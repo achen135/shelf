@@ -1,4 +1,4 @@
-# Shelf CI. SKELETON — TODO(M0): make this green.
+# Shelf CI: the build must be green from an empty database on every push.
 name: ci
 
 on:
@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Postgres for the Flyway step. The JUnit suite does not use this one — Testcontainers
+    # starts its own throwaway database so that tests cannot depend on leftover state.
     services:
       postgres:
         image: postgres:16
@@ -26,12 +28,27 @@ jobs:
       SHELF_DB_PASSWORD: shelf
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "21"
-      - name: check (compile + spotbugs + junit)
+          cache: gradle
+
+      # Compile (Error Prone) + SpotBugs + Spotless + JUnit, including the Testcontainers
+      # tests — the runner's Docker daemon backs those.
+      - name: check
         run: ./gradlew --no-daemon check
-      - name: flyway migrate from empty
+
+      # Proves the migrations apply to a database that has never seen them.
+      - name: flyway migrate from an empty database
         run: ./gradlew --no-daemon flywayMigrate flywayInfo
-      # TODO(M1): crawl smoke against the fixture server
+
+      - name: upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/reports/tests/test
+            build/reports/spotbugs

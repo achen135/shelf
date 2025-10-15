@@ -1,0 +1,22 @@
+name: widgets
+spec_schema:
+  finish:     { type: string, enum: [matte, gloss] }
+  wireless:   { type: boolean }
+  port_count: { type: integer }
+  weight_kg:  { type: number, unit: kg }
+retailers:
+  - name: shop_one
+    base_url: "https://shop-one.test"
+    brand_source: fixed
+    brand: ShopOne
+    fetch:
+      mode: api
+      list_paths: ["/collections/widgets/products.json?limit={limit}&page={page}"]
+      page_size: 100
+      max_pages: 2
+      max_rps: 0.5
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+seed_products:
+  - { brand: "ShopOne", model: "W1", canonical_name: "ShopOne W1", spec: { finish: matte, port_count: 2 } }

@@ -9,7 +9,8 @@ public final class Main {
   private Main() {}
 
   public static void main(String[] args) {
-    System.err.println("shelf: not implemented yet — see docs/Spec.md §7 (M0/M1). args=" + String.join(" ", args));
+    System.err.println(
+        "shelf: not implemented yet — see docs/Spec.md §7 (M0/M1). args=" + String.join(" ", args));
     System.exit(2);
   }
 }

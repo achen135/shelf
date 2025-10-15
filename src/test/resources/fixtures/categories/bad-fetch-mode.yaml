@@ -1,0 +1,13 @@
+name: widgets
+spec_schema:
+  finish: { type: string }
+retailers:
+  - name: shop_one
+    base_url: "https://shop-one.test"
+    fetch:
+      mode: carrier_pigeon
+      list_paths: ["/x.json"]
+      max_rps: 0.5
+    parser: shopify_products_json
+seed_products:
+  - { brand: "ShopOne", model: "W1", canonical_name: "ShopOne W1" }

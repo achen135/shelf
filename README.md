@@ -4,10 +4,49 @@ Price & deal intelligence for enthusiast product categories. Pick a category, se
 spec filters, get a ranked shortlist and a **buy-now / wait** signal grounded in real price
 history.
 
-> **This is a skeleton.** The directory layout, build files, first migration, and category
-> config are first-cut scaffolding with `TODO(M0)` markers. Milestone **M0** makes the build,
-> CI, and `make up` actually work; **M1** implements the single-threaded crawl. See
-> `docs/Spec.md` §7 for the milestone plan and `CLAUDE.md` for the working agreement.
+A *category* is a config file — its spec schema, its retailers and how to fetch each, its seed
+products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
+never touches the open web: it visits the paths a category file names, and nothing else.
+
+> **Status: M0 (scaffold + category config) complete.** The build, migrations, config loading
+> and test infrastructure work end to end. M1 adds the single-threaded crawl. See
+> `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each one actually did,
+> and `CLAUDE.md` for the working agreement.
+
+## Prereqs
+
+- **JDK 21** (Temurin or equivalent). Gradle comes from the committed wrapper — no system
+  Gradle needed.
+- **Docker** + Docker Compose, for local Postgres and for the Testcontainers-backed tests.
+
+## Quickstart
+
+```
+make up        # docker compose up -d postgres, waits for healthy
+make migrate   # ./gradlew flywayMigrate  (applies src/main/resources/db/migration)
+make test      # ./gradlew check — compile + Error Prone + SpotBugs + Spotless + JUnit
+make down
+```
+
+`make test` starts a throwaway Postgres via Testcontainers, so Docker must be running. On
+macOS with Docker Desktop this works without further setup; see the comment in
+`build.gradle.kts` if your Docker socket lives somewhere unusual.
+
+## Configuration
+
+Environment variables, with the defaults matching `docker-compose.yml`:
+
+| Variable | Default | Used by |
+|---|---|---|
+| `SHELF_DB_URL` | `jdbc:postgresql://localhost:5432/shelf` | app, Gradle Flyway task, CI |
+| `SHELF_DB_USER` | `shelf` | as above |
+| `SHELF_DB_PASSWORD` | `shelf` | as above |
+| `SHELF_CATEGORIES_DIR` | `categories` | category config loading |
+| `SHELF_RAW_DIR` | `data/raw` | stored response bodies |
+| `SHELF_CRAWLER_CONTACT` | the project's GitHub URL | the crawler's `User-Agent` |
+
+No credentials are ever read from a config file — a retailer that needs an API key names the
+environment variable that holds it.
 
 ## Layout
 
@@ -24,26 +63,23 @@ src/main/java/com/achen/shelf/
   signal/             buy/wait signal + backtest (M5)
   api/                Javalin query API    (M6)
 src/main/resources/db/migration/   Flyway SQL migrations
-src/test/                          JUnit 5 + golden-file fixtures
+src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
 data/raw/             fetched response bodies (gitignored)
 docker-compose.yml    postgres:16 (coordinator/worker/api services added later)
 ```
 
-## Prereqs
+## Crawler conduct
 
-- JDK 21
-- Docker + Docker Compose
-- Gradle is used via the wrapper — **`gradle wrapper --gradle-version 8.10` must be run once**
-  to generate `gradlew` + `gradle/wrapper/gradle-wrapper.jar` (M0).
+This is a portfolio project, not a commercial service, and it is built to be a good citizen:
+official or public structured endpoints wherever they exist, `robots.txt` fetched, cached and
+obeyed, a real `User-Agent` with a contact point, a per-domain rate limit of one request every
+few seconds, responses cached on disk, and no circumvention of any anti-bot measure. Retailers
+that ask not to be crawled are left out — several were, during the M0 survey (see
+`docs/Sessions.md`).
 
-## Quickstart (once M0 lands)
-
-```
-make up        # docker compose up -d postgres
-make migrate   # flyway migrate
-make test      # ./gradlew check
-make down
-```
+Any price data this project reports as observed was observed. Synthetic history — which M4
+adds for depth — is labelled `synthetic` in `price_observations.source` and stays labelled
+everywhere it is used.
 
 ## Planning docs
 

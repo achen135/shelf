@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusions. Each entry is a pattern SpotBugs is right about in general and wrong
+  about here; anything not listed is a real finding and fails the build.
+-->
+<FindBugsFilter>
+
+  <!--
+    EI_EXPOSE_REP / EI_EXPOSE_REP2 on the config records. Every one of these takes its
+    collections through a compact constructor that calls List.copyOf/Map.copyOf, so the
+    "internal representation" being returned is already immutable — SpotBugs cannot see
+    through the factory call. Leaving these on would mean copying twice on every accessor.
+  -->
+  <Match>
+    <Package name="com.achen.shelf.config"/>
+    <Or>
+      <Bug pattern="EI_EXPOSE_REP"/>
+      <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+  </Match>
+
+  <!--
+    The connection pool is shared on purpose: a pool that were defensively copied would not
+    be a pool.
+  -->
+  <Match>
+    <Class name="com.achen.shelf.db.Database"/>
+    <Or>
+      <Bug pattern="EI_EXPOSE_REP"/>
+      <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+  </Match>
+
+</FindBugsFilter>

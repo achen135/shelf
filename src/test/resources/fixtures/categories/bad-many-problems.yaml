@@ -1,0 +1,24 @@
+# Several independent problems at once: the loader should report all of them, not just the first.
+name: widgets
+spec_schema:
+  finish:   { type: string, enum: [matte, gloss] }
+  wireless: { type: boolean, enum: [yes, no] }     # enum on a non-string field
+retailers:
+  - name: shop_one
+    base_url: "shop-one.test"                       # not absolute
+    fetch:
+      mode: api
+      list_paths: ["collections/widgets.json"]      # no leading slash
+      max_rps: 9.0                                  # above the politeness ceiling
+      respect_robots: false                         # not a permitted setting
+    parser: shopify_products_json
+  - name: shop_one                                  # duplicate name
+    base_url: "https://shop-two.test/"              # trailing slash
+    brand_source: fixed                             # ... with no brand
+    fetch:
+      mode: html
+      list_paths: ["/collections/widgets"]
+      max_rps: 0.2
+    parser: ""                                      # missing parser
+seed_products:
+  - { brand: "ShopOne", model: "W1", canonical_name: "ShopOne W1", spec: { finish: neon, colour: red } }

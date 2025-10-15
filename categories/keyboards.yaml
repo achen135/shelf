@@ -2,13 +2,21 @@
 # A category is defined entirely here: its spec schema, its retailers + how to fetch each,
 # and a seed product list to bootstrap the catalog. Adding a category = a file like this
 # plus parsers; no pipeline code changes (proven in M7 with monitors).
+#
+# Retailer selection (verified 2026-09-10, see docs/Sessions.md M0 for the full survey):
+# every retailer below is fetched from its Shopify storefront's public product JSON, which
+# robots.txt permits and which returns price, availability, SKU and variants as structured
+# data. HTML-only candidates were evaluated and rejected: zsa.io renders prices client-side,
+# nuphy.com and microcenter.com answer bot challenges, drop.com serves no robots.txt, and
+# bhphotovideo.com 403s a plain crawler. Best Buy and eBay have real APIs but need
+# credentials, so they are present and disabled rather than guessed at.
 
 name: keyboards
 
 # --- spec schema ---------------------------------------------------------------
 # Field -> {type, enum?, unit?}. The app validates products.spec against this.
 spec_schema:
-  switch_type:     { type: string,  enum: [linear, tactile, clicky, silent-linear, silent-tactile] }
+  switch_type:     { type: string,  enum: [linear, tactile, clicky, silent-linear, silent-tactile, magnetic, topre, optical] }
   hot_swap:        { type: boolean }
   layout_size:     { type: string,  enum: ["full", "1800", "tkl", "75", "65", "60", "40", "alice", "split"] }
   connectivity:    { type: string,  enum: [wired, "2.4ghz", bluetooth, tri-mode] }
@@ -19,38 +27,199 @@ spec_schema:
   key_count:       { type: integer }
 
 # --- retailers ---------------------------------------------------------------
-# Prefer official / affiliate APIs. For each: name, base_url, fetch{mode: api|html, ...},
-# parser (id resolved to a parser class). TODO(M0): finalize this list, fill real details,
-# drop any retailer that forbids scraping.
+# `mode: api` = a structured endpoint parsed with Jackson. `mode: html` = a public page parsed
+# with Jsoup. list_paths are the ONLY paths fetched for a retailer: the crawler never follows a
+# link out of a fetched document. {limit}/{page} are substituted per request.
 retailers:
-  - name: bestbuy
-    base_url: "https://www.bestbuy.com"
+  - name: keychron
+    base_url: "https://www.keychron.com"
+    brand_source: fixed          # Shopify `vendor` here is a product series ("Q HE series")
+    brand: Keychron
     fetch:
       mode: api
-      # TODO(M0): Best Buy Products API — endpoint, API key via env BESTBUY_API_KEY, category filter.
+      list_paths:
+        - "/collections/all-keyboards/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 2               # ~352 keyboards in this collection
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      Shopify storefront product JSON. robots.txt allows /collections and /products; the
+      disallowed paths are cart/checkout/account, which this crawler never requests.
+
+  - name: kbdfans
+    base_url: "https://kbdfans.com"
+    brand_source: fixed          # `vendor` is "KBDfans", plus a few listings tagged "Third Party"
+    brand: KBDfans
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/keyboard-category/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 2
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      A handful of listings carry vendor "Third Party" rather than a manufacturer; those keep
+      the store brand here and are left for M3 entity resolution to correct from the title.
+
+  - name: mechanicalkeyboards
+    base_url: "https://mechanicalkeyboards.com"
+    brand_source: vendor         # genuine multi-brand retailer: Ducky, Varmilo, HHKB, Leopold…
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/compact-keyboards-60/products.json?limit={limit}&page={page}"
+        - "/collections/75-keyboards/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 2
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      The cross-retailer anchor: stocks brands that also sell direct (Keychron, Wooting,
+      Glorious), which is what makes a price comparison — and M3's resolution eval — meaningful.
+
+  - name: glorious
+    base_url: "https://www.gloriousgaming.com"
+    brand_source: fixed          # `vendor` is a series ("GMMK 3 Prebuilt")
+    brand: Glorious
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/keyboards/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+
+  - name: epomaker
+    base_url: "https://epomaker.com"
+    brand_source: vendor         # accurate here: "Epomaker", and "AJAZZ" for the one rebadge
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/keyboards/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+
+  # --- configured but not yet crawlable ------------------------------------------
+  # Both are real APIs with public documentation, disabled until credentials exist. The
+  # endpoint/param details are deliberately NOT filled in from memory — see docs/Sessions.md.
+  - name: bestbuy
+    base_url: "https://api.bestbuy.com"
+    enabled: false
+    brand_source: vendor
+    fetch:
+      mode: api
+      list_paths:
+        - "/v1/products(categoryPath.id={category_path_id})?format=json&pageSize={limit}&page={page}"
+      page_size: 100
+      max_pages: 2
+      max_rps: 1.0
+      respect_robots: true
+      auth:
+        mode: api_key
+        env_vars: ["BESTBUY_API_KEY"]
     parser: bestbuy_api
+    notes: >
+      TODO(M1+): needs a developer.bestbuy.com key in BESTBUY_API_KEY, and the keyboard
+      categoryPath.id confirmed against the live Categories API before this is enabled. The
+      list_path above is a placeholder shape, not a verified query.
 
   - name: ebay
-    base_url: "https://www.ebay.com"
+    base_url: "https://api.ebay.com"
+    enabled: false
+    brand_source: vendor
     fetch:
       mode: api
-      # TODO(M0): eBay Browse API — OAuth app token via env, category_id for keyboards, condition=NEW.
-    parser: ebay_browse_api
-
-  - name: example_retailer
-    base_url: "https://example.com"
-    fetch:
-      mode: html
-      list_paths: ["/collections/keyboards?page={page}"]   # TODO(M0): real listing paths
+      list_paths:
+        - "/buy/browse/v1/item_summary/search?q={query}&limit={limit}&offset={offset}"
+      page_size: 200
+      max_pages: 2
+      max_rps: 1.0
       respect_robots: true
-      max_rps: 0.2
-    parser: example_html
+      auth:
+        mode: oauth2_client_credentials
+        env_vars: ["EBAY_CLIENT_ID", "EBAY_CLIENT_SECRET"]
+    parser: ebay_browse_api
+    notes: >
+      TODO(M1+): needs an eBay developer app (client credentials -> application token) and the
+      keyboard category_id confirmed. Used-condition listings would also need a condition
+      filter before the prices are comparable with the new-only retailers above.
 
 # --- seed products ---------------------------------------------------------------
-# Bootstraps the catalog + gives the crawler search terms. TODO(M0): expand to ~30-50.
+# Bootstraps the catalog and gives entity resolution something to match against. Every entry
+# below was taken from a live listing during the M0 retailer survey, not from memory.
 seed_products:
-  - { brand: "Keychron",   model: "Q1 Pro",     canonical_name: "Keychron Q1 Pro" }
-  - { brand: "GMMK",       model: "Pro",         canonical_name: "Glorious GMMK Pro" }
-  - { brand: "NuPhy",      model: "Air75 V2",    canonical_name: "NuPhy Air75 V2" }
-  - { brand: "Wooting",    model: "60HE",        canonical_name: "Wooting 60HE" }
-  - { brand: "Logitech",   model: "MX Mechanical", canonical_name: "Logitech MX Mechanical" }
+  # Keychron
+  - { brand: "Keychron", model: "Q1 Pro",   canonical_name: "Keychron Q1 Pro" }
+  - { brand: "Keychron", model: "Q2",       canonical_name: "Keychron Q2" }
+  - { brand: "Keychron", model: "Q4",       canonical_name: "Keychron Q4" }
+  - { brand: "Keychron", model: "Q6 HE",    canonical_name: "Keychron Q6 HE" }
+  - { brand: "Keychron", model: "Q7",       canonical_name: "Keychron Q7" }
+  - { brand: "Keychron", model: "Q8",       canonical_name: "Keychron Q8 (Alice)" }
+  - { brand: "Keychron", model: "Q15 Max",  canonical_name: "Keychron Q15 Max" }
+  - { brand: "Keychron", model: "K2 Ultra", canonical_name: "Keychron K2 Ultra" }
+  - { brand: "Keychron", model: "K5 Ultra", canonical_name: "Keychron K5 Ultra" }
+  - { brand: "Keychron", model: "K8 Ultra", canonical_name: "Keychron K8 Ultra" }
+  - { brand: "Keychron", model: "K10 Ultra", canonical_name: "Keychron K10 Ultra" }
+  - { brand: "Keychron", model: "K6 HE",    canonical_name: "Keychron K6 HE" }
+  - { brand: "Keychron", model: "B11 Pro",  canonical_name: "Keychron B11 Pro" }
+  # Glorious
+  - { brand: "Glorious", model: "GMMK 3",           canonical_name: "Glorious GMMK 3" }
+  - { brand: "Glorious", model: "GMMK 3 HE",        canonical_name: "Glorious GMMK 3 HE" }
+  - { brand: "Glorious", model: "GMMK Pro",         canonical_name: "Glorious GMMK Pro" }
+  - { brand: "Glorious", model: "GMMK Eternal 96",  canonical_name: "Glorious GMMK Eternal 96%" }
+  - { brand: "Glorious", model: "GMBK 75",          canonical_name: "Glorious GMBK 75%" }
+  # Epomaker
+  - { brand: "Epomaker", model: "TH26",        canonical_name: "Epomaker TH26" }
+  - { brand: "Epomaker", model: "TH65",        canonical_name: "Epomaker TH65" }
+  - { brand: "Epomaker", model: "RT75",        canonical_name: "Epomaker RT75" }
+  - { brand: "Epomaker", model: "HE65 V2 TMR", canonical_name: "Epomaker HE65 V2 TMR" }
+  - { brand: "Epomaker", model: "HE75 V2 TMR", canonical_name: "Epomaker HE75 V2 TMR" }
+  - { brand: "Epomaker", model: "HACK70",      canonical_name: "Epomaker HACK70" }
+  # KBDfans
+  - { brand: "KBDfans", model: "Tofu60 Redux", canonical_name: "KBDfans Tofu60 Redux" }
+  - { brand: "KBDfans", model: "Athena 75",    canonical_name: "KBDfans Athena 75" }
+  - { brand: "KBDfans", model: "Odin 75",      canonical_name: "KBDfans Odin 75" }
+  - { brand: "KBDfans", model: "KBD75 V3",     canonical_name: "KBDfans KBD75 V3" }
+  - { brand: "KBDfans", model: "KBD67 Lite",   canonical_name: "KBDfans KBD67 Lite" }
+  - { brand: "KBDfans", model: "Blade60",      canonical_name: "KBDfans Blade60" }
+  - { brand: "KBDfans", model: "+84 Classic TKL", canonical_name: "KBDfans +84 Classic TKL" }
+  # Wooting
+  - { brand: "Wooting", model: "60HE V2", canonical_name: "Wooting 60HE V2" }
+  - { brand: "Wooting", model: "60HE+",   canonical_name: "Wooting 60HE+" }
+  # Ducky
+  - { brand: "Ducky", model: "One 2 Mini Pro", canonical_name: "Ducky One 2 Mini Pro" }
+  - { brand: "Ducky", model: "One 2 SF",       canonical_name: "Ducky One 2 SF" }
+  - { brand: "Ducky", model: "One X Mini",     canonical_name: "Ducky One X Mini" }
+  - { brand: "Ducky", model: "OK-M 65",        canonical_name: "Ducky OK-M 65" }
+  - { brand: "Ducky", model: "Tinker 65",      canonical_name: "Ducky Tinker 65 ProjectD" }
+  # HHKB
+  - { brand: "HHKB", model: "Hybrid Type-S",  canonical_name: "HHKB Professional Hybrid Type-S" }
+  - { brand: "HHKB", model: "Classic Type-S", canonical_name: "HHKB Professional Classic Type-S" }
+  - { brand: "HHKB", model: "Studio",         canonical_name: "HHKB Studio" }
+  # Leopold
+  - { brand: "Leopold", model: "FC660M",   canonical_name: "Leopold FC660M" }
+  - { brand: "Leopold", model: "FC660MBT", canonical_name: "Leopold FC660MBT" }
+  - { brand: "Leopold", model: "FC650MDS", canonical_name: "Leopold FC650MDS" }
+  # Varmilo
+  - { brand: "Varmilo", model: "Minilo VXT67", canonical_name: "Varmilo Minilo VXT67" }
+  - { brand: "Varmilo", model: "Sword68",      canonical_name: "Varmilo Sword68" }
+  # Others seen at the multi-brand retailer
+  - { brand: "Lofree", model: "Flow 2 68", canonical_name: "Lofree Flow 2 68" }
+  - { brand: "Lofree", model: "Tofu 68",   canonical_name: "Lofree Tofu 68" }
+  - { brand: "Akko",   model: "MU01",      canonical_name: "Akko MU01" }
+  - { brand: "WOBKEY", model: "Rainy 75 Pro", canonical_name: "WOBKEY Rainy 75 Pro" }

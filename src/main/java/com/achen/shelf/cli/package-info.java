@@ -1,4 +1,4 @@
 /**
- * TODO(M0): cli package. See docs/Spec.md and docs/Architecture.md.
+ * The {@code shelf} command line: {@code crawl}, {@code migrate}, and the M2/M6 role subcommands.
  */
 package com.achen.shelf.cli;
