@@ -20,11 +20,17 @@
   </Match>
 
   <!--
-    The connection pool is shared on purpose: a pool that were defensively copied would not
-    be a pool.
+    Injected collaborators — the connection pool, and the DAOs handed to crawl services — are
+    shared on purpose: a pool that were defensively copied would not be a pool.
   -->
   <Match>
-    <Class name="com.achen.shelf.db.Database"/>
+    <Or>
+      <Class name="com.achen.shelf.db.Database"/>
+      <Class name="com.achen.shelf.crawl.RobotsGate"/>
+      <Class name="com.achen.shelf.crawl.CrawlRunner"/>
+      <Class name="com.achen.shelf.crawl.CrawlSummary"/>
+      <Class name="com.achen.shelf.crawl.ParsedOffer"/>
+    </Or>
     <Or>
       <Bug pattern="EI_EXPOSE_REP"/>
       <Bug pattern="EI_EXPOSE_REP2"/>

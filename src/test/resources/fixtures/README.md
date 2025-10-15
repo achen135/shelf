@@ -8,12 +8,16 @@ which is what makes a failure here mean "the retailer changed" or "we broke the 
 
 | Fixture | Source | Captured | Edits |
 |---|---|---|---|
+| `shopify/keychron-products.json` | `https://www.keychron.com/collections/all-keyboards/products.json` | 2026-09-10 | 3 products kept; images emptied, `body_html` truncated to 300 chars, 2 variants each. Field values are verbatim. |
+| `shopify/mechanicalkeyboards-products.json` | `https://mechanicalkeyboards.com/collections/compact-keyboards-60/products.json` | 2026-09-10 | as above; picked for three different vendors (HHKB, Ducky, Wooting) |
+| `shopify/kbdfans-products.json` | `https://kbdfans.com/collections/keyboard-category/products.json` | 2026-09-10 | as above; keeps one product priced `0.00` (a store placeholder) next to a real one |
+| `shopify/empty-products.json` | — | — | hand-written: what a store returns past the last page |
+| `html/mechanicalkeyboards-collection.html` | `https://mechanicalkeyboards.com/collections/75-keyboards` | 2026-09-10 | first 4 product cards, verbatim except `<style>`/`<script>`/`<svg>`/`<img>`/quick-add markup removed; wrapped in the page's own `<ul class="grid product-grid">` |
+| `robots/*.txt` | — | — | hand-written. `shopify-style.txt` is a faithful subset of the rules the surveyed storefronts serve |
 | `categories/*.yaml` | — | — | hand-written config cases for the loader tests |
-
-Captured retailer responses arrive with the M1 parsers.
 
 ## Refreshing a captured fixture
 
-Re-fetch the source URL with the crawler's own User-Agent, apply the same edits, and expect the
+Re-fetch the URL above with the crawler's own User-Agent, apply the same edits, and expect the
 assertions that encode prices to change. A diff here is information: it is the retailer's markup
 or data shape moving, which is exactly what the golden tests exist to catch before a crawl does.

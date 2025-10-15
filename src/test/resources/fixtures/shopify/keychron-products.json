@@ -1,0 +1,233 @@
+{
+  "products": [
+    {
+      "id": 7889305075801,
+      "title": "Keychron Q6 HE QMK Wireless Custom Keyboard",
+      "handle": "keychron-q6-he-qmk-wireless-custom-keyboard",
+      "vendor": "Q HE series",
+      "product_type": "Custom Keyboards",
+      "tags": [
+        "100% Layout",
+        "CaseMaterial:All-metal",
+        "Connectivity:wireless",
+        "Custom Keyboard",
+        "Hot Products",
+        "Keyboard",
+        "KeycapsType:Double-shot PBT",
+        "KnobSupport:Yes",
+        "LayoutSize:100% | Full Size",
+        "MMO Keyboards",
+        "MountStyle:Gasket Mount",
+        "NP-100%",
+        "ProductType:Fully Assembled",
+        "Profile:Normal Profile",
+        "QMK/VIASupport:Yes",
+        "Standard:ANSI",
+        "SwitchFacing:South-face",
+        "SwitchMount:Hot-swappable",
+        "Wired Keyboard",
+        "Wireless Mechanical Keyboard"
+      ],
+      "published_at": "2026-08-24T10:06:23+08:00",
+      "body_html": "<div> <p class=\"okr-block-clipboard\" data-okr=\"%7B%22okrDelta%22%3A%5B%7B%22lineType%22%3A%22text%22%2C%22lineOptions%22%3A%7B%7D%2C%22lineContent%22%3A%5B%7B%22opType%22%3A%22text%22%2C%22options%22%3A%7B%22text%22%3A%22We%20have%20shipped%20most%20of%20the%20pre-orders%20made%20before%20September%",
+      "variants": [
+        {
+          "id": 42069797568601,
+          "title": "Fully Assembled Knob / Carbon Black / Gateron Double-Rail Magnetic Nebula Switch",
+          "sku": "Q6H-M1",
+          "price": "229.99",
+          "compare_at_price": "249.99",
+          "available": false,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 42069797601369,
+          "title": "Fully Assembled Knob / Shell White / Gateron Double-Rail Magnetic Nebula Switch",
+          "sku": "Q6H-P1",
+          "price": "229.99",
+          "compare_at_price": "249.99",
+          "available": false,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Type",
+          "position": 1,
+          "values": [
+            "Fully Assembled Knob"
+          ]
+        },
+        {
+          "name": "Color",
+          "position": 2,
+          "values": [
+            "Carbon Black",
+            "Shell White"
+          ]
+        },
+        {
+          "name": "Switches",
+          "position": 3,
+          "values": [
+            "Gateron Double-Rail Magnetic Nebula Switch"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8231623393369,
+      "title": "Keychron K5 Ultra 8K Wireless Custom Mechanical Keyboard",
+      "handle": "keychron-k5-ultra-8k-wireless-custom-mechanical-keyboard",
+      "vendor": "K Ultra series",
+      "product_type": "Slim Keyboards",
+      "tags": [
+        "100% Layout",
+        "8K Keyboard",
+        "Connectivity:wireless",
+        "Custom Keyboard",
+        "Keyboard",
+        "KeycapsType:Double-shot PBT",
+        "Low Profile Keyboard",
+        "MMO Keyboards",
+        "ProductType:Fully Assembled",
+        "Profile:Low Profile",
+        "Profile:Normal Profile",
+        "RGB mechanical Keyboard",
+        "Standard:ANSI",
+        "SwitchMount:Hot-swappable",
+        "SwitchType:Mechanical Switch",
+        "Wireless Mechanical Keyboard"
+      ],
+      "published_at": "2026-06-18T17:26:58+08:00",
+      "body_html": "<div> <div class=\"old-record-id-Ht2wdkmCRoxb7gxyMjScFfOYnFh\"> <strong>Ultra-Slim. Full-Size. Wireless 8K.</strong> <br>The Keychron K5 Ultra 8K combines a full-size low-profile layout, ultra-low-latency 2.4 GHz wireless performance, and up to 370 hours of battery life. Customize every key, macro, an",
+      "variants": [
+        {
+          "id": 43354556170329,
+          "title": "Fully Assembled / Black / Keychron Milk POM Switch - Red",
+          "sku": "K5U-H1",
+          "price": "114.99",
+          "compare_at_price": "114.99",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 43354556203097,
+          "title": "Fully Assembled / Black / Keychron Milk POM Switch - Brown",
+          "sku": "K5U-H3",
+          "price": "114.99",
+          "compare_at_price": "114.99",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Type",
+          "position": 1,
+          "values": [
+            "Fully Assembled"
+          ]
+        },
+        {
+          "name": "Color",
+          "position": 2,
+          "values": [
+            "Black"
+          ]
+        },
+        {
+          "name": "Switch Type",
+          "position": 3,
+          "values": [
+            "Keychron Milk POM Switch - Red",
+            "Keychron Milk POM Switch - Brown",
+            "Keychron Milk POM Switch - Banana"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8199647920217,
+      "title": "Keychron K2 Ultra 8K Wireless Custom Mechanical Keyboard",
+      "handle": "keychron-k2-ultra-8k-wireless-custom-mechanical-keyboard",
+      "vendor": "K Ultra series",
+      "product_type": "Custom Keyboards",
+      "tags": [
+        "75% Layout",
+        "Connectivity:wireless",
+        "Custom Keyboard",
+        "Keyboard",
+        "KeycapLayoutSupport:75%",
+        "KeycapMaterial:Double-shot PBT",
+        "KeycapProfile:OSA Profile",
+        "KeycapsType:Double-shot PBT",
+        "Normal Profile Keyboard",
+        "ProductType:Fully Assembled",
+        "Profile:Normal Profile",
+        "RGB mechanical Keyboard",
+        "Standard:ANSI",
+        "SwitchFacing:South-face",
+        "SwitchMount:Hot-swappable",
+        "SwitchType:Mechanical Switch",
+        "Wireless Mechanical Keyboard"
+      ],
+      "published_at": "2026-06-11T18:29:28+08:00",
+      "body_html": "<p data-start=\"0\" data-end=\"326\">Keychron K2 Ultra 8K is a wireless custom mechanical keyboard designed for performance and flexibility. It supports 2.4 GHz wireless, Bluetooth, and wired connectivity. With its compact 75% layout, you can fully customize every key and create macros through the Keych",
+      "variants": [
+        {
+          "id": 43245836730457,
+          "title": "Fully Assembled / Black / Keychron Apex Switch - Red",
+          "sku": "K2U-J1",
+          "price": "119.99",
+          "compare_at_price": "119.99",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 43245836763225,
+          "title": "Fully Assembled / Black / Keychron Apex Switch - Brown",
+          "sku": "K2U-J3",
+          "price": "119.99",
+          "compare_at_price": "119.99",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Type",
+          "position": 1,
+          "values": [
+            "Fully Assembled"
+          ]
+        },
+        {
+          "name": "Color",
+          "position": 2,
+          "values": [
+            "Black"
+          ]
+        },
+        {
+          "name": "Switch Type",
+          "position": 3,
+          "values": [
+            "Keychron Apex Switch - Red",
+            "Keychron Apex Switch - Brown",
+            "Keychron Apex Switch - Banana"
+          ]
+        }
+      ]
+    }
+  ]
+}

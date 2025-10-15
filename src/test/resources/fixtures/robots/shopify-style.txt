@@ -1,0 +1,19 @@
+# A faithful subset of the robots.txt every surveyed Shopify storefront serves: product and
+# collection paths are crawlable, cart/checkout/account are not, and sorted/filtered collection
+# URLs are excluded as duplicate views of the same products.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /checkouts/
+Disallow: /orders
+Disallow: /account
+Disallow: /collections/*sort_by*
+Disallow: /*/collections/*sort_by*
+Disallow: /services
+Disallow: /cart.js
+Sitemap: https://example.test/sitemap.xml
+
+User-agent: BadBot
+Disallow: /

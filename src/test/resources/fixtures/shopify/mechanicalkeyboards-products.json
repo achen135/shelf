@@ -1,0 +1,232 @@
+{
+  "products": [
+    {
+      "id": 8930609660204,
+      "title": "HHKB Hybrid Type-S Topre Silent 45g Keyboard",
+      "handle": "hhkb-hybrid-type-s",
+      "vendor": "HHKB",
+      "product_type": "Compact Keyboards / 60%+",
+      "tags": [
+        "45g",
+        "ansi",
+        "blank led",
+        "compact",
+        "fujitsu",
+        "hhkb",
+        "hybrid",
+        "keyboard",
+        "linux",
+        "mac",
+        "plastic frame",
+        "plate mount",
+        "silent",
+        "topre",
+        "type s",
+        "types",
+        "us qwerty",
+        "usb c",
+        "usbc",
+        "windows",
+        "wireless"
+      ],
+      "published_at": "2023-12-13T15:19:10-06:00",
+      "body_html": "<ul style=\"padding-left: 16px; margin-bottom: 30px;\" id=\"mkv3_bullets\"> <li>Dip switches for customizing layout</li> <li>3-stage height adjustable feet</li> <li>Uses USB-C to USB-A cable (not included)</li> <li>PBT spacebar</li> <li>Connect up to 4 devices via Bluetooth 2.0: PC, tablet, smartphone</",
+      "variants": [
+        {
+          "id": 47607395713324,
+          "title": "Charcoal / Dye Sub",
+          "sku": "CG01000-297201",
+          "price": "259.00",
+          "compare_at_price": "385.00",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 47607395778860,
+          "title": "Charcoal / Blank",
+          "sku": "CG01000-297301",
+          "price": "259.00",
+          "compare_at_price": "385.00",
+          "available": false,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Charcoal",
+            "White",
+            "Snow"
+          ]
+        },
+        {
+          "name": "Print Method",
+          "position": 2,
+          "values": [
+            "Dye Sub",
+            "Blank"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9041011114284,
+      "title": "Ducky One 2 Mini Pro Classic RGB LED 60% Double Shot PBT Mechanical Keyboard",
+      "handle": "ducky-one-2-mini-pro-classic",
+      "vendor": "Ducky",
+      "product_type": "Compact Keyboards / 60%+",
+      "tags": [
+        "2",
+        "60",
+        "ansi",
+        "classic",
+        "compact",
+        "double shot",
+        "ducky",
+        "keyboard",
+        "mechanical",
+        "mini",
+        "multimedia",
+        "one",
+        "pbt",
+        "pgg",
+        "plastic frame",
+        "plate mount",
+        "pro",
+        "rgb led",
+        "us qwerty",
+        "usb c",
+        "usbc",
+        "windows"
+      ],
+      "published_at": "2024-02-23T12:38:38-06:00",
+      "body_html": "<ul style=\"padding-left: 16px; margin-bottom: 30px;\" id=\"mkv3_bullets\"> <li>10 additional PBT Double Shot colorful keycaps (random color)</li> <li>PBT Double Shot seamless keycaps</li> <li>Supports Ducky Macro 2.0, the most powerful hardware available in the market</li> <li>3-level adjustable feet a",
+      "variants": [
+        {
+          "id": 48022260384044,
+          "title": "Kailh BOX White",
+          "sku": "DKON2061ST-KUSPDAZTW2",
+          "price": "69.50",
+          "compare_at_price": "79.00",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 48022260416812,
+          "title": "Kailh BOX Red",
+          "sku": "DKON2061ST-KUSPDAZTR2",
+          "price": "72.00",
+          "compare_at_price": "79.00",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Switch",
+          "position": 1,
+          "values": [
+            "Kailh BOX White",
+            "Kailh BOX Red",
+            "Kailh BOX Silent Pink",
+            "Cherry MX Blue",
+            "Gateron Milky Red",
+            "Kailh BOX Brown",
+            "Gateron Yellow",
+            "Kailh BOX Jade",
+            "Cherry MX Black",
+            "Cherry MX Brown",
+            "Cherry MX Red",
+            "Cherry MX Speed Silver",
+            "Cherry MX Silent Red",
+            "Cherry MX Silent Black"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10162552897836,
+      "title": "Wooting 60HE V2 Magnetic 8K Keyboard",
+      "handle": "wooting-60he-v2-magnetic-8k-keyboard",
+      "vendor": "Wooting",
+      "product_type": "Compact Keyboards / 60%+",
+      "tags": [
+        "60he",
+        "8k",
+        "ansi",
+        "compact",
+        "keyboard",
+        "lekker",
+        "magnetic",
+        "plate mount",
+        "rgb led",
+        "tikken",
+        "us qwerty",
+        "usb c",
+        "usbc",
+        "v2",
+        "windows",
+        "wooting"
+      ],
+      "published_at": "2025-12-11T13:21:04-06:00",
+      "body_html": "<ul style=\"padding-left: 16px; margin-bottom: 30px;\" id=\"mkv3_bullets\"> <li>2 layout options: 6.25u spacebar and split spacebar</li> <li>Split spacebar provides an extra key without losing the ability to actuate the spacebar with either hand</li> <li>Friction fit mount design holds PCB without using",
+      "variants": [
+        {
+          "id": 52420059234604,
+          "title": "Black / ABS / 6.25u Spacebar",
+          "sku": "WK3C-US1-TIK-BK1",
+          "price": "189.99",
+          "compare_at_price": "0.00",
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 52420059267372,
+          "title": "Black / Aluminum / Split Spacebar",
+          "sku": "WT-60HEV2-SSB-ALBK",
+          "price": "249.99",
+          "compare_at_price": "0.00",
+          "available": false,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "Black",
+            "Silver"
+          ]
+        },
+        {
+          "name": "Bottom Material",
+          "position": 2,
+          "values": [
+            "ABS",
+            "Aluminum"
+          ]
+        },
+        {
+          "name": "Edition",
+          "position": 3,
+          "values": [
+            "6.25u Spacebar",
+            "Split Spacebar"
+          ]
+        }
+      ]
+    }
+  ]
+}

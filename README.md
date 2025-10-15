@@ -8,10 +8,12 @@ A *category* is a config file — its spec schema, its retailers and how to fetc
 products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
 never touches the open web: it visits the paths a category file names, and nothing else.
 
-> **Status: M0 (scaffold + category config) complete.** The build, migrations, config loading
-> and test infrastructure work end to end. M1 adds the single-threaded crawl. See
-> `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each one actually did,
-> and `CLAUDE.md` for the working agreement.
+> **Status: M1 complete.** `shelf crawl --category keyboards --once` crawls five live retailers
+> and writes real price history; a cycle on 2026-09-10 recorded **7,556 offers and 7,556 price
+> observations across 10 pages with no errors**, and a second cycle added a second price point
+> per offer without duplicating a single one. M2 makes it distributed. See `docs/Spec.md` §7 for
+> the milestone plan, `docs/Sessions.md` for what each one actually did (including the numbers
+> above and how to re-derive them), and `CLAUDE.md` for the working agreement.
 
 ## Prereqs
 
@@ -31,6 +33,19 @@ make down
 `make test` starts a throwaway Postgres via Testcontainers, so Docker must be running. On
 macOS with Docker Desktop this works without further setup; see the comment in
 `build.gradle.kts` if your Docker socket lives somewhere unusual.
+
+### Crawling
+
+```
+make crawl     # shelf crawl --category keyboards --once
+```
+
+It prints a per-retailer summary — pages, offers, price points, how many linked to a seeded
+product, errors — and writes into the database you just migrated. Fetched bodies land under
+`data/raw/<run>/`, content-addressed, and every attempt gets a `raw_fetches` row.
+
+The crawl is paced by `max_rps` in the category file (one request every five seconds per domain
+today), so a full cycle takes about half a minute of mostly waiting. That is deliberate.
 
 ## Configuration
 

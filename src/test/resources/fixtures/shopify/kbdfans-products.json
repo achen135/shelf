@@ -1,0 +1,96 @@
+{
+  "products": [
+    {
+      "id": 6768407347339,
+      "title": "KBDfans SOLAR keyboard kit",
+      "handle": "kbdfans-solar-keyboard-kit",
+      "vendor": "KBDfans",
+      "product_type": "Keyboard Kit",
+      "tags": [
+        "Group Buy",
+        "Interest Check",
+        "Keyboard",
+        "on-sale",
+        "spo-default",
+        "spo-disabled"
+      ],
+      "published_at": "2022-03-02T14:57:50+08:00",
+      "body_html": "<div class=\"shogun-root\" data-shogun-id=\"638dd038e21b4d00c91d9c1d\" data-shogun-site-id=\"be5a2c2a-7dab-4b1d-af92-e98b67c8220b\" data-shogun-page-id=\"638dd038e21b4d00c91d9c1d\" data-shogun-page-version-id=\"665eb7f00e7adb98842d804e\" data-shogun-platform-type=\"shopify\" data-shogun-variant-id=\"665eb7f00e7a",
+      "variants": [
+        {
+          "id": 39983340159115,
+          "title": "Default Title",
+          "sku": "",
+          "price": "0.00",
+          "compare_at_price": null,
+          "available": false,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7601283727499,
+      "title": "KBDfans x MM HE Gaming Keyboard Kit",
+      "handle": "mm-gaming-keyboard-kit",
+      "vendor": "KBDfans",
+      "product_type": "Keyboard Kit",
+      "tags": [
+        "60% DIY KIT",
+        "BFCM2025",
+        "Gaming",
+        "Holy60",
+        "In Stock",
+        "Keyboard",
+        "Limited",
+        "New arrival",
+        "Redux"
+      ],
+      "published_at": "2025-09-09T14:40:03+08:00",
+      "body_html": "<div class=\"shogun-root\" data-shogun-id=\"6757e818fb8c40dd8fca6264\" data-shogun-site-id=\"be5a2c2a-7dab-4b1d-af92-e98b67c8220b\" data-shogun-page-id=\"6757e818fb8c40dd8fca6264\" data-shogun-page-version-id=\"698d2f84c9b3aba98cc5f986\" data-shogun-platform-type=\"shopify\" data-shogun-variant-id=\"698d2f85c9b3",
+      "variants": [
+        {
+          "id": 42943385665675,
+          "title": "61 key layout",
+          "sku": "ZH19378",
+          "price": "80.00",
+          "compare_at_price": null,
+          "available": false,
+          "requires_shipping": true,
+          "taxable": true
+        },
+        {
+          "id": 42943385698443,
+          "title": "64 key layout",
+          "sku": "ZH19379",
+          "price": "80.00",
+          "compare_at_price": null,
+          "available": true,
+          "requires_shipping": true,
+          "taxable": true
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Choose the layout",
+          "position": 1,
+          "values": [
+            "61 key layout",
+            "64 key layout"
+          ]
+        }
+      ]
+    }
+  ]
+}

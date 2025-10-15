@@ -36,7 +36,10 @@ jobs:
           cache: gradle
 
       # Compile (Error Prone) + SpotBugs + Spotless + JUnit, including the Testcontainers
-      # tests — the runner's Docker daemon backs those.
+      # tests — the runner's Docker daemon backs those. This is also where the crawl smoke
+      # lives: CrawlRunIntegrationTest drives the real pipeline (robots, fetch, parse, upsert,
+      # observe) against the fixture HTTP server and a throwaway Postgres, so a break in the
+      # crawl path fails CI without any job here ever touching a live retailer.
       - name: check
         run: ./gradlew --no-daemon check
 
