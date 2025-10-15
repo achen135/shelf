@@ -1,0 +1,56 @@
+# Shelf category config — mechanical keyboards.
+# A category is defined entirely here: its spec schema, its retailers + how to fetch each,
+# and a seed product list to bootstrap the catalog. Adding a category = a file like this
+# plus parsers; no pipeline code changes (proven in M7 with monitors).
+
+name: keyboards
+
+# --- spec schema ---------------------------------------------------------------
+# Field -> {type, enum?, unit?}. The app validates products.spec against this.
+spec_schema:
+  switch_type:     { type: string,  enum: [linear, tactile, clicky, silent-linear, silent-tactile] }
+  hot_swap:        { type: boolean }
+  layout_size:     { type: string,  enum: ["full", "1800", "tkl", "75", "65", "60", "40", "alice", "split"] }
+  connectivity:    { type: string,  enum: [wired, "2.4ghz", bluetooth, tri-mode] }
+  keycap_profile:  { type: string,  enum: [oem, cherry, sa, xda, dsa, mt3, kat] }
+  keycap_material: { type: string,  enum: [abs, pbt, unknown] }
+  case_material:   { type: string,  enum: [plastic, aluminum, polycarbonate, wood, other] }
+  mount_type:      { type: string,  enum: [tray, top, gasket, "o-ring", plate, unknown] }
+  key_count:       { type: integer }
+
+# --- retailers ---------------------------------------------------------------
+# Prefer official / affiliate APIs. For each: name, base_url, fetch{mode: api|html, ...},
+# parser (id resolved to a parser class). TODO(M0): finalize this list, fill real details,
+# drop any retailer that forbids scraping.
+retailers:
+  - name: bestbuy
+    base_url: "https://www.bestbuy.com"
+    fetch:
+      mode: api
+      # TODO(M0): Best Buy Products API — endpoint, API key via env BESTBUY_API_KEY, category filter.
+    parser: bestbuy_api
+
+  - name: ebay
+    base_url: "https://www.ebay.com"
+    fetch:
+      mode: api
+      # TODO(M0): eBay Browse API — OAuth app token via env, category_id for keyboards, condition=NEW.
+    parser: ebay_browse_api
+
+  - name: example_retailer
+    base_url: "https://example.com"
+    fetch:
+      mode: html
+      list_paths: ["/collections/keyboards?page={page}"]   # TODO(M0): real listing paths
+      respect_robots: true
+      max_rps: 0.2
+    parser: example_html
+
+# --- seed products ---------------------------------------------------------------
+# Bootstraps the catalog + gives the crawler search terms. TODO(M0): expand to ~30-50.
+seed_products:
+  - { brand: "Keychron",   model: "Q1 Pro",     canonical_name: "Keychron Q1 Pro" }
+  - { brand: "GMMK",       model: "Pro",         canonical_name: "Glorious GMMK Pro" }
+  - { brand: "NuPhy",      model: "Air75 V2",    canonical_name: "NuPhy Air75 V2" }
+  - { brand: "Wooting",    model: "60HE",        canonical_name: "Wooting 60HE" }
+  - { brand: "Logitech",   model: "MX Mechanical", canonical_name: "Logitech MX Mechanical" }

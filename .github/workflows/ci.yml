@@ -1,0 +1,37 @@
+# Shelf CI. SKELETON — TODO(M0): make this green.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: shelf
+          POSTGRES_USER: shelf
+          POSTGRES_PASSWORD: shelf
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U shelf -d shelf"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      SHELF_DB_URL: jdbc:postgresql://localhost:5432/shelf
+      SHELF_DB_USER: shelf
+      SHELF_DB_PASSWORD: shelf
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: check (compile + spotbugs + junit)
+        run: ./gradlew --no-daemon check
+      - name: flyway migrate from empty
+        run: ./gradlew --no-daemon flywayMigrate flywayInfo
+      # TODO(M1): crawl smoke against the fixture server

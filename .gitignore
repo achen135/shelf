@@ -1,0 +1,24 @@
+# Java / Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+*.class
+
+# Crawler output — raw fetched bodies are large and not source of truth
+/data/raw/*
+!/data/raw/.gitkeep
+
+# Local env / secrets
+.env
+.env.local
+*.local
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS
+.DS_Store

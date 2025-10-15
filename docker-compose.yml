@@ -1,0 +1,23 @@
+# Shelf local infra. M0: postgres only. M2+ adds coordinator/worker; M6 adds api.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: shelf
+      POSTGRES_USER: shelf
+      POSTGRES_PASSWORD: shelf
+    ports:
+      - "5432:5432"
+    volumes:
+      - shelf_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shelf -d shelf"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # TODO(M2): coordinator + worker services (build from ./ , command = cli subcommand).
+  # TODO(M6): api service exposing 8080.
+
+volumes:
+  shelf_pgdata:
