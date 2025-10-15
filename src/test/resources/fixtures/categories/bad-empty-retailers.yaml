@@ -1,0 +1,6 @@
+name: widgets
+spec_schema:
+  finish: { type: string }
+retailers: []
+seed_products:
+  - { brand: "ShopOne", model: "W1", canonical_name: "ShopOne W1" }
