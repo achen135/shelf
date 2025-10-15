@@ -1,0 +1,7 @@
+# Names our product token specifically: a site that does not want ShelfBot, while allowing
+# everyone else. The crawler must obey the more specific group.
+User-agent: ShelfBot
+Disallow: /
+
+User-agent: *
+Allow: /

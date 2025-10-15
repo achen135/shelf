@@ -31,19 +31,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class FixtureServer implements AutoCloseable {
 
   /** One scripted response. */
-  public record Response(int status, String body, String contentType, Duration delay) {
+  public record Response(
+      int status, String body, String contentType, Duration delay, boolean gzip) {
 
     public static Response ok(String body, String contentType) {
-      return new Response(200, body, contentType, Duration.ZERO);
+      return new Response(200, body, contentType, Duration.ZERO, false);
     }
 
     public static Response status(int status, String body) {
-      return new Response(status, body, "text/plain; charset=utf-8", Duration.ZERO);
+      return new Response(status, body, "text/plain; charset=utf-8", Duration.ZERO, false);
     }
 
     /** A response that arrives after {@code delay} — used to exercise client timeouts. */
     public Response delayedBy(Duration delay) {
-      return new Response(status, body, contentType, delay);
+      return new Response(status, body, contentType, delay, gzip);
+    }
+
+    /**
+     * The same response, gzip-encoded with a {@code Content-Encoding: gzip} header — which is what
+     * every real retailer sends back once a client advertises gzip support.
+     */
+    public Response gzipped() {
+      return new Response(status, body, contentType, delay, true);
     }
   }
 
@@ -150,11 +159,29 @@ public final class FixtureServer implements AutoCloseable {
     }
 
     byte[] bytes = response.body().getBytes(StandardCharsets.UTF_8);
+    if (response.gzip()) {
+      bytes = gzip(bytes);
+      exchange.getResponseHeaders().add("Content-Encoding", "gzip");
+    }
     exchange.getResponseHeaders().add("Content-Type", response.contentType());
     exchange.sendResponseHeaders(response.status(), bytes.length);
     try (OutputStream out = exchange.getResponseBody()) {
       out.write(bytes);
     }
+  }
+
+  private static byte[] gzip(byte[] raw) throws IOException {
+    var out = new java.io.ByteArrayOutputStream();
+    try (var gz = new java.util.zip.GZIPOutputStream(out)) {
+      gz.write(raw);
+    }
+    return out.toByteArray();
+  }
+
+  /** Serves a gzip-encoded body at {@code path}, as a real retailer would. */
+  public FixtureServer serveGzipped(String path, String body, String contentType) {
+    scripted.put(path, List.of(Response.ok(body, contentType).gzipped()));
+    return this;
   }
 
   @Override

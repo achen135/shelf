@@ -1,6 +1,7 @@
 package com.achen.shelf.db;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.achen.shelf.testing.PostgresTestBase;
 import java.sql.Connection;
@@ -80,6 +81,30 @@ class MigrationAndPartitionTest extends PostgresTestBase {
 
     assertThat(first).isEqualTo("price_observations_2032_01").isEqualTo(second);
     assertThat(partitionNames()).filteredOn("price_observations_2032_01"::equals).hasSize(1);
+  }
+
+  @Test
+  void refusesAnObservationWithNoPartition() throws SQLException {
+    // No DEFAULT partition, on purpose: a row outside every known month should fail loudly
+    // rather than land in a catch-all that later blocks ATTACH for that month.
+    long runId = new CrawlRunDao(DB).open("keyboards", Instant.now(), 1);
+    long productId = new ProductDao(DB).upsert("keyboards", "B", "M", "b", "m", "B M", "{}");
+    long offerId =
+        new OfferDao(DB).upsert("shop", "https://shop.test/p/1", "B M", null, "USD", productId);
+    ObservationDao observations = new ObservationDao(DB);
+
+    assertThatThrownBy(
+            () ->
+                observations.record(
+                    offerId,
+                    Instant.parse("1999-01-01T00:00:00Z"),
+                    1000,
+                    0,
+                    true,
+                    runId,
+                    ObservationDao.Source.OBSERVED))
+        .isInstanceOf(SQLException.class)
+        .hasMessageContaining("partition");
   }
 
   private static List<String> tables() throws SQLException {

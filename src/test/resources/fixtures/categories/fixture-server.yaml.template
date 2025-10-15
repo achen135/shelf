@@ -1,0 +1,73 @@
+# Category config used by the end-to-end crawl test. __PORT__ is replaced with the fixture
+# server's ephemeral port before loading, so the crawl runs through the real config loader
+# rather than a hand-built object.
+name: keyboards
+
+spec_schema:
+  switch_type:     { type: string,  enum: [linear, tactile, clicky, silent-linear, silent-tactile, magnetic, topre, optical] }
+  hot_swap:        { type: boolean }
+  layout_size:     { type: string,  enum: ["full", "1800", "tkl", "75", "65", "60", "40", "alice", "split"] }
+  connectivity:    { type: string,  enum: [wired, "2.4ghz", bluetooth, tri-mode] }
+  keycap_material: { type: string,  enum: [abs, pbt, unknown] }
+  case_material:   { type: string,  enum: [plastic, aluminum, polycarbonate, wood, other] }
+  mount_type:      { type: string,  enum: [tray, top, gasket, "o-ring", plate, unknown] }
+  key_count:       { type: integer }
+
+retailers:
+  # mode: api — the Shopify product JSON path, paged until a page comes back empty.
+  - name: json_store
+    base_url: "http://127.0.0.1:__PORT__"
+    brand_source: fixed
+    brand: Keychron
+    fetch:
+      mode: api
+      list_paths: ["/collections/keyboards/products.json?limit={limit}&page={page}"]
+      page_size: 250
+      max_pages: 3
+      max_rps: 2.0
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+
+  # mode: html — the Jsoup path over a rendered collection page.
+  - name: html_store
+    base_url: "http://127.0.0.1:__PORT__"
+    brand_source: vendor
+    fetch:
+      mode: html
+      list_paths: ["/collections/html-keyboards"]
+      page_size: 1
+      max_pages: 1
+      max_rps: 2.0
+      respect_robots: true
+    parser: shopify_collection_html
+
+  # Its only list path is one robots.txt disallows, so the crawl must skip it without fetching.
+  - name: forbidden_store
+    base_url: "http://127.0.0.1:__PORT__"
+    brand_source: vendor
+    fetch:
+      mode: api
+      list_paths: ["/collections/keyboards/products.json?sort_by=price&page={page}"]
+      page_size: 250
+      max_pages: 1
+      max_rps: 2.0
+      respect_robots: true
+    parser: shopify_products_json
+
+  # Disabled: must not be fetched at all.
+  - name: disabled_store
+    base_url: "http://127.0.0.1:__PORT__"
+    enabled: false
+    brand_source: vendor
+    fetch:
+      mode: api
+      list_paths: ["/collections/never/products.json?page={page}"]
+      max_rps: 2.0
+    parser: shopify_products_json
+
+seed_products:
+  - { brand: "Keychron", model: "Q6 HE",    canonical_name: "Keychron Q6 HE" }
+  - { brand: "Keychron", model: "K2 Ultra", canonical_name: "Keychron K2 Ultra" }
+  - { brand: "Wooting",  model: "80HE",     canonical_name: "Wooting 80HE" }
+  - { brand: "Keychron", model: "Q65",      canonical_name: "Keychron Q65 (not in the fixtures)" }
