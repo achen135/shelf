@@ -1,0 +1,16 @@
+<!-- Console logging for the CLI. Crawl progress at INFO; parser detail at DEBUG. -->
+<configuration>
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} %-5level %logger{24} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="com.achen.shelf" level="INFO"/>
+  <logger name="com.zaxxer.hikari" level="WARN"/>
+  <logger name="org.flywaydb" level="INFO"/>
+
+  <root level="WARN">
+    <appender-ref ref="console"/>
+  </root>
+</configuration>
