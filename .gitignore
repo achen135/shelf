@@ -22,3 +22,7 @@ build/
 
 # OS
 .DS_Store
+
+# Internal planning docs — not part of the published repo
+/CLAUDE.md
+/docs/
