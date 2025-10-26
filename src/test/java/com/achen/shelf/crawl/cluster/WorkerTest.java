@@ -350,10 +350,22 @@ class WorkerTest extends PostgresTestBase {
     List<Instant> pages =
         server.requestTimes(FixtureCategory.HTML_LIST_PATH).stream().sorted().toList();
     assertThat(pages).hasSize(8);
+
+    // The slots themselves are exactly 500ms apart in database time — RateLimitDaoTest proves
+    // that. What arrives at the server is slot + sleep wake-up + scheduling, which on a loaded
+    // CI runner jitters by tens of milliseconds either way, so the exact interval is not
+    // asserted per gap here. Two things are: the pool's overall rate — eight requests through one
+    // 2 rps bucket cannot span less than 7 × 500ms, whereas four private budgets would have
+    // finished in about a second — and the absence of any burst, two requests inside half an
+    // interval, which is what per-worker budgets would have produced.
+    Duration span = Duration.between(pages.get(0), pages.get(pages.size() - 1));
+    assertThat(span)
+        .as("8 requests through one 2 rps bucket")
+        .isGreaterThanOrEqualTo(Duration.ofMillis(3400));
     for (int i = 1; i < pages.size(); i++) {
       assertThat(Duration.between(pages.get(i - 1), pages.get(i)))
           .as("gap before page request %d", i)
-          .isGreaterThanOrEqualTo(Duration.ofMillis(450));
+          .isGreaterThanOrEqualTo(Duration.ofMillis(250));
     }
   }
 

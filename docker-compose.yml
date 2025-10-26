@@ -25,7 +25,9 @@ services:
       retries: 10
 
   # One-shot: applies the Flyway migrations, then exits. The crawler services wait for it.
+  # All three shelf services name the same image, so one build serves them all.
   migrate:
+    image: shelf:local
     build: .
     command: ["migrate"]
     environment: &shelf_env
@@ -38,6 +40,7 @@ services:
 
   # The leader-elected scheduler. `deploy.replicas: 2` gives a standby; only one holds the lock.
   coordinator:
+    image: shelf:local
     build: .
     command: ["coordinator", "--category", "keyboards"]
     environment: *shelf_env
@@ -50,6 +53,7 @@ services:
 
   # The worker pool. Scale it: `docker compose up --scale worker=N`.
   worker:
+    image: shelf:local
     build: .
     command: ["worker"]
     environment: *shelf_env

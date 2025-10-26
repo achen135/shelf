@@ -71,4 +71,4 @@ jobs:
       - name: docker compose build
         run: docker compose build worker
       - name: the image runs
-        run: docker run --rm $(docker compose config --images | grep -v postgres | head -1) --version
+        run: docker run --rm shelf:local --version
