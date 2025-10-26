@@ -1,39 +1,28 @@
 package com.achen.shelf.crawl;
 
 import com.achen.shelf.config.CategoryConfig;
-import com.achen.shelf.config.FetchMode;
 import com.achen.shelf.config.Retailer;
-import com.achen.shelf.config.SpecValidator;
-import com.achen.shelf.crawl.parse.ParseException;
-import com.achen.shelf.crawl.parse.Parser;
-import com.achen.shelf.crawl.parse.ParserRegistry;
 import com.achen.shelf.db.CrawlRunDao;
 import com.achen.shelf.db.Database;
-import com.achen.shelf.db.ObservationDao;
-import com.achen.shelf.db.OfferDao;
 import com.achen.shelf.db.PartitionDao;
 import com.achen.shelf.db.ProductDao;
-import com.achen.shelf.db.RawFetchDao;
-import com.achen.shelf.db.RobotsCacheDao;
 import java.sql.SQLException;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * One crawl cycle, start to finish, on one thread.
  *
- * <p>The sequence per retailer is: check robots.txt, wait for the domain's rate limiter, fetch,
- * store the raw body, parse, validate specs, link to the catalog where possible, then upsert the
- * offer and record one price observation. Correctness first — M2 keeps this pipeline and moves the
- * loop into a queue and a worker pool.
+ * <p>This is {@code shelf crawl --once}: the M1 path, kept as the simplest correct way to run a
+ * cycle and as the reference the distributed path must match. Since M2 the per-page work lives in
+ * {@link PageCrawler}, which the queue-driven worker runs one task at a time; this class is that
+ * same crawler driven by a plain nested loop instead of a queue.
  *
  * <p>Two invariants worth stating because later milestones depend on them. Every URL fetched is
  * built from configuration (a retailer's base_url plus one of its list_paths): nothing is
@@ -46,17 +35,11 @@ public final class CrawlRunner {
 
   private static final Logger log = LoggerFactory.getLogger(CrawlRunner.class);
 
-  private final Fetcher fetcher;
+  private final Database db;
   private final Clock clock;
-  private final RobotsGate robots;
-  private final DomainRateLimiter rateLimiter;
-  private final RawStore rawStore;
-
+  private final PageCrawler pages;
   private final CrawlRunDao runs;
   private final ProductDao products;
-  private final OfferDao offers;
-  private final ObservationDao observations;
-  private final RawFetchDao rawFetches;
   private final PartitionDao partitions;
 
   public CrawlRunner(Database db, Fetcher fetcher, RawStore rawStore) {
@@ -71,46 +54,39 @@ public final class CrawlRunner {
    * nothing was written twice.
    */
   public CrawlRunner(Database db, Fetcher fetcher, RawStore rawStore, Clock clock) {
+    this.db = db;
     this.clock = clock;
-    this.fetcher = fetcher;
-    this.rawStore = rawStore;
-    this.robots = new RobotsGate(fetcher, new RobotsCacheDao(db));
-    this.rateLimiter = new DomainRateLimiter();
+    this.pages = new PageCrawler(db, fetcher, rawStore);
     this.runs = new CrawlRunDao(db);
     this.products = new ProductDao(db);
-    this.offers = new OfferDao(db);
-    this.observations = new ObservationDao(db);
-    this.rawFetches = new RawFetchDao(db);
     this.partitions = new PartitionDao(db);
   }
 
   /** Runs one cycle over every enabled retailer in the category. */
   public CrawlSummary runOnce(CategoryConfig category) throws SQLException, InterruptedException {
     Instant startedAt = clock.instant().truncatedTo(ChronoUnit.MILLIS);
-    ParserRegistry parsers = ParserRegistry.forCategory(category);
-    checkParsersResolve(category, parsers);
 
     // Both months, so a run near a boundary — or the first run of a new month — has somewhere
     // to write without a human having created the partition first.
     partitions.ensurePartition(startedAt);
     partitions.ensurePartition(startedAt.plus(31, ChronoUnit.DAYS));
 
+    CrawlContext ctx = CrawlContext.bootstrap(category, products);
     long runId = runs.open(category.name(), startedAt, 1);
-    SeedCatalog catalog = SeedCatalog.bootstrap(category, products);
     log.info(
         "crawl run {} started: category={} seeds={} retailers={}",
         runId,
         category.name(),
-        catalog.size(),
+        ctx.catalog().size(),
         category.enabledRetailers().size());
 
-    SpecValidator specValidator = new SpecValidator(category.specSchema());
     List<CrawlSummary.RetailerSummary> summaries = new ArrayList<>();
     for (Retailer retailer : category.enabledRetailers()) {
-      summaries.add(crawlRetailer(retailer, parsers, specValidator, catalog, runId, startedAt));
+      summaries.add(crawlRetailer(ctx, retailer, runId, startedAt));
     }
 
-    CrawlSummary summary = new CrawlSummary(runId, category.name(), summaries, catalog.size());
+    CrawlSummary summary =
+        new CrawlSummary(runId, category.name(), summaries, ctx.catalog().size());
     runs.finish(runId, summary.totalPages(), summary.totalErrors(), clock.instant());
     log.info(
         "crawl run {} finished: pages={} offers={} observations={} matched={} errors={}",
@@ -124,16 +100,9 @@ public final class CrawlRunner {
   }
 
   private CrawlSummary.RetailerSummary crawlRetailer(
-      Retailer retailer,
-      ParserRegistry parsers,
-      SpecValidator specValidator,
-      SeedCatalog catalog,
-      long runId,
-      Instant observedAt)
+      CrawlContext ctx, Retailer retailer, long runId, Instant observedAt)
       throws SQLException, InterruptedException {
-
-    Parser parser = parsers.get(retailer.parser());
-    int pages = 0;
+    int pageCount = 0;
     int offersSeen = 0;
     int offersWritten = 0;
     int observationsWritten = 0;
@@ -141,99 +110,41 @@ public final class CrawlRunner {
     int errors = 0;
     int skippedByRobots = 0;
 
-    // robots.txt can only ever slow us down relative to the configured rate.
-    Optional<Duration> crawlDelay = robots.crawlDelay(retailer.baseUrl() + "/");
-    rateLimiter.configure(retailer.baseUrl(), retailer.fetch().maxRps(), crawlDelay.orElse(null));
-    crawlDelay.ifPresent(
-        delay -> log.info("{}: honouring robots.txt Crawl-delay of {}", retailer.name(), delay));
-
     for (String listPath : retailer.fetch().listPaths()) {
       for (int page = 1; page <= retailer.fetch().maxPages(); page++) {
-        String url = buildUrl(retailer, listPath, page);
+        PageCrawler.Target target = new PageCrawler.Target(retailer, listPath, page);
+        PageCrawler.Fetched fetched = pages.fetch(ctx, target, runId);
 
-        if (!robots.allows(url)) {
-          log.warn("{}: robots.txt disallows {} — skipping", retailer.name(), url);
+        if (fetched instanceof PageCrawler.Fetched.SkippedByRobots) {
           skippedByRobots++;
           continue;
         }
-
-        rateLimiter.acquire(url);
-        FetchResult result = fetcher.fetch(url);
-        String bodyRef =
-            result.succeeded()
-                ? rawStore.store(runId, result.body().orElseThrow(), extensionFor(retailer))
-                : null;
-        rawFetches.record(url, runId, result.status().orElse(null), bodyRef);
-
-        if (!result.succeeded()) {
-          log.warn(
-              "{}: fetch failed after {} attempts: {} ({})",
-              retailer.name(),
-              result.attempts(),
-              url,
-              result.failure().orElse("unknown"));
+        if (fetched instanceof PageCrawler.Fetched.Failed) {
           errors++;
           break; // a failing page means later pages of the same path are not worth trying
         }
 
-        List<ParsedOffer> parsed;
-        try {
-          parsed = parser.parse(retailer, result.body().orElseThrow(), url);
-        } catch (ParseException e) {
-          log.warn("{}: could not parse {}: {}", retailer.name(), url, e.getMessage());
-          errors++;
-          break;
-        }
-
-        pages++;
+        List<ParsedOffer> parsed = ((PageCrawler.Fetched.Parsed) fetched).offers();
+        pageCount++;
         offersSeen += parsed.size();
         if (parsed.isEmpty()) {
-          log.debug("{}: {} returned no offers — end of this list path", retailer.name(), url);
+          log.debug(
+              "{}: {} returned no offers — end of this list path", retailer.name(), fetched.url());
           break;
         }
 
-        for (ParsedOffer offer : parsed) {
-          Optional<Long> productId = catalog.match(offer.brand(), offer.title());
-          if (productId.isPresent()) {
-            matched++;
-          }
-          SpecValidator.Result specs = specValidator.validate(offer.specFields());
-          if (!specs.isClean()) {
-            log.debug(
-                "{}: dropped spec values for {}: {}",
-                retailer.name(),
-                offer.url(),
-                specs.warnings());
-          }
-          long offerId =
-              offers.upsert(
-                  retailer.name(),
-                  offer.url(),
-                  offer.title(),
-                  offer.retailerSku(),
-                  offer.currency(),
-                  productId.orElse(null));
-          offersWritten++;
-          boolean inserted =
-              observations.record(
-                  offerId,
-                  observedAt,
-                  offer.priceCents(),
-                  offer.shippingCents(),
-                  offer.inStock(),
-                  runId,
-                  ObservationDao.Source.OBSERVED);
-          if (inserted) {
-            observationsWritten++;
-          }
-        }
+        PageCrawler.Written written =
+            db.transaction(c -> pages.write(c, ctx, retailer, parsed, runId, observedAt));
+        offersWritten += written.offersWritten();
+        observationsWritten += written.observationsWritten();
+        matched += written.matched();
       }
     }
 
     log.info(
         "{}: pages={} offers={} observations={} matched={} errors={}",
         retailer.name(),
-        pages,
+        pageCount,
         offersWritten,
         observationsWritten,
         matched,
@@ -241,7 +152,7 @@ public final class CrawlRunner {
     return new CrawlSummary.RetailerSummary(
         retailer.name(),
         retailer.fetch().mode().name().toLowerCase(Locale.ROOT),
-        pages,
+        pageCount,
         offersSeen,
         offersWritten,
         observationsWritten,
@@ -250,44 +161,8 @@ public final class CrawlRunner {
         skippedByRobots);
   }
 
-  /**
-   * Substitutes the per-request placeholders into a configured list path.
-   *
-   * <p>An unresolved placeholder is a configuration error and is raised as one: the disabled Best
-   * Buy and eBay entries carry placeholders ({@code {category_path_id}}, {@code {query}}) that are
-   * deliberately unfilled, and enabling one without finishing its config should fail loudly rather
-   * than fetch a URL with a brace in it.
-   */
+  /** The URL for a page of a list path; see {@link PageCrawler#buildUrl}. */
   static String buildUrl(Retailer retailer, String listPath, int page) {
-    String path =
-        listPath
-            .replace("{page}", String.valueOf(page))
-            .replace("{limit}", String.valueOf(retailer.fetch().pageSize()));
-    if (path.indexOf('{') >= 0) {
-      throw new IllegalStateException(
-          "retailer '"
-              + retailer.name()
-              + "' has an unresolved placeholder in list_path '"
-              + listPath
-              + "' — finish its config before enabling it");
-    }
-    return retailer.baseUrl() + path;
-  }
-
-  private void checkParsersResolve(CategoryConfig category, ParserRegistry parsers) {
-    for (Retailer retailer : category.enabledRetailers()) {
-      if (!parsers.has(retailer.parser())) {
-        throw new ParseException(
-            "retailer '"
-                + retailer.name()
-                + "' names parser '"
-                + retailer.parser()
-                + "', which is not registered");
-      }
-    }
-  }
-
-  private static String extensionFor(Retailer retailer) {
-    return retailer.fetch().mode() == FetchMode.API ? "json" : "html";
+    return PageCrawler.buildUrl(retailer, listPath, page);
   }
 }

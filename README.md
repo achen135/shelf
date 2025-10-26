@@ -8,12 +8,15 @@ A *category* is a config file — its spec schema, its retailers and how to fetc
 products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
 never touches the open web: it visits the paths a category file names, and nothing else.
 
-> **Status: M1 complete.** `shelf crawl --category keyboards --once` crawls five live retailers
-> and writes real price history; a cycle on 2026-09-10 recorded **7,556 offers and 7,556 price
-> observations across 10 pages with no errors**, and a second cycle added a second price point
-> per offer without duplicating a single one. M2 makes it distributed. See `docs/Spec.md` §7 for
-> the milestone plan, `docs/Sessions.md` for what each one actually did (including the numbers
-> above and how to re-derive them), and `CLAUDE.md` for the working agreement.
+> **Status: M2 complete.** The crawler is distributed: a leader-elected coordinator enqueues
+> cycles into a Postgres work queue (`FOR UPDATE SKIP LOCKED`, 15 s leases heartbeated every
+> 5 s, exponential retry, dead-letter) and a pool of workers claims pages from it, sharing one
+> per-domain politeness budget. A cycle over five live retailers records **7,556 offers and
+> 7,556 price observations across 10 pages with no errors** at 1 or 4 workers; SIGKILLing a
+> worker mid-page is recovered in **13.0 s** with zero duplicate observations, and SIGKILLing the
+> leader fails over in **4.9 s** — both automated tests, numbers in `docs/benchmarks/`. See
+> `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each one actually did,
+> and `CLAUDE.md` for the working agreement.
 
 ## Prereqs
 
@@ -32,7 +35,8 @@ make down
 
 `make test` starts a throwaway Postgres via Testcontainers, so Docker must be running. On
 macOS with Docker Desktop this works without further setup; see the comment in
-`build.gradle.kts` if your Docker socket lives somewhere unusual.
+`build.gradle.kts` if your Docker socket lives somewhere unusual. Two of the tests launch real
+`shelf` subprocesses and SIGKILL them; they take about a minute between them.
 
 ### Crawling
 
@@ -46,6 +50,28 @@ product, errors — and writes into the database you just migrated. Fetched bodi
 
 The crawl is paced by `max_rps` in the category file (one request every five seconds per domain
 today), so a full cycle takes about half a minute of mostly waiting. That is deliberate.
+
+### The distributed crawler
+
+```
+docker compose up --scale worker=4      # postgres + migrate + 2 coordinators (one leads) + 4 workers
+docker kill shelf-worker-2              # its leased page is back in the queue within 15 s + 5 s
+docker kill $(docker compose ps -q coordinator | head -1)   # the standby leads within 5 s
+```
+
+Or without Docker, against `make up`'s Postgres: `shelf worker` in as many terminals as you like,
+then `shelf coordinator --category keyboards --once` to run one cycle and print its summary.
+`scripts/throughput.sh N` does exactly that with N workers and reports pages/sec from the
+database. Timings (`--lease`, `--heartbeat`, `--poll`, …) are flags; the defaults and what they
+were measured at are in `docs/benchmarks/m2-distributed-crawler.md`.
+
+A few queries worth having at `make psql`:
+
+```sql
+select state, count(*) from crawl_tasks where crawl_run_id = (select max(id) from crawl_runs) group by 1;
+select a.application_name from pg_locks l join pg_stat_activity a on a.pid = l.pid where l.locktype = 'advisory';
+select domain, next_allowed_at from domain_rate_limits;
+```
 
 ## Configuration
 
@@ -68,11 +94,13 @@ environment variable that holds it.
 ```
 categories/           per-category config (spec schema, retailers, seed products)
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
+scripts/              throughput.sh — the 1-vs-N worker benchmark
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli)
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker
   config/             config loading + validation
-  db/                 HikariCP pool + thin JDBC query layer (no ORM)
-  crawl/              fetcher, robots, rate limiting, per-retailer parsers
+  db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
+  crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
+  crawl/cluster/      coordinator (leader election, cycles, reaping) + worker pool
   resolve/            entity resolution  (M3)
   rollup/             price rollups        (M4)
   signal/             buy/wait signal + backtest (M5)
@@ -80,7 +108,8 @@ src/main/java/com/achen/shelf/
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
 data/raw/             fetched response bodies (gitignored)
-docker-compose.yml    postgres:16 (coordinator/worker/api services added later)
+Dockerfile            one image, one `shelf` subcommand per compose service
+docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable); api in M6
 ```
 
 ## Crawler conduct

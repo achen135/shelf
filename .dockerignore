@@ -1,0 +1,10 @@
+.git
+.gradle
+build
+data/raw/*
+docs
+CLAUDE.md
+*.md
+.idea
+.vscode
+.env*

@@ -50,6 +50,22 @@ public final class ObservationDao {
       long crawlRunId,
       Source source)
       throws SQLException {
+    try (Connection c = db.connection()) {
+      return record(c, offerId, observedAt, priceCents, shippingCents, inStock, crawlRunId, source);
+    }
+  }
+
+  /** As above, on a caller-owned connection, for the worker's single-transaction write. */
+  public boolean record(
+      Connection c,
+      long offerId,
+      Instant observedAt,
+      int priceCents,
+      int shippingCents,
+      boolean inStock,
+      long crawlRunId,
+      Source source)
+      throws SQLException {
     String sql =
         """
         insert into price_observations
@@ -57,8 +73,7 @@ public final class ObservationDao {
         values (?, ?, ?, ?, ?, ?, ?)
         on conflict (offer_id, observed_at) do nothing
         """;
-    try (Connection c = db.connection();
-        PreparedStatement ps = c.prepareStatement(sql)) {
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
       ps.setLong(1, offerId);
       ps.setTimestamp(2, Timestamp.from(observedAt));
       ps.setInt(3, priceCents);

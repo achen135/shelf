@@ -55,8 +55,16 @@ public abstract class PostgresTestBase {
     try (Connection c = DB.connection();
         Statement s = c.createStatement()) {
       s.execute(
-          "truncate price_observations, raw_fetches, offers, products, crawl_runs, robots_cache"
-              + " restart identity cascade");
+          "truncate price_observations, raw_fetches, offers, products, crawl_tasks, crawl_runs,"
+              + " robots_cache, domain_rate_limits restart identity cascade");
+    }
+  }
+
+  /** Convenience: runs one statement that returns nothing. */
+  protected static void execute(String sql) throws SQLException {
+    try (Connection c = DB.connection();
+        Statement s = c.createStatement()) {
+      s.execute(sql);
     }
   }
 

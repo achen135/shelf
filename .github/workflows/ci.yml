@@ -39,9 +39,15 @@ jobs:
       # tests — the runner's Docker daemon backs those. This is also where the crawl smoke
       # lives: CrawlRunIntegrationTest drives the real pipeline (robots, fetch, parse, upsert,
       # observe) against the fixture HTTP server and a throwaway Postgres, so a break in the
-      # crawl path fails CI without any job here ever touching a live retailer.
+      # crawl path fails CI without any job here ever touching a live retailer. M2's recovery
+      # tests run here too: they launch real `shelf worker` / `shelf coordinator` JVMs from the
+      # test classpath and SIGKILL them, so they need nothing the unit tests do not.
       - name: check
         run: ./gradlew --no-daemon check
+
+      - name: recovery numbers
+        if: always()
+        run: cat build/benchmarks/*.txt || true
 
       # Proves the migrations apply to a database that has never seen them.
       - name: flyway migrate from an empty database
@@ -55,3 +61,14 @@ jobs:
           path: |
             build/reports/tests/test
             build/reports/spotbugs
+
+  # The compose demo is a deliverable (M2): prove the image still builds. A separate job so
+  # the from-scratch Gradle build inside Docker does not sit on the test job's critical path.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker compose build
+        run: docker compose build worker
+      - name: the image runs
+        run: docker run --rm $(docker compose config --images | grep -v postgres | head -1) --version

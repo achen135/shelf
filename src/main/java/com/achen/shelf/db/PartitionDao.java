@@ -24,8 +24,14 @@ public final class PartitionDao {
    * whether this stays a per-run call or moves to pg_partman.
    */
   public String ensurePartition(Instant when) throws SQLException {
-    try (Connection c = db.connection();
-        PreparedStatement ps = c.prepareStatement("select ensure_price_partition(?)")) {
+    try (Connection c = db.connection()) {
+      return ensurePartition(c, when);
+    }
+  }
+
+  /** As above, on a caller-owned connection (the coordinator opens cycles on its lock session). */
+  public static String ensurePartition(Connection c, Instant when) throws SQLException {
+    try (PreparedStatement ps = c.prepareStatement("select ensure_price_partition(?)")) {
       ps.setTimestamp(1, Timestamp.from(when));
       try (ResultSet rs = ps.executeQuery()) {
         rs.next();

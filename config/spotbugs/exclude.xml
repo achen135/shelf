@@ -20,8 +20,10 @@
   </Match>
 
   <!--
-    Injected collaborators — the connection pool, and the DAOs handed to crawl services — are
-    shared on purpose: a pool that were defensively copied would not be a pool.
+    Injected collaborators — the connection pool, the DAOs handed to crawl services, the
+    PageCrawler handed to a Worker — are shared on purpose: a pool that were defensively copied
+    would not be a pool. LeaderLock.connection() hands out the one session the advisory lock
+    lives on, which is the entire point of the class.
   -->
   <Match>
     <Or>
@@ -30,6 +32,9 @@
       <Class name="com.achen.shelf.crawl.CrawlRunner"/>
       <Class name="com.achen.shelf.crawl.CrawlSummary"/>
       <Class name="com.achen.shelf.crawl.ParsedOffer"/>
+      <Class name="com.achen.shelf.crawl.PageCrawler"/>
+      <Class name="com.achen.shelf.crawl.cluster.Worker"/>
+      <Class name="com.achen.shelf.crawl.cluster.LeaderLock"/>
     </Or>
     <Or>
       <Bug pattern="EI_EXPOSE_REP"/>

@@ -10,10 +10,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -60,6 +62,7 @@ public final class FixtureServer implements AutoCloseable {
   private final Map<String, List<Response>> scripted = new ConcurrentHashMap<>();
   private final Map<String, AtomicInteger> hits = new ConcurrentHashMap<>();
   private final List<String> userAgents = java.util.Collections.synchronizedList(new ArrayList<>());
+  private final Map<String, List<Instant>> requestTimes = new ConcurrentHashMap<>();
 
   private FixtureServer(HttpServer server) {
     this.server = server;
@@ -72,7 +75,11 @@ public final class FixtureServer implements AutoCloseable {
           HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
       FixtureServer fixture = new FixtureServer(http);
       http.createContext("/", fixture::dispatch);
-      http.setExecutor(null);
+      // One virtual thread per request. The default (null) executor handles requests on the
+      // single dispatcher thread, so a response scripted to arrive after a delay would also
+      // hold up every other request — and M2's tests have several workers fetching at once,
+      // one of them deliberately stuck.
+      http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
       http.start();
       return fixture;
     } catch (IOException e) {
@@ -119,6 +126,17 @@ public final class FixtureServer implements AutoCloseable {
     return n == null ? 0 : n.get();
   }
 
+  /** When each request for {@code path} arrived, in arrival order — for asserting on pacing. */
+  public List<Instant> requestTimes(String path) {
+    List<Instant> times = requestTimes.get(path);
+    if (times == null) {
+      return List.of();
+    }
+    synchronized (times) {
+      return List.copyOf(times);
+    }
+  }
+
   /** Every User-Agent header seen, in arrival order. */
   public List<String> userAgents() {
     synchronized (userAgents) {
@@ -144,6 +162,9 @@ public final class FixtureServer implements AutoCloseable {
       key = path;
     }
     int n = hits.computeIfAbsent(key, k -> new AtomicInteger()).incrementAndGet();
+    requestTimes
+        .computeIfAbsent(key, k -> java.util.Collections.synchronizedList(new ArrayList<>()))
+        .add(Instant.now());
 
     Response response =
         responses == null

@@ -23,10 +23,17 @@ public final class RawFetchDao {
   /** Records one HTTP attempt and where its body was stored. */
   public void record(String url, long crawlRunId, Integer status, String bodyRef)
       throws SQLException {
+    try (Connection c = db.connection()) {
+      record(c, url, crawlRunId, status, bodyRef);
+    }
+  }
+
+  /** As above, on a caller-owned connection. */
+  public void record(Connection c, String url, long crawlRunId, Integer status, String bodyRef)
+      throws SQLException {
     String sql =
         "insert into raw_fetches (url, crawl_run_id, status, body_ref) values (?, ?, ?, ?)";
-    try (Connection c = db.connection();
-        PreparedStatement ps = c.prepareStatement(sql)) {
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
       ps.setString(1, url);
       ps.setLong(2, crawlRunId);
       if (status == null) {

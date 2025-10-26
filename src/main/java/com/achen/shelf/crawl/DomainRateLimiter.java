@@ -1,8 +1,11 @@
 package com.achen.shelf.crawl;
 
+import com.achen.shelf.db.RateLimitDao;
 import crawlercommons.domains.EffectiveTldFinder;
 import java.net.URI;
+import java.sql.SQLException;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.LongSupplier;
@@ -18,10 +21,11 @@ import java.util.function.LongSupplier;
  * allowance. A burst is exactly what a small retailer would notice, and the crawl has no deadline
  * that a burst would help meet.
  *
- * <p>State is in memory, which is correct for M1's single process and wrong for M2's worker pool —
- * N workers would each keep their own budget and together exceed it. M2 moves the next-allowed
- * timestamp into Postgres so all workers share one bucket; the interface here is deliberately the
- * one that change can keep.
+ * <p>Where the bucket lives is the {@link SlotStore}. The interval per domain is configuration and
+ * stays in this process; the <em>next-allowed instant</em> is the shared state. {@link #shared}
+ * keeps it in Postgres, so that N workers — separate processes on separate machines — reserve slots
+ * from one bucket and together never exceed a retailer's {@code max_rps}. The in-memory store is
+ * correct for a single process and is what the unit tests drive with a fake clock.
  */
 public final class DomainRateLimiter {
 
@@ -31,20 +35,55 @@ public final class DomainRateLimiter {
     void sleep(Duration duration) throws InterruptedException;
   }
 
-  private final Map<String, Long> nextAllowedNanos = new ConcurrentHashMap<>();
-  private final Map<String, Long> intervalNanos = new ConcurrentHashMap<>();
-  private final LongSupplier nanoTime;
-  private final Sleeper sleeper;
-
-  public DomainRateLimiter() {
-    this(
-        System::nanoTime,
-        duration -> Thread.sleep(duration.toMillis(), duration.toNanosPart() % 1_000_000));
+  /**
+   * Where the next-allowed instant per domain is kept.
+   *
+   * <p>{@link #reserve} atomically takes the next slot for a domain — pushing the domain's
+   * next-allowed instant forward by {@code interval} — and returns how long the caller must wait
+   * before its slot arrives. Zero means "go now".
+   */
+  @FunctionalInterface
+  public interface SlotStore {
+    Duration reserve(String domain, Duration interval);
   }
 
+  private final Map<String, Long> intervalNanos = new ConcurrentHashMap<>();
+  private final SlotStore store;
+  private final Sleeper sleeper;
+
+  /** In-memory pacing on the system clock: right for one process, wrong for a pool. */
+  public DomainRateLimiter() {
+    this(System::nanoTime, DomainRateLimiter::sleepFor);
+  }
+
+  /** In-memory pacing on an explicit clock and sleeper, for tests. */
   public DomainRateLimiter(LongSupplier nanoTime, Sleeper sleeper) {
-    this.nanoTime = nanoTime;
+    this(inMemory(nanoTime), sleeper);
+  }
+
+  public DomainRateLimiter(SlotStore store, Sleeper sleeper) {
+    this.store = store;
     this.sleeper = sleeper;
+  }
+
+  /**
+   * A limiter whose bucket is the {@code domain_rate_limits} table.
+   *
+   * <p>A database failure while reserving a slot surfaces as an unchecked exception rather than a
+   * silent "go ahead": if we cannot prove the slot is ours, the fetch does not happen and the task
+   * fails and is retried — a missed page is recoverable, an impolite burst is not.
+   */
+  public static DomainRateLimiter shared(RateLimitDao dao) {
+    SlotStore store =
+        (domain, interval) -> {
+          try {
+            return dao.reserve(domain, interval).delay();
+          } catch (SQLException e) {
+            throw new IllegalStateException(
+                "could not reserve a rate-limit slot for " + domain + ": " + e.getMessage(), e);
+          }
+        };
+    return new DomainRateLimiter(store, DomainRateLimiter::sleepFor);
   }
 
   /**
@@ -62,15 +101,7 @@ public final class DomainRateLimiter {
   public void acquire(String url) throws InterruptedException {
     String domain = registrableDomain(url);
     long interval = intervalNanos.getOrDefault(domain, Duration.ofSeconds(5).toNanos());
-
-    Duration wait;
-    synchronized (this) {
-      long now = nanoTime.getAsLong();
-      long nextAllowed = nextAllowedNanos.getOrDefault(domain, now);
-      long startAt = Math.max(now, nextAllowed);
-      nextAllowedNanos.put(domain, startAt + interval);
-      wait = Duration.ofNanos(startAt - now);
-    }
+    Duration wait = store.reserve(domain, Duration.ofNanos(interval));
     if (!wait.isZero() && !wait.isNegative()) {
       sleeper.sleep(wait);
     }
@@ -85,5 +116,23 @@ public final class DomainRateLimiter {
     String assigned = EffectiveTldFinder.getAssignedDomain(host, true);
     // Localhost and bare hostnames have no public suffix; the host itself is the right budget.
     return assigned == null ? host : assigned;
+  }
+
+  /** A store that keeps next-allowed instants in this process, on the given clock. */
+  static SlotStore inMemory(LongSupplier nanoTime) {
+    Map<String, Long> nextAllowedNanos = new HashMap<>();
+    return (domain, interval) -> {
+      synchronized (nextAllowedNanos) {
+        long now = nanoTime.getAsLong();
+        long nextAllowed = nextAllowedNanos.getOrDefault(domain, now);
+        long startAt = Math.max(now, nextAllowed);
+        nextAllowedNanos.put(domain, startAt + interval.toNanos());
+        return Duration.ofNanos(startAt - now);
+      }
+    };
+  }
+
+  private static void sleepFor(Duration duration) throws InterruptedException {
+    Thread.sleep(duration.toMillis(), duration.toNanosPart() % 1_000_000);
   }
 }
