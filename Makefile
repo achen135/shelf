@@ -3,7 +3,7 @@
 # Everything here works from a fresh clone with only a JDK 21 and Docker installed; Gradle
 # arrives via the committed wrapper.
 
-.PHONY: up down migrate test lint fmt crawl psql clean wrapper
+.PHONY: up down migrate test lint fmt crawl cluster bench psql clean wrapper
 
 ## bring up local infra (postgres on :5432)
 up:
@@ -32,9 +32,18 @@ lint:
 fmt:
 	./gradlew spotlessApply
 
-## one crawl cycle over the keyboards seed set (M1)
+## one crawl cycle over the keyboards seed set, single process (M1)
 crawl:
 	./gradlew run --args="crawl --category keyboards --once"
+
+## the distributed crawler in compose: postgres + migrate + 2 coordinators + N workers (M2)
+cluster:
+	docker compose up --build --scale worker=$${WORKERS:-4}
+
+## throughput at 1 and 4 local worker processes against the live retailers (M2)
+bench:
+	scripts/throughput.sh 1
+	scripts/throughput.sh 4
 
 ## psql shell against the local DB
 psql:
