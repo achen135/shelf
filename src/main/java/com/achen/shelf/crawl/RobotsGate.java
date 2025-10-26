@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ public final class RobotsGate {
   private final RobotsCacheDao cache;
   private final SimpleRobotRulesParser parser = new SimpleRobotRulesParser();
   private final Map<String, BaseRobotRules> perOrigin = new ConcurrentHashMap<>();
+  private final ReentrantLock loading = new ReentrantLock();
 
   public RobotsGate(Fetcher fetcher, RobotsCacheDao cache) {
     this.fetcher = fetcher;
@@ -68,7 +70,27 @@ public final class RobotsGate {
   private BaseRobotRules rulesFor(String url) {
     URI uri = URI.create(url);
     String origin = uri.getScheme() + "://" + uri.getAuthority();
-    return perOrigin.computeIfAbsent(origin, this::load);
+    BaseRobotRules rules = perOrigin.get(origin);
+    if (rules != null) {
+      return rules;
+    }
+    // Deliberately not computeIfAbsent: that runs the mapping function while holding a monitor
+    // on the map's bin, and load() blocks on a database read and an HTTP fetch. A virtual
+    // thread that blocks while holding a monitor pins its carrier thread, and a worker whose
+    // loops are all pinned on robots.txt cannot run its heartbeat — or, on a two-core box,
+    // anything else. A j.u.c lock is safe to block under (the waiter unmounts), and one lock
+    // for the whole gate is fine: an origin is loaded once per process, and there are five.
+    loading.lock();
+    try {
+      rules = perOrigin.get(origin);
+      if (rules == null) {
+        rules = load(origin);
+        perOrigin.put(origin, rules);
+      }
+      return rules;
+    } finally {
+      loading.unlock();
+    }
   }
 
   private BaseRobotRules load(String origin) {

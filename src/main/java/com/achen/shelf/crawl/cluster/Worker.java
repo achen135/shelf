@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,6 +119,7 @@ public final class Worker implements AutoCloseable {
   private final ProductDao products;
 
   private final Map<String, CrawlContext> contexts = new HashMap<>();
+  private final ReentrantLock contextsLock = new ReentrantLock();
   private final AtomicBoolean running = new AtomicBoolean(false);
   private final List<Thread> threads = new ArrayList<>();
 
@@ -392,14 +394,27 @@ public final class Worker implements AutoCloseable {
     }
   }
 
-  private synchronized CrawlContext contextFor(String category) throws SQLException {
-    CrawlContext ctx = contexts.get(category);
-    if (ctx == null) {
-      CategoryConfig config = loader.load(categoriesDir, category);
-      ctx = CrawlContext.bootstrap(config, products);
-      contexts.put(category, ctx);
-      log.info("worker {}: loaded category {} ({} seeds)", id, category, ctx.catalog().size());
+  /**
+   * The context for a category, built on first use.
+   *
+   * <p>Guarded by a {@link ReentrantLock} rather than {@code synchronized}: bootstrapping seeds the
+   * catalog, which is database I/O, and a virtual thread that blocks inside a monitor pins its
+   * carrier. With {@code --concurrency} loops all arriving at once on a small machine, that would
+   * starve the heartbeat thread of a carrier just as the leases start counting down.
+   */
+  private CrawlContext contextFor(String category) throws SQLException {
+    contextsLock.lock();
+    try {
+      CrawlContext ctx = contexts.get(category);
+      if (ctx == null) {
+        CategoryConfig config = loader.load(categoriesDir, category);
+        ctx = CrawlContext.bootstrap(config, products);
+        contexts.put(category, ctx);
+        log.info("worker {}: loaded category {} ({} seeds)", id, category, ctx.catalog().size());
+      }
+      return ctx;
+    } finally {
+      contextsLock.unlock();
     }
-    return ctx;
   }
 }

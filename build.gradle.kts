@@ -84,6 +84,12 @@ tasks.test {
     // than depend on whichever Docker the machine happens to run.
     systemProperty("api.version", "1.40")
 
+    // Extra flags for the test JVM. Used to reproduce what a small CI runner does to virtual
+    // threads: SHELF_TEST_JVM_ARGS="-Djdk.virtualThreadScheduler.parallelism=1" runs the whole
+    // suite on a single carrier thread, where anything that blocks while pinned stalls
+    // everything else (see docs/Sessions.md, M2).
+    System.getenv("SHELF_TEST_JVM_ARGS")?.let { jvmArgs(it.split(" ")) }
+
     // Testcontainers looks for /var/run/docker.sock. Docker Desktop on macOS only creates that
     // symlink when "Allow the default Docker socket to be used" is enabled; otherwise the
     // engine is reachable at docker.raw.sock inside the app container. (The socket under

@@ -75,11 +75,14 @@ public final class FixtureServer implements AutoCloseable {
           HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
       FixtureServer fixture = new FixtureServer(http);
       http.createContext("/", fixture::dispatch);
-      // One virtual thread per request. The default (null) executor handles requests on the
+      // A platform thread per request. The default (null) executor handles requests on the
       // single dispatcher thread, so a response scripted to arrive after a delay would also
       // hold up every other request — and M2's tests have several workers fetching at once,
-      // one of them deliberately stuck.
-      http.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+      // one of them deliberately stuck. Platform rather than virtual threads on purpose: the
+      // code under test runs on virtual threads, and the server that answers it must not
+      // compete with it for carrier threads (sun.net.httpserver's streams are synchronized,
+      // which would pin them) — a two-carrier CI runner found that out.
+      http.setExecutor(Executors.newCachedThreadPool(FixtureServer::daemonThread));
       http.start();
       return fixture;
     } catch (IOException e) {
@@ -189,6 +192,12 @@ public final class FixtureServer implements AutoCloseable {
     try (OutputStream out = exchange.getResponseBody()) {
       out.write(bytes);
     }
+  }
+
+  private static Thread daemonThread(Runnable r) {
+    Thread t = new Thread(r, "fixture-server");
+    t.setDaemon(true);
+    return t;
   }
 
   private static byte[] gzip(byte[] raw) throws IOException {

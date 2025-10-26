@@ -299,8 +299,9 @@ class WorkerTest extends PostgresTestBase {
               .as("reaper found an expired lease")
               .isZero();
         }
-        if (row(id).state().equals("leased")) {
-          assertThat(row(id).leaseExpiresAt()).isAfter(Instant.now());
+        CrawlTaskDao.Row now = row(id); // one read: the task may finish between two
+        if (now.state().equals("leased")) {
+          assertThat(now.leaseExpiresAt()).isAfter(Instant.now());
           reapChecks++;
         }
         Thread.sleep(250);
@@ -346,6 +347,9 @@ class WorkerTest extends PostgresTestBase {
     }
 
     assertThat(count("select count(*) from crawl_tasks where state = 'done'")).isEqualTo(8);
+    assertThat(count("select count(*) from crawl_tasks where skipped_by_robots"))
+        .as("a robots.txt fetch failed and the worker refused the page (fail closed)")
+        .isZero();
     assertThat(count("select count(distinct leased_by) from crawl_tasks")).isGreaterThan(1);
     List<Instant> pages =
         server.requestTimes(FixtureCategory.HTML_LIST_PATH).stream().sorted().toList();
