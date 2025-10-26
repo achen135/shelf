@@ -56,6 +56,32 @@ public final class Database implements AutoCloseable {
     return dataSource.getConnection();
   }
 
+  /** Work done on one connection inside one transaction. */
+  @FunctionalInterface
+  public interface Transactional<T> {
+    T apply(Connection c) throws SQLException;
+  }
+
+  /**
+   * Runs {@code body} in a transaction on a pooled connection: committed if it returns, rolled back
+   * if it throws. Autocommit is restored before the connection goes back to the pool.
+   */
+  public <T> T transaction(Transactional<T> body) throws SQLException {
+    try (Connection c = dataSource.getConnection()) {
+      c.setAutoCommit(false);
+      try {
+        T result = body.apply(c);
+        c.commit();
+        return result;
+      } catch (SQLException | RuntimeException e) {
+        c.rollback();
+        throw e;
+      } finally {
+        c.setAutoCommit(true);
+      }
+    }
+  }
+
   @Override
   public void close() {
     dataSource.close();

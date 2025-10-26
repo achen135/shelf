@@ -31,6 +31,24 @@ public final class OfferDao {
       String currency,
       Long productId)
       throws SQLException {
+    try (Connection c = db.connection()) {
+      return upsert(c, retailer, url, title, retailerSku, currency, productId);
+    }
+  }
+
+  /**
+   * As above, on a caller-owned connection — so a worker can write a page's offers, its
+   * observations and its task's completion in one transaction (M2).
+   */
+  public long upsert(
+      Connection c,
+      String retailer,
+      String url,
+      String title,
+      String retailerSku,
+      String currency,
+      Long productId)
+      throws SQLException {
     String sql =
         """
         insert into offers (retailer, url, title, retailer_sku, currency, product_id,
@@ -47,8 +65,7 @@ public final class OfferDao {
           end
         returning id
         """;
-    try (Connection c = db.connection();
-        PreparedStatement ps = c.prepareStatement(sql)) {
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
       ps.setString(1, retailer);
       ps.setString(2, url);
       ps.setString(3, title);
