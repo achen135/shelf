@@ -26,6 +26,22 @@ spec_schema:
   mount_type:      { type: string,  enum: [tray, top, gasket, "o-ring", plate, unknown] }
   key_count:       { type: integer }
 
+# --- entity resolution ---------------------------------------------------------
+# What the resolver (M3) needs to know about keyboards that it cannot read off the schema.
+resolution:
+  # Spec fields every variant of one product shares, so that a listing disagreeing with the catalog
+  # on one is a different product. Empty on purpose, after measuring: layout_size was the obvious
+  # candidate, but at this seed list's granularity it is a variant attribute — a "GMMK 3" is sold
+  # at 65%, 75% and 100% — and switching it on cost four labeled matches and caught nothing
+  # (docs/benchmarks/m3-entity-resolution.md). switch_type never qualified: a Q1 Pro ships with
+  # linear or tactile switches and is still a Q1 Pro.
+  identity_fields: []
+  # Title phrases that mean the listing is not a purchasable instance of any product — a bundle, a
+  # part, a custom order — so its price must not become the product's. Matched on whole normalized
+  # tokens. Chosen narrowly on purpose: "pcb", "kit", "case" and "barebones" all name real keyboard
+  # variants on these retailers and would be wrong here.
+  non_product_phrases: ["bundle", "combo", "custom order", "with pbtfans", "module", "top case"]
+
 # --- retailers ---------------------------------------------------------------
 # `mode: api` = a structured endpoint parsed with Jackson. `mode: html` = a public page parsed
 # with Jsoup. list_paths are the ONLY paths fetched for a retailer: the crawler never follows a

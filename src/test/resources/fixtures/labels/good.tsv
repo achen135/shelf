@@ -1,0 +1,9 @@
+# A small label set over the fixture category (fixture-server.yaml.template).
+offer_url	title	brand	model	match	note
+http://127.0.0.1:__PORT__/products/keychron-q6-he-qmk-wireless-custom-keyboard?variant=42069797568601	Keychron Q6 HE QMK Wireless Custom Keyboard	Keychron	Q6 HE	true	whole match
+http://127.0.0.1:__PORT__/products/keychron-q6-he-qmk-wireless-custom-keyboard?variant=42069797568601	Keychron Q6 HE QMK Wireless Custom Keyboard	Keychron	Q65	false	q6 is not q65
+http://127.0.0.1:__PORT__/products/keychron-k5-ultra-8k-wireless-custom-mechanical-keyboard?variant=43354556170329	Keychron K5 Ultra 8K Wireless Custom Mechanical Keyboard	Keychron	K2 Ultra	false	K5 is not K2
+http://127.0.0.1:__PORT__/products/keychron-k2-ultra-8k-wireless-custom-mechanical-keyboard?variant=43245836730457	Keychron K2 Ultra 8K Wireless Custom Mechanical Keyboard	Keychron	K2 Ultra	true
+http://127.0.0.1:__PORT__/products/wooting-80he-magnetic-75-hotswap-rgb-keyboard	Wooting 80HE Magnetic 75% Hotswap RGB Keyboard	Wooting	80HE	true	the HTML card
+http://127.0.0.1:__PORT__/products/does-not-exist	A listing the crawl never saw	Keychron	Q6 HE	true	skipped by the eval
+http://127.0.0.1:__PORT__/products/keychron-k2-ultra-8k-wireless-custom-mechanical-keyboard?variant=43245836730457	Keychron K2 Ultra 8K Wireless Custom Mechanical Keyboard	Nobody	Nothing	false	no such product; skipped

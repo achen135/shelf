@@ -42,6 +42,15 @@ class CategoryConfigLoaderTest {
   }
 
   @Test
+  void loadsTheResolutionSection() {
+    CategoryConfig cfg = loader.load(Path.of("categories"), "keyboards");
+
+    assertThat(cfg.resolution().identityFields()).isEmpty();
+    assertThat(cfg.resolution().nonProductPhrases())
+        .contains("bundle", "custom order", "with pbtfans", "module");
+  }
+
+  @Test
   void rejectsAResolutionSectionThatNamesUnknownFieldsOrBlankPhrases() {
     assertThatThrownBy(() -> loader.load(FIXTURES.resolve("bad-resolution.yaml")))
         .isInstanceOf(ConfigException.class)

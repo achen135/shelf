@@ -15,6 +15,7 @@ which is what makes a failure here mean "the retailer changed" or "we broke the 
 | `html/mechanicalkeyboards-collection.html` | `https://mechanicalkeyboards.com/collections/75-keyboards` | 2026-09-10 | first 4 product cards, verbatim except `<style>`/`<script>`/`<svg>`/`<img>`/quick-add markup removed; wrapped in the page's own `<ul class="grid product-grid">` |
 | `robots/*.txt` | — | — | hand-written. `shopify-style.txt` is a faithful subset of the rules the surveyed storefronts serve |
 | `categories/*.yaml` | — | — | hand-written config cases for the loader tests |
+| `labels/*.tsv` | — | — | hand-written entity-resolution label sets over the fixture category, for the eval tests (M3); `__PORT__` is substituted like the category template |
 
 ## Refreshing a captured fixture
 

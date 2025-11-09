@@ -8,15 +8,17 @@ A *category* is a config file — its spec schema, its retailers and how to fetc
 products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
 never touches the open web: it visits the paths a category file names, and nothing else.
 
-> **Status: M2 complete.** The crawler is distributed: a leader-elected coordinator enqueues
-> cycles into a Postgres work queue (`FOR UPDATE SKIP LOCKED`, 15 s leases heartbeated every
-> 5 s, exponential retry, dead-letter) and a pool of workers claims pages from it, sharing one
-> per-domain politeness budget. A cycle over five live retailers records **7,556 offers and
-> 7,556 price observations across 10 pages with no errors** at 1 or 4 workers; SIGKILLing a
-> worker mid-page is recovered in **13.0 s** with zero duplicate observations, and SIGKILLing the
-> leader fails over in **4.9 s** — both automated tests, numbers in `docs/benchmarks/`. See
-> `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each one actually did,
-> and `CLAUDE.md` for the working agreement.
+> **Status: M3 complete.** Retailer listings now resolve to catalog products: after each crawl
+> cycle the pending offers are blocked by normalized brand, scored against the products in their
+> block, auto-linked above a threshold and otherwise queued for a human (`shelf review`). Against
+> **235 hand-labeled pairs** from the live corpus the resolver runs at **precision 1.000 / recall
+> 0.976** (both misses land in the review queue) — `shelf eval resolution` re-derives that from
+> `data/labels/`, and the threshold sweep is committed next to the labels. Per-listing specs are
+> persisted, and each linked product's canonical spec is derived from them. The crawler is
+> unchanged from M2: a leader-elected coordinator, a Postgres work queue, a worker pool, **7,556
+> offers** per cycle over five live retailers, SIGKILL recovery in **13.0 s** (worker) and
+> **4.9 s** (leader). See `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what
+> each one actually did, and `CLAUDE.md` for the working agreement.
 
 ## Prereqs
 
@@ -44,8 +46,8 @@ macOS with Docker Desktop this works without further setup; see the comment in
 make crawl     # shelf crawl --category keyboards --once
 ```
 
-It prints a per-retailer summary — pages, offers, price points, how many linked to a seeded
-product, errors — and writes into the database you just migrated. Fetched bodies land under
+It prints a per-retailer summary — pages, offers, price points, errors — then runs an
+entity-resolution pass over what it wrote and prints that too. Fetched bodies land under
 `data/raw/<run>/`, content-addressed, and every attempt gets a `raw_fetches` row.
 
 The crawl is paced by `max_rps` in the category file (one request every five seconds per domain
@@ -73,6 +75,31 @@ select a.application_name from pg_locks l join pg_stat_activity a on a.pid = l.p
 select domain, next_allowed_at from domain_rate_limits;
 ```
 
+### Entity resolution
+
+```
+shelf resolve --category keyboards              # one pass over the pending offers (the coordinator does this after every cycle)
+shelf resolve --category keyboards --rescore    # reopen the machine's links after a scorer or config change; human decisions stay
+shelf review list --category keyboards          # what the resolver was not sure about, best score first
+shelf review accept --category keyboards 266    # confirm the proposal (or --product <id> for a different one)
+shelf review reject 266                         # not a catalog product; never re-scored
+shelf eval resolution --category keyboards --labels data/labels/keyboards-resolution.tsv
+```
+
+The resolver links a listing to a seed product when the product's model appears whole in the
+title and nothing counts against it; a sibling's qualifier next to the model ("Q2 **HE**", "K2
+**Max**" when the catalog has a Q6 HE and a Q15 Max), a missing numbered token, or a phrase that
+marks a bundle or a part all push it down into the review queue or out. Every score carries its
+reasons. The scorer is category-agnostic; what it cannot know about keyboards — which spec
+fields identify a product, which phrases mean "not the product" — lives in the category file's
+`resolution:` section.
+
+`data/labels/keyboards-resolution.tsv` is the hand-labeled set (235 pairs, written from titles
+before any score was seen; the policy is in the file's header), and
+`keyboards-resolution.eval.txt` is the committed report: precision / recall at the operating
+point, the threshold sweep, and every miss with the reason. Re-derive it with one crawl and the
+`eval` line above.
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -96,17 +123,18 @@ categories/           per-category config (spec schema, retailers, seed products
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
 scripts/              throughput.sh — the 1-vs-N worker benchmark
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, eval
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
   crawl/cluster/      coordinator (leader election, cycles, reaping) + worker pool
-  resolve/            entity resolution  (M3)
+  resolve/            entity resolution: blocking, scoring, the review queue, the eval (M3)
   rollup/             price rollups        (M4)
   signal/             buy/wait signal + backtest (M5)
   api/                Javalin query API    (M6)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
+data/labels/          hand-labeled resolution pairs + the committed eval report
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable); api in M6
