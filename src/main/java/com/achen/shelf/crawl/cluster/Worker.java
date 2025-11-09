@@ -292,7 +292,6 @@ public final class Worker implements AutoCloseable {
                     offers.size(),
                     written.offersWritten(),
                     written.observationsWritten(),
-                    written.matched(),
                     skippedByRobots);
             if (!CrawlTaskDao.complete(c, task.id(), id, outcome)) {
               throw new LostLease(task.id());

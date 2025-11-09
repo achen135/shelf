@@ -89,12 +89,11 @@ public final class CrawlRunner {
         new CrawlSummary(runId, category.name(), summaries, ctx.catalog().size());
     runs.finish(runId, summary.totalPages(), summary.totalErrors(), clock.instant());
     log.info(
-        "crawl run {} finished: pages={} offers={} observations={} matched={} errors={}",
+        "crawl run {} finished: pages={} offers={} observations={} errors={}",
         runId,
         summary.totalPages(),
         summary.totalOffersWritten(),
         summary.totalObservations(),
-        summary.totalMatched(),
         summary.totalErrors());
     return summary;
   }
@@ -106,7 +105,6 @@ public final class CrawlRunner {
     int offersSeen = 0;
     int offersWritten = 0;
     int observationsWritten = 0;
-    int matched = 0;
     int errors = 0;
     int skippedByRobots = 0;
 
@@ -137,17 +135,15 @@ public final class CrawlRunner {
             db.transaction(c -> pages.write(c, ctx, retailer, parsed, runId, observedAt));
         offersWritten += written.offersWritten();
         observationsWritten += written.observationsWritten();
-        matched += written.matched();
       }
     }
 
     log.info(
-        "{}: pages={} offers={} observations={} matched={} errors={}",
+        "{}: pages={} offers={} observations={} errors={}",
         retailer.name(),
         pageCount,
         offersWritten,
         observationsWritten,
-        matched,
         errors);
     return new CrawlSummary.RetailerSummary(
         retailer.name(),
@@ -156,7 +152,6 @@ public final class CrawlRunner {
         offersSeen,
         offersWritten,
         observationsWritten,
-        matched,
         errors,
         skippedByRobots);
   }

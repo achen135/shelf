@@ -43,11 +43,7 @@ public final class CrawlTaskDao {
 
   /** What executing a task produced; stored on the row so a run's totals are queryable. */
   public record Outcome(
-      int offersSeen,
-      int offersWritten,
-      int observationsWritten,
-      int matched,
-      boolean skippedByRobots) {}
+      int offersSeen, int offersWritten, int observationsWritten, boolean skippedByRobots) {}
 
   /** What one reaper pass did. */
   public record Reaped(int leasesRequeued, int leasesDeadLettered, int retriesPromoted) {
@@ -285,7 +281,7 @@ public final class CrawlTaskDao {
         """
         update crawl_tasks
         set state = 'done', finished_at = now(), lease_expires_at = null,
-            offers_seen = ?, offers_written = ?, observations_written = ?, matched = ?,
+            offers_seen = ?, offers_written = ?, observations_written = ?,
             skipped_by_robots = ?
         where id = ? and leased_by = ? and state = 'leased'
         """;
@@ -293,10 +289,9 @@ public final class CrawlTaskDao {
       ps.setInt(1, outcome.offersSeen());
       ps.setInt(2, outcome.offersWritten());
       ps.setInt(3, outcome.observationsWritten());
-      ps.setInt(4, outcome.matched());
-      ps.setBoolean(5, outcome.skippedByRobots());
-      ps.setLong(6, taskId);
-      ps.setString(7, workerId);
+      ps.setBoolean(4, outcome.skippedByRobots());
+      ps.setLong(5, taskId);
+      ps.setString(6, workerId);
       return ps.executeUpdate() == 1;
     }
   }

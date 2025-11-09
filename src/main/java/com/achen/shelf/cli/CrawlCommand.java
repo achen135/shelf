@@ -53,27 +53,24 @@ public final class CrawlCommand implements Callable<Integer> {
         "crawl run %d (%s): %d seeded products%n",
         summary.runId(), summary.category(), summary.seededProducts());
     System.out.printf(
-        "%-22s %-5s %6s %8s %8s %8s %7s%n",
-        "retailer", "mode", "pages", "offers", "prices", "matched", "errors");
+        "%-22s %-5s %6s %8s %8s %7s%n", "retailer", "mode", "pages", "offers", "prices", "errors");
     for (CrawlSummary.RetailerSummary r : summary.retailers()) {
       System.out.printf(
-          "%-22s %-5s %6d %8d %8d %8d %7d%n",
+          "%-22s %-5s %6d %8d %8d %7d%n",
           r.retailer(),
           r.mode(),
           r.pages(),
           r.offersWritten(),
           r.observationsWritten(),
-          r.matchedToSeed(),
           r.errors());
     }
     System.out.printf(
-        "%-22s %-5s %6d %8d %8d %8d %7d%n",
+        "%-22s %-5s %6d %8d %8d %7d%n",
         "TOTAL",
         "",
         summary.totalPages(),
         summary.totalOffersWritten(),
         summary.totalObservations(),
-        summary.totalMatched(),
         summary.totalErrors());
   }
 }

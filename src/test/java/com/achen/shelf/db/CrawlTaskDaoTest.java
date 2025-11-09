@@ -196,7 +196,7 @@ class CrawlTaskDaoTest extends PostgresTestBase {
   void completeIsFencedToTheLeaseHolder() throws SQLException {
     long id = enqueue("keychron", 1, "keychron.com", 3);
     mustClaim("w1");
-    CrawlTaskDao.Outcome outcome = new CrawlTaskDao.Outcome(10, 10, 10, 2, false);
+    CrawlTaskDao.Outcome outcome = new CrawlTaskDao.Outcome(10, 10, 10, false);
 
     try (Connection c = DB.connection()) {
       assertThat(CrawlTaskDao.lockIfHeld(c, id, "w2")).isFalse();
@@ -330,7 +330,7 @@ class CrawlTaskDaoTest extends PostgresTestBase {
     mustClaim("w"); // takes page 1
     mustClaim("w"); // takes page 2
     try (Connection c = DB.connection()) {
-      CrawlTaskDao.complete(c, leased, "w", new CrawlTaskDao.Outcome(0, 0, 0, 0, false));
+      CrawlTaskDao.complete(c, leased, "w", new CrawlTaskDao.Outcome(0, 0, 0, false));
       assertThat(CrawlTaskDao.countByState(c, runId))
           .containsEntry("queued", 0)
           .containsEntry("leased", 1)

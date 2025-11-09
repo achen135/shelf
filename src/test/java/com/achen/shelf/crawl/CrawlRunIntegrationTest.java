@@ -159,22 +159,25 @@ class CrawlRunIntegrationTest extends PostgresTestBase {
   }
 
   @Test
-  void linksListingsToSeededProductsOnlyWhenCertain() throws SQLException, InterruptedException {
+  void recordsWhatEachListingSaysAndLinksNothing() throws SQLException, InterruptedException {
     runnerAt(Instant.parse("2026-09-10T12:00:00Z")).runOnce(category);
 
-    // Q6 HE (2 variants) + K2 Ultra (2 variants) from the JSON store, Wooting 80HE from the
-    // HTML store. The K5 Ultra listings and the rest of the HTML cards stay unresolved.
-    assertThat(count("select count(*) from offers where product_id is not null")).isEqualTo(5);
-    assertThat(count("select count(*) from offers where resolution_status = 'auto'")).isEqualTo(5);
+    // Since M3 the crawl decides nothing about identity: it stores the brand, the title and the
+    // validated spec, and every offer waits for the resolver.
+    assertThat(count("select count(*) from offers where product_id is not null")).isZero();
     assertThat(count("select count(*) from offers where resolution_status = 'pending'"))
-        .isEqualTo(5);
-
-    // The seeded "Q65" must not collect the "Q6 HE" listings: model matching is on whole tokens.
+        .isEqualTo(10);
+    assertThat(count("select count(*) from offers where brand_norm = 'keychron'")).isEqualTo(6);
+    assertThat(count("select count(*) from offers where brand_norm = 'wooting'")).isEqualTo(1);
+    // The Q6 HE listing's tags say 100% layout, magnetic, gasket, hot-swappable, wireless…
     assertThat(
             count(
-                "select count(*) from offers o join products p on p.id = o.product_id"
-                    + " where p.model = 'Q65'"))
-        .isZero();
+                "select count(*) from offers where title like 'Keychron Q6 HE%'"
+                    + " and spec->>'layout_size' = 'full' and spec->>'switch_type' = 'magnetic'"
+                    + " and (spec->>'hot_swap')::boolean"))
+        .isEqualTo(2);
+    // …and a listing that says nothing usable gets an empty object, not a null.
+    assertThat(count("select count(*) from offers where spec is null")).isZero();
   }
 
   @Test
@@ -221,8 +224,16 @@ class CrawlRunIntegrationTest extends PostgresTestBase {
   void validatesSpecsAgainstTheCategorySchema() throws SQLException, InterruptedException {
     runnerAt(Instant.parse("2026-09-10T12:00:00Z")).runOnce(category);
 
-    // Seeds carry no spec in this config, so products.spec stays an empty object rather than
-    // accumulating whatever the listings happened to say.
+    // Seeds carry no spec in this config, and the crawl alone derives nothing: products.spec
+    // stays an empty object until a resolution pass links listings to the product.
     assertThat(count("select count(*) from products where spec = '{}'::jsonb")).isEqualTo(4);
+    // What the listings said is on the offers, validated: an unknown or off-enum value is gone.
+    assertThat(count("select count(*) from offers where spec <> '{}'::jsonb")).isGreaterThan(0);
+    assertThat(
+            count(
+                "select count(*) from offers o, jsonb_each(o.spec) kv"
+                    + " where kv.key not in ('switch_type','hot_swap','layout_size','connectivity',"
+                    + "'keycap_material','case_material','mount_type','key_count')"))
+        .isZero();
   }
 }
