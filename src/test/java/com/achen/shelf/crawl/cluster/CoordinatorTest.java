@@ -104,8 +104,33 @@ class CoordinatorTest extends PostgresTestBase {
 
       a.close(); // ends the session; the lock goes with it
 
-      assertThat(b.tick().leader()).isTrue();
+      // The release is the server's to do: close() returns once the client has sent its
+      // terminate, and the backend drops the session — and the lock — a moment later. A standby
+      // therefore sees the lock free on a try within one poll, not necessarily on the very next
+      // statement (CI lost that race once). The bound is the production poll, which is the
+      // failover claim; KillCoordinatorFailoverTest measures the actual number.
+      assertThat(standbyLeadsWithin(b, Coordinator.Settings.defaults().poll())).isTrue();
       assertThat(holder()).isEqualTo("coordinator-b");
+    }
+  }
+
+  /** Ticks {@code standby} until it leads or {@code within} has passed. */
+  private static boolean standbyLeadsWithin(Coordinator standby, Duration within)
+      throws SQLException {
+    long deadline = System.nanoTime() + within.toNanos();
+    while (true) {
+      if (standby.tick().leader()) {
+        return true;
+      }
+      if (System.nanoTime() > deadline) {
+        return false;
+      }
+      try {
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return false;
+      }
     }
   }
 
