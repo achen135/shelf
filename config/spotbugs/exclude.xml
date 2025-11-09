@@ -20,6 +20,23 @@
   </Match>
 
   <!--
+    The same for the spec maps on the resolve/ records and the DAO row records that feed them:
+    every one is built from Map.copyOf or Jsonb.toMap (an unmodifiable view), so the map a
+    caller gets back cannot be mutated through it.
+  -->
+  <Match>
+    <Or>
+      <Package name="com.achen.shelf.resolve"/>
+      <Class name="com.achen.shelf.db.ProductDao$Row"/>
+      <Class name="com.achen.shelf.db.ResolutionDao$PendingOffer"/>
+    </Or>
+    <Or>
+      <Bug pattern="EI_EXPOSE_REP"/>
+      <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+  </Match>
+
+  <!--
     Injected collaborators — the connection pool, the DAOs handed to crawl services, the
     PageCrawler handed to a Worker — are shared on purpose: a pool that were defensively copied
     would not be a pool. LeaderLock.connection() hands out the one session the advisory lock

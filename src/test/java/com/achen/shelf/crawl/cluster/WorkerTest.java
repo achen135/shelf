@@ -119,7 +119,9 @@ class WorkerTest extends PostgresTestBase {
                     + " where observed_at = timestamptz '2026-09-11T12:00:00Z'"))
         .as("every observation carries the run's start instant")
         .isEqualTo(6);
-    assertThat(count("select count(*) from offers where product_id is not null")).isEqualTo(4);
+    // The page's facts are recorded; linking is the resolver's job after the run closes.
+    assertThat(count("select count(*) from offers where product_id is not null")).isZero();
+    assertThat(count("select count(*) from offers where brand_norm = 'keychron'")).isEqualTo(6);
 
     CrawlTaskDao.Row done = row(id);
     assertThat(done.state()).isEqualTo("done");

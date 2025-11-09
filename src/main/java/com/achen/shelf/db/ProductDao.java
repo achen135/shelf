@@ -4,10 +4,24 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /** Reads and writes the canonical {@code products} catalog. */
 public final class ProductDao {
+
+  /** A catalog row. */
+  public record Row(
+      long id,
+      String category,
+      String brand,
+      String model,
+      String brandNorm,
+      String modelNorm,
+      String canonicalName,
+      Map<String, Object> spec) {}
 
   private final Database db;
 
@@ -52,6 +66,35 @@ public final class ProductDao {
       try (ResultSet rs = ps.executeQuery()) {
         rs.next();
         return rs.getLong(1);
+      }
+    }
+  }
+
+  /** Every product in a category, in id order. */
+  public List<Row> list(String category) throws SQLException {
+    String sql =
+        """
+        select id, category, brand, model, brand_norm, model_norm, canonical_name, spec::text
+        from products where category = ? order by id
+        """;
+    try (Connection c = db.connection();
+        PreparedStatement ps = c.prepareStatement(sql)) {
+      ps.setString(1, category);
+      try (ResultSet rs = ps.executeQuery()) {
+        List<Row> rows = new ArrayList<>();
+        while (rs.next()) {
+          rows.add(
+              new Row(
+                  rs.getLong(1),
+                  rs.getString(2),
+                  rs.getString(3),
+                  rs.getString(4),
+                  rs.getString(5),
+                  rs.getString(6),
+                  rs.getString(7),
+                  Jsonb.toMap(rs.getString(8))));
+        }
+        return rows;
       }
     }
   }

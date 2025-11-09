@@ -88,9 +88,11 @@ class MigrationAndPartitionTest extends PostgresTestBase {
     // No DEFAULT partition, on purpose: a row outside every known month should fail loudly
     // rather than land in a catch-all that later blocks ATTACH for that month.
     long runId = new CrawlRunDao(DB).open("keyboards", Instant.now(), 1);
-    long productId = new ProductDao(DB).upsert("keyboards", "B", "M", "b", "m", "B M", "{}");
     long offerId =
-        new OfferDao(DB).upsert("shop", "https://shop.test/p/1", "B M", null, "USD", productId);
+        new OfferDao(DB)
+            .upsert(
+                new OfferDao.Listing(
+                    "shop", "https://shop.test/p/1", "B M", null, "USD", "B", "b", "{}"));
     ObservationDao observations = new ObservationDao(DB);
 
     assertThatThrownBy(

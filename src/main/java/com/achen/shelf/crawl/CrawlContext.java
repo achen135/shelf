@@ -10,7 +10,7 @@ import java.sql.SQLException;
 
 /**
  * Everything a page crawl needs that is decided per category: the config, its parsers, its spec
- * validator, and the seeded catalog listings are matched against.
+ * validator, and the seeded catalog.
  *
  * <p>Built once per run by {@link CrawlRunner}, and once per category per process by the M2 worker
  * — a worker serves whatever categories the queue hands it, and this is the unit it caches.
@@ -18,7 +18,7 @@ import java.sql.SQLException;
  * @param category the category config
  * @param parsers the parser registry for it
  * @param specValidator validates extracted specs against its schema
- * @param catalog its seed products, upserted and indexed for matching
+ * @param catalog its seed products, upserted into {@code products}
  */
 public record CrawlContext(
     CategoryConfig category,

@@ -36,6 +36,27 @@ class CategoryConfigLoaderTest {
 
     assertThat(cfg.seedProducts()).hasSize(1);
     assertThat(cfg.seedProducts().get(0).spec()).containsEntry("finish", "matte");
+
+    // No resolution section: both knobs default to off.
+    assertThat(cfg.resolution()).isEqualTo(ResolutionConfig.NONE);
+  }
+
+  @Test
+  void loadsTheResolutionSection() {
+    CategoryConfig cfg = loader.load(Path.of("categories"), "keyboards");
+
+    assertThat(cfg.resolution().identityFields()).isEmpty();
+    assertThat(cfg.resolution().nonProductPhrases())
+        .contains("bundle", "custom order", "with pbtfans", "module");
+  }
+
+  @Test
+  void rejectsAResolutionSectionThatNamesUnknownFieldsOrBlankPhrases() {
+    assertThatThrownBy(() -> loader.load(FIXTURES.resolve("bad-resolution.yaml")))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("resolution.identity_fields: 'colour' is not a field")
+        .hasMessageContaining("resolution.non_product_phrases: contains a blank phrase")
+        .satisfies(e -> assertThat(e.getMessage()).doesNotContain("'finish'"));
   }
 
   @Test

@@ -89,6 +89,7 @@ public final class CategoryConfigLoader {
     validateSpecSchema(cfg, errors);
     validateRetailers(cfg, errors);
     validateSeeds(cfg, errors);
+    validateResolution(cfg, errors);
 
     if (!errors.isEmpty()) {
       StringBuilder sb = new StringBuilder(source + " is not a valid category config:");
@@ -236,6 +237,17 @@ public final class CategoryConfigLoader {
       for (String problem : specValidator.validate(s.spec()).warnings()) {
         errors.add(path + ".spec: " + problem);
       }
+    }
+  }
+
+  private void validateResolution(CategoryConfig cfg, List<String> errors) {
+    for (String field : cfg.resolution().identityFields()) {
+      if (!cfg.specSchema().containsKey(field)) {
+        errors.add("resolution.identity_fields: '" + field + "' is not a field in `spec_schema`");
+      }
+    }
+    if (cfg.resolution().nonProductPhrases().stream().anyMatch(CategoryConfigLoader::isBlank)) {
+      errors.add("resolution.non_product_phrases: contains a blank phrase");
     }
   }
 

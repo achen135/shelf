@@ -6,12 +6,16 @@ import com.achen.shelf.config.CategoryConfigLoader;
 import com.achen.shelf.crawl.cluster.Coordinator;
 import com.achen.shelf.crawl.cluster.LeaderLock;
 import com.achen.shelf.db.CrawlRunDao;
+import com.achen.shelf.db.Database;
+import com.achen.shelf.resolve.ResolutionRun;
+import com.achen.shelf.resolve.Resolver;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
@@ -21,6 +25,8 @@ import picocli.CommandLine;
  * <p>Run as many as you like; exactly one holds the advisory lock and does the work, the rest wait
  * to take over. {@code --once} opens a cycle immediately, waits for it to finish, prints what it
  * did and exits — the shape the throughput benchmark and the recovery tests use.
+ *
+ * <p>When a run closes, the leader runs an entity-resolution pass over that category (M3).
  */
 @CommandLine.Command(
     name = "coordinator",
@@ -79,8 +85,19 @@ public final class CoordinatorCommand implements Callable<Integer> {
 
     LeaderLock lock =
         new LeaderLock(app.dbUrl(), app.dbUser(), app.dbPassword(), "coordinator-" + coordinatorId);
-    try (Coordinator coordinator =
-        new Coordinator(coordinatorId, lock, configs, settings, Clock.systemUTC())) {
+    Map<String, CategoryConfig> byName = new java.util.HashMap<>();
+    configs.forEach(c -> byName.put(c.name(), c));
+    try (Database db = Database.open(app, 2);
+        Coordinator coordinator =
+            new Coordinator(
+                coordinatorId,
+                lock,
+                configs,
+                settings,
+                Clock.systemUTC(),
+                run ->
+                    new ResolutionRun(db, Resolver.Thresholds.defaults())
+                        .run(byName.get(run.category())))) {
       Runtime.getRuntime().addShutdownHook(new Thread(coordinator::stop, "coordinator-shutdown"));
       if (!once) {
         coordinator.run();

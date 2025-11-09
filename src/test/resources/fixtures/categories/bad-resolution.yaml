@@ -1,0 +1,19 @@
+# resolution.identity_fields names a field the spec schema does not declare, and a phrase is blank.
+name: widgets
+spec_schema:
+  finish: { type: string, enum: [matte, gloss] }
+resolution:
+  identity_fields: [finish, colour]
+  non_product_phrases: ["bundle", "  "]
+retailers:
+  - name: shop_one
+    base_url: "https://shop-one.test"
+    brand_source: fixed
+    brand: ShopOne
+    fetch:
+      mode: api
+      list_paths: ["/collections/widgets/products.json?page={page}"]
+      max_rps: 0.5
+    parser: shopify_products_json
+seed_products:
+  - { brand: "ShopOne", model: "W1", canonical_name: "ShopOne W1" }

@@ -1,0 +1,32 @@
+resolution eval — keyboards: 235 labeled pairs (82 match, 153 not) against a catalog of 50 products (48 with a spec)
+operating point: auto >= 0.90, review >= 0.40
+  precision 1.000  recall 0.976  f1 0.988   (tp 80, fp 0, fn 2, tn 153)
+  36 labeled pair(s) land in the review band; 0 labeled offer(s) would auto-link to a product no label covers
+
+threshold sweep (auto threshold; review band ignored):
+  threshold precision recall    f1        tp   fp   fn   tn
+  0.00      0.469     1.000     0.638     82   93    0   60
+  0.05      0.566     1.000     0.722     82   63    0   90
+  0.10      0.586     1.000     0.739     82   58    0   95
+  0.15      0.599     1.000     0.749     82   55    0   98
+  0.20      0.607     1.000     0.756     82   53    0  100
+  0.25      0.607     1.000     0.756     82   53    0  100
+  0.30      0.607     1.000     0.756     82   53    0  100
+  0.35      0.617     1.000     0.763     82   51    0  102
+  0.40      0.707     1.000     0.828     82   34    0  119
+  0.45      0.726     1.000     0.841     82   31    0  122
+  0.50      0.752     1.000     0.859     82   27    0  126
+  0.55      0.812     1.000     0.896     82   19    0  134
+  0.60      0.812     1.000     0.896     82   19    0  134
+  0.65      0.812     1.000     0.896     82   19    0  134
+  0.70      0.964     0.988     0.976     81    3    1  150
+  0.75      0.964     0.988     0.976     81    3    1  150
+  0.80      0.964     0.988     0.976     81    3    1  150
+  0.85      1.000     0.976     0.988     80    0    2  153
+  0.90      1.000     0.976     0.988     80    0    2  153
+  0.95      1.000     0.976     0.988     80    0    2  153
+  1.00      1.000     0.976     0.988     80    0    2  153
+
+mistakes at the operating point:
+  FN  Keychron B11 Pro Ultra-Slim Wireless Foldable Keyboard — Space Gray × Keychron B11 Pro  [REVIEW]  best=Keychron B11 Pro 0.65 [model appears whole, qualifier of a sibling product next to the model: [ultra]]
+  FN  KBDFans KBD67 R1 Lite Barebones DIY Keyboard Kit × KBDfans KBD67 Lite  [REVIEW]  best=KBDfans KBD67 Lite 0.80 [every model token present, not together]

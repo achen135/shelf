@@ -7,9 +7,9 @@ import java.util.Map;
 /**
  * A product the catalog is bootstrapped with.
  *
- * <p>Seeds exist so the catalog has canonical rows before any crawling happens: a parsed listing
- * that normalizes onto a seed's (brand, model) links straight to it, and everything else is left
- * unresolved for M3.
+ * <p>Seeds exist so the catalog has canonical rows before any crawling happens. Their normalized
+ * brand and model are what entity resolution blocks and scores listings against (M3), and a spec
+ * given here is authoritative: it wins over anything derived from linked listings.
  *
  * @param brand manufacturer, as displayed
  * @param model model designation, as displayed

@@ -6,6 +6,7 @@ import com.achen.shelf.config.SpecValidator;
 import com.achen.shelf.crawl.parse.ParseException;
 import com.achen.shelf.crawl.parse.Parser;
 import com.achen.shelf.db.Database;
+import com.achen.shelf.db.Jsonb;
 import com.achen.shelf.db.ObservationDao;
 import com.achen.shelf.db.OfferDao;
 import com.achen.shelf.db.RateLimitDao;
@@ -30,9 +31,10 @@ import org.slf4j.LoggerFactory;
  *   <li>{@link #fetch}: robots check, rate-limit wait, HTTP fetch, raw body to disk, audit row,
  *       parse. No transaction — the audit row is append-only and wants to survive whatever happens
  *       next, and an HTTP call has no business inside a database transaction.
- *   <li>{@link #write}: offers and observations, on a connection the caller owns. The worker puts
- *       this in the same transaction as marking its task done, so a page is either fully recorded
- *       and finished, or neither.
+ *   <li>{@link #write}: offers (title, brand, validated spec) and observations, on a connection the
+ *       caller owns. The worker puts this in the same transaction as marking its task done, so a
+ *       page is either fully recorded and finished, or neither. No linking happens here — see
+ *       {@code resolve/}.
  * </ol>
  */
 public final class PageCrawler {
@@ -65,7 +67,7 @@ public final class PageCrawler {
   }
 
   /** What the write half recorded. */
-  public record Written(int offersWritten, int observationsWritten, int matched) {}
+  public record Written(int offersWritten, int observationsWritten) {}
 
   private final Fetcher fetcher;
   private final RobotsGate robots;
@@ -153,9 +155,13 @@ public final class PageCrawler {
   }
 
   /**
-   * The write half: per offer, validate specs, match against the catalog, upsert the offer, record
+   * The write half: per offer, validate specs, upsert the offer with what the listing says, record
    * one observation at the run's instant. On the caller's connection, inside the caller's
    * transaction.
+   *
+   * <p>Nothing here decides which product a listing is. Since M3 that is the resolver's job, run
+   * over the pending offers after a cycle closes ({@code resolve/ResolutionRun}); the crawl's part
+   * is to record the facts it scores — the brand, the title and the validated spec.
    */
   public Written write(
       Connection c,
@@ -167,12 +173,7 @@ public final class PageCrawler {
       throws SQLException {
     int offersWritten = 0;
     int observationsWritten = 0;
-    int matched = 0;
     for (ParsedOffer offer : parsed) {
-      Optional<Long> productId = ctx.catalog().match(offer.brand(), offer.title());
-      if (productId.isPresent()) {
-        matched++;
-      }
       SpecValidator.Result specs = ctx.specValidator().validate(offer.specFields());
       if (!specs.isClean()) {
         log.debug(
@@ -181,12 +182,15 @@ public final class PageCrawler {
       long offerId =
           offers.upsert(
               c,
-              retailer.name(),
-              offer.url(),
-              offer.title(),
-              offer.retailerSku(),
-              offer.currency(),
-              productId.orElse(null));
+              new OfferDao.Listing(
+                  retailer.name(),
+                  offer.url(),
+                  offer.title(),
+                  offer.retailerSku(),
+                  offer.currency(),
+                  offer.brand(),
+                  Normalizer.normalize(offer.brand()),
+                  Jsonb.fromMap(specs.accepted())));
       offersWritten++;
       boolean inserted =
           observations.record(
@@ -202,7 +206,7 @@ public final class PageCrawler {
         observationsWritten++;
       }
     }
-    return new Written(offersWritten, observationsWritten, matched);
+    return new Written(offersWritten, observationsWritten);
   }
 
   /**

@@ -13,6 +13,12 @@ spec_schema:
   mount_type:      { type: string,  enum: [tray, top, gasket, "o-ring", plate, unknown] }
   key_count:       { type: integer }
 
+# Entity resolution (M3): layout is an identity field for this catalog, and "bundle" marks a
+# listing as not the product itself.
+resolution:
+  identity_fields: [layout_size]
+  non_product_phrases: [bundle]
+
 retailers:
   # mode: api — the Shopify product JSON path, paged until a page comes back empty.
   - name: json_store

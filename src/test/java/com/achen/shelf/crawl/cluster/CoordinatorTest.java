@@ -19,8 +19,10 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -194,6 +196,35 @@ class CoordinatorTest extends PostgresTestBase {
       assertThat(closed.pages()).isEqualTo(2);
       assertThat(closed.errors()).isEqualTo(1);
       assertThat(closed.workerCount()).isEqualTo(2);
+    }
+  }
+
+  @Test
+  void theHookRunsAfterTheClosingTickCommitsAndItsFailureDoesNotBreakTheTick() throws SQLException {
+    List<CrawlRunDao.Closed> seen = new ArrayList<>();
+    AtomicBoolean runWasClosedWhenCalled = new AtomicBoolean(false);
+    Coordinator.AfterRun hook =
+        run -> {
+          seen.add(run);
+          // The closing tick has committed: the run is visible as finished on another connection.
+          runWasClosedWhenCalled.set(
+              count("select count(*) from crawl_runs where finished_at is not null") == 1);
+          throw new IllegalStateException("resolution exploded");
+        };
+    try (Coordinator a =
+        new Coordinator("a", lock("a"), List.of(category), SETTINGS, clock, hook)) {
+      long runId = a.tick().opened().get(0);
+      execute("update crawl_tasks set state = 'done', leased_by = 'w1'");
+
+      Coordinator.Tick tick = a.tick();
+
+      assertThat(tick.leader()).isTrue();
+      assertThat(tick.closed()).extracting(CrawlRunDao.Closed::runId).containsExactly(runId);
+      assertThat(seen).extracting(CrawlRunDao.Closed::runId).containsExactly(runId);
+      assertThat(runWasClosedWhenCalled).isTrue();
+      // The exception was logged and swallowed; the leader is still the leader.
+      assertThat(a.tick().leader()).isTrue();
+      assertThat(seen).hasSize(1);
     }
   }
 
