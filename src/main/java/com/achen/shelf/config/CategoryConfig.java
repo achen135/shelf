@@ -17,17 +17,20 @@ import java.util.Optional;
  * @param specSchema field name to its declared type/enum
  * @param retailers where to look, and how
  * @param seedProducts catalog bootstrap
+ * @param resolution what entity resolution should know about this category; optional
  */
 public record CategoryConfig(
     String name,
     Map<String, SpecField> specSchema,
     List<Retailer> retailers,
-    List<SeedProduct> seedProducts) {
+    List<SeedProduct> seedProducts,
+    ResolutionConfig resolution) {
 
   public CategoryConfig {
     specSchema = specSchema == null ? Map.of() : Map.copyOf(specSchema);
     retailers = retailers == null ? List.of() : List.copyOf(retailers);
     seedProducts = seedProducts == null ? List.of() : List.copyOf(seedProducts);
+    resolution = resolution == null ? ResolutionConfig.NONE : resolution;
   }
 
   /** The retailers a crawl should actually visit, in config order. */
@@ -45,7 +48,8 @@ public record CategoryConfig(
       @JsonProperty("name") String name,
       @JsonProperty("spec_schema") Map<String, SpecField> specSchema,
       @JsonProperty("retailers") List<Retailer> retailers,
-      @JsonProperty("seed_products") List<SeedProduct> seedProducts) {
-    return new CategoryConfig(name, specSchema, retailers, seedProducts);
+      @JsonProperty("seed_products") List<SeedProduct> seedProducts,
+      @JsonProperty("resolution") ResolutionConfig resolution) {
+    return new CategoryConfig(name, specSchema, retailers, seedProducts, resolution);
   }
 }

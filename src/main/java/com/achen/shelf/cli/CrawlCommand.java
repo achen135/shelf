@@ -8,10 +8,15 @@ import com.achen.shelf.crawl.CrawlSummary;
 import com.achen.shelf.crawl.Fetcher;
 import com.achen.shelf.crawl.RawStore;
 import com.achen.shelf.db.Database;
+import com.achen.shelf.resolve.ResolutionRun;
+import com.achen.shelf.resolve.Resolver;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/** {@code shelf crawl --category keyboards --once}. */
+/**
+ * {@code shelf crawl --category keyboards --once}: one single-process cycle, then a resolution pass
+ * over what it wrote (M3).
+ */
 @CommandLine.Command(
     name = "crawl",
     mixinStandardHelpOptions = true,
@@ -44,6 +49,9 @@ public final class CrawlCommand implements Callable<Integer> {
           new CrawlRunner(db, Fetcher.withDefaults(app.userAgent()), new RawStore(app.rawDir()));
       CrawlSummary summary = runner.runOnce(config);
       print(summary);
+      ResolutionRun.Summary resolved =
+          new ResolutionRun(db, Resolver.Thresholds.defaults()).run(config);
+      ResolveCommand.print(resolved);
       return summary.totalErrors() == 0 ? CommandLine.ExitCode.OK : CommandLine.ExitCode.SOFTWARE;
     }
   }

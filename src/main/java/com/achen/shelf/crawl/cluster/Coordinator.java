@@ -42,8 +42,22 @@ import org.slf4j.LoggerFactory;
  *
  * <p>The poll interval is the failover bound: a standby notices a dead leader on its next try,
  * which is at most one {@code poll} after the leader's session ended.
+ *
+ * <p>After a tick commits, an {@link AfterRun} hook is told about each run that closed — that is
+ * where entity resolution runs (M3), on its own connection, outside the leader's transaction. A
+ * hook that throws is logged and does not affect the tick; whatever it failed to do is redone the
+ * next time a run closes, because its work is idempotent by contract.
  */
 public final class Coordinator implements AutoCloseable {
+
+  /** Called by the leader, after the tick that closed a run has committed. */
+  @FunctionalInterface
+  public interface AfterRun {
+    void runClosed(CrawlRunDao.Closed run) throws Exception;
+
+    /** Does nothing. */
+    AfterRun NONE = run -> {};
+  }
 
   private static final Logger log = LoggerFactory.getLogger(Coordinator.class);
 
@@ -86,16 +100,28 @@ public final class Coordinator implements AutoCloseable {
   private final List<CategoryConfig> categories;
   private final Settings settings;
   private final Clock clock;
+  private final AfterRun afterRun;
   private final AtomicBoolean running = new AtomicBoolean(false);
   private boolean wasLeader;
 
   public Coordinator(
       String id, LeaderLock lock, List<CategoryConfig> categories, Settings settings, Clock clock) {
+    this(id, lock, categories, settings, clock, AfterRun.NONE);
+  }
+
+  public Coordinator(
+      String id,
+      LeaderLock lock,
+      List<CategoryConfig> categories,
+      Settings settings,
+      Clock clock,
+      AfterRun afterRun) {
     this.id = id;
     this.lock = lock;
     this.categories = List.copyOf(categories);
     this.settings = settings;
     this.clock = clock;
+    this.afterRun = afterRun;
   }
 
   public String id() {
@@ -176,6 +202,13 @@ public final class Coordinator implements AutoCloseable {
       wasLeader = true;
     }
 
+    Tick tick = leaderTick();
+    tick.closed().forEach(this::afterRun);
+    return tick;
+  }
+
+  /** The leader's transaction: reap, close, open. */
+  private Tick leaderTick() {
     Connection c = lock.connection();
     try {
       c.setAutoCommit(false);
@@ -220,6 +253,21 @@ public final class Coordinator implements AutoCloseable {
       lock.sessionFailed();
       wasLeader = false;
       return Tick.standby();
+    }
+  }
+
+  private void afterRun(CrawlRunDao.Closed run) {
+    try {
+      afterRun.runClosed(run);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (Exception e) {
+      log.warn(
+          "coordinator {}: post-run hook failed for run {} ({}): {}",
+          id,
+          run.runId(),
+          run.category(),
+          e.toString());
     }
   }
 

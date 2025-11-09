@@ -5,9 +5,10 @@ import picocli.CommandLine;
 /**
  * The {@code shelf} entry point.
  *
- * <p>One binary, one subcommand per role: the crawl today, the distributed coordinator and worker
- * in M2, the query API in M6. They share a process so that a demo is {@code docker compose up} and
- * a different {@code command:} per service, not a different image.
+ * <p>One binary, one subcommand per role: the crawl, the distributed coordinator and worker (M2),
+ * entity resolution and its review queue (M3), the query API in M6. They share a process so that a
+ * demo is {@code docker compose up} and a different {@code command:} per service, not a different
+ * image.
  */
 @CommandLine.Command(
     name = "shelf",
@@ -19,6 +20,8 @@ import picocli.CommandLine;
       MigrateCommand.class,
       CoordinatorCommand.class,
       WorkerCommand.class,
+      ResolveCommand.class,
+      ReviewCommand.class,
       ApiCommand.class
     })
 public final class Main implements Runnable {

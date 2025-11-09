@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.achen.shelf.config.CategoryConfig;
 import com.achen.shelf.config.CategoryConfigLoader;
+import com.achen.shelf.resolve.ResolutionRun;
+import com.achen.shelf.resolve.Resolver;
 import com.achen.shelf.testing.FixtureServer;
 import com.achen.shelf.testing.PostgresTestBase;
 import java.io.IOException;
@@ -178,6 +180,44 @@ class CrawlRunIntegrationTest extends PostgresTestBase {
         .isEqualTo(2);
     // …and a listing that says nothing usable gets an empty object, not a null.
     assertThat(count("select count(*) from offers where spec is null")).isZero();
+  }
+
+  @Test
+  void aResolutionPassAfterTheCrawlLinksWhatTheCatalogCovers()
+      throws SQLException, InterruptedException {
+    runnerAt(Instant.parse("2026-09-10T12:00:00Z")).runOnce(category);
+
+    ResolutionRun.Summary summary =
+        new ResolutionRun(DB, Resolver.Thresholds.defaults()).run(category);
+
+    // Q6 HE (2 variants) + K2 Ultra (2 variants) from the JSON store, Wooting 80HE from the
+    // HTML store — the same five M1's exact rule found, now with a score on each.
+    assertThat(summary.autoLinked()).isEqualTo(5);
+    assertThat(count("select count(*) from offers where resolution_status = 'auto'")).isEqualTo(5);
+    assertThat(
+            count(
+                "select count(*) from offers where resolution_status = 'auto'"
+                    + " and resolution_score = 1.0"))
+        .isEqualTo(5);
+    // The K5 Ultra listings are the K2 Ultra's relatives, not the K2 Ultra: no link, and a
+    // missing numbered token scores too low even for review.
+    assertThat(
+            count(
+                "select count(*) from offers where title like 'Keychron K5 Ultra%'"
+                    + " and resolution_status = 'pending' and candidate_product_id is null"))
+        .isEqualTo(2);
+    // The seeded "Q65" must not collect the "Q6 HE" listings: model matching is on whole tokens.
+    assertThat(
+            count(
+                "select count(*) from offers o join products p on p.id = o.product_id"
+                    + " where p.model = 'Q65'"))
+        .isZero();
+    // And the products that gained links now carry a spec derived from them.
+    assertThat(
+            count(
+                "select count(*) from products where model = 'Q6 HE'"
+                    + " and spec->>'switch_type' = 'magnetic' and spec->>'layout_size' = 'full'"))
+        .isEqualTo(1);
   }
 
   @Test
