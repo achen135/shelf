@@ -1,0 +1,37 @@
+-- offer-history  2026-09-12T17:18:26Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- execution time, three consecutive runs: 0.088 ms, 0.088 ms, 0.102 ms (plan below is run 3)
+-- partitions in the plan: price_observations_2026_09 price_observations_2026_10 price_observations_2026_11 
+
+Sort  (cost=56.71..56.74 rows=13 width=36) (actual time=0.072..0.072 rows=5 loops=1)
+  Sort Key: price_observations.observed_at
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=18
+  InitPlan 1 (returns $0)
+    ->  Index Scan using offers_url_key on offers  (cost=0.41..8.43 rows=1 width=8) (actual time=0.034..0.034 rows=1 loops=1)
+          Index Cond: (url = 'https://www.keychron.com/products/keychron-q2-qmk-custom-mechanical-keyboard?variant=39610695647321'::text)
+          Buffers: shared hit=4
+  ->  Append  (cost=4.33..48.04 rows=13 width=36) (actual time=0.047..0.060 rows=5 loops=1)
+        Buffers: shared hit=15
+        ->  Bitmap Heap Scan on price_observations_2026_09 price_observations_1  (cost=4.33..22.69 rows=5 width=22) (actual time=0.047..0.058 rows=5 loops=1)
+              Recheck Cond: (offer_id = $0)
+              Heap Blocks: exact=5
+              Buffers: shared hit=11
+              ->  Bitmap Index Scan on price_observations_2026_09_pkey  (cost=0.00..4.33 rows=5 width=0) (actual time=0.042..0.042 rows=5 loops=1)
+                    Index Cond: (offer_id = $0)
+                    Buffers: shared hit=6
+        ->  Bitmap Heap Scan on price_observations_2026_10 price_observations_2  (cost=4.18..12.64 rows=4 width=45) (actual time=0.001..0.001 rows=0 loops=1)
+              Recheck Cond: (offer_id = $0)
+              Buffers: shared hit=2
+              ->  Bitmap Index Scan on price_observations_2026_10_pkey  (cost=0.00..4.18 rows=4 width=0) (actual time=0.001..0.001 rows=0 loops=1)
+                    Index Cond: (offer_id = $0)
+                    Buffers: shared hit=2
+        ->  Bitmap Heap Scan on price_observations_2026_11 price_observations_3  (cost=4.18..12.64 rows=4 width=45) (actual time=0.001..0.001 rows=0 loops=1)
+              Recheck Cond: (offer_id = $0)
+              Buffers: shared hit=2
+              ->  Bitmap Index Scan on price_observations_2026_11_pkey  (cost=0.00..4.18 rows=4 width=0) (actual time=0.000..0.000 rows=0 loops=1)
+                    Index Cond: (offer_id = $0)
+                    Buffers: shared hit=2
+Planning:
+  Buffers: shared hit=453
+Planning Time: 0.436 ms
+Execution Time: 0.102 ms
