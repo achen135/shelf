@@ -10,12 +10,14 @@ import com.achen.shelf.crawl.RawStore;
 import com.achen.shelf.db.Database;
 import com.achen.shelf.resolve.ResolutionRun;
 import com.achen.shelf.resolve.Resolver;
+import com.achen.shelf.rollup.RollupRun;
+import java.time.Clock;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
 /**
  * {@code shelf crawl --category keyboards --once}: one single-process cycle, then a resolution pass
- * over what it wrote (M3).
+ * over what it wrote (M3) and a rollup pass over what it touched (M4).
  */
 @CommandLine.Command(
     name = "crawl",
@@ -52,6 +54,9 @@ public final class CrawlCommand implements Callable<Integer> {
       ResolutionRun.Summary resolved =
           new ResolutionRun(db, Resolver.Thresholds.defaults()).run(config);
       ResolveCommand.print(resolved);
+      RollupCommand.print(
+          new RollupRun(db, RollupRun.Settings.defaults(), Clock.systemUTC())
+              .run(config, new RollupRun.Scope.Run(summary.runId())));
       return summary.totalErrors() == 0 ? CommandLine.ExitCode.OK : CommandLine.ExitCode.SOFTWARE;
     }
   }
