@@ -64,10 +64,30 @@ public final class CrawlRunDao {
     }
   }
 
-  /** The most recent run for a category that has not finished, if there is one. */
+  /**
+   * Records a backfill as a run of its own, already finished, spanning the instants it wrote — both
+   * in the past, so it is never the run a cycle-due or a retirement question finds first.
+   */
+  public static long openBackfill(Connection c, String category, Instant from, Instant to)
+      throws SQLException {
+    String sql =
+        "insert into crawl_runs (category, kind, started_at, finished_at, worker_count)"
+            + " values (?, 'backfill', ?, ?, 0) returning id";
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
+      ps.setString(1, category);
+      ps.setTimestamp(2, Timestamp.from(from));
+      ps.setTimestamp(3, Timestamp.from(to));
+      try (ResultSet rs = ps.executeQuery()) {
+        rs.next();
+        return rs.getLong(1);
+      }
+    }
+  }
+
+  /** The most recent crawl run for a category that has not finished, if there is one. */
   public static Optional<Long> findOpen(Connection c, String category) throws SQLException {
     String sql =
-        "select id from crawl_runs where category = ? and finished_at is null"
+        "select id from crawl_runs where category = ? and kind = 'crawl' and finished_at is null"
             + " order by started_at desc limit 1";
     try (PreparedStatement ps = c.prepareStatement(sql)) {
       ps.setString(1, category);
@@ -77,12 +97,12 @@ public final class CrawlRunDao {
     }
   }
 
-  /** When the most recent finished run for a category finished, if any has. */
+  /** When the most recent finished crawl run for a category finished, if any has. */
   public static Optional<Instant> lastFinishedAt(Connection c, String category)
       throws SQLException {
     String sql =
-        "select finished_at from crawl_runs where category = ? and finished_at is not null"
-            + " order by finished_at desc limit 1";
+        "select finished_at from crawl_runs where category = ? and kind = 'crawl'"
+            + " and finished_at is not null order by finished_at desc limit 1";
     try (PreparedStatement ps = c.prepareStatement(sql)) {
       ps.setString(1, category);
       try (ResultSet rs = ps.executeQuery()) {
