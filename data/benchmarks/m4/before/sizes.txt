@@ -1,0 +1,14 @@
+-- sizes  2026-09-12T17:18:27Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+
+          relation          |    heap    | indexes |  total   | rows_est 
+----------------------------+------------+---------+----------+----------
+ crawl_runs                 | 16 kB      | 16 kB   | 32 kB    |        5
+ crawl_tasks                | 16 kB      | 80 kB   | 96 kB    |       20
+ offers                     | 7232 kB    | 2848 kB | 10080 kB |     7556
+ price_observations         | 0 bytes    | 0 bytes | 0 bytes  |        0
+ price_observations_2026_09 | 3160 kB    | 1928 kB | 5088 kB  |    38655
+ price_observations_2026_10 | 8192 bytes | 16 kB   | 24 kB    |        0
+ price_observations_2026_11 | 8192 bytes | 16 kB   | 24 kB    |        0
+ products                   | 56 kB      | 32 kB   | 88 kB    |       50
+(8 rows)
+

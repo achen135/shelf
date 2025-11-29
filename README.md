@@ -8,17 +8,20 @@ A *category* is a config file — its spec schema, its retailers and how to fetc
 products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
 never touches the open web: it visits the paths a category file names, and nothing else.
 
-> **Status: M3 complete.** Retailer listings now resolve to catalog products: after each crawl
-> cycle the pending offers are blocked by normalized brand, scored against the products in their
-> block, auto-linked above a threshold and otherwise queued for a human (`shelf review`). Against
-> **235 hand-labeled pairs** from the live corpus the resolver runs at **precision 1.000 / recall
-> 0.976** (both misses land in the review queue) — `shelf eval resolution` re-derives that from
-> `data/labels/`, and the threshold sweep is committed next to the labels. Per-listing specs are
-> persisted, and each linked product's canonical spec is derived from them. The crawler is
-> unchanged from M2: a leader-elected coordinator, a Postgres work queue, a worker pool, **7,556
-> offers** per cycle over five live retailers, SIGKILL recovery in **13.0 s** (worker) and
-> **4.9 s** (leader). See `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what
-> each one actually did, and `CLAUDE.md` for the working agreement.
+> **Status: M4 complete.** `price_observations` now holds **2.8 M rows** — 37,780 observed
+> over five live retailers plus a labeled **synthetic** year behind every offer (`shelf
+> backfill`; `source = 'synthetic'` on every such row) — in monthly partitions, and
+> `price_rollups` summarises them per offer and per product after every crawl cycle: current
+> price, list price, trailing 7/30/90/365-day min/median/max, where today sits in the year,
+> volatility, the detected sale windows, and the synthetic share of it all. Offers a retailer
+> has stopped listing retire after three unseen cycles and stop counting. The representative
+> deal query — keyboards in a price range, ordered by how today's price sits in the trailing
+> year — went from **321 ms** against raw observations to **0.10 ms** against the rollups on the
+> same data (plans in `data/benchmarks/m4/`; the partition pruning behind it is asserted by a
+> test, not claimed). Resolution (M3: precision 1.000 / recall 0.976 on 235 labeled pairs) and
+> the distributed crawler (M2: SIGKILL recovery in 13.0 s / 4.9 s) are unchanged. See
+> `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each one actually did,
+> and `CLAUDE.md` for the working agreement.
 
 ## Prereqs
 
@@ -47,8 +50,9 @@ make crawl     # shelf crawl --category keyboards --once
 ```
 
 It prints a per-retailer summary — pages, offers, price points, errors — then runs an
-entity-resolution pass over what it wrote and prints that too. Fetched bodies land under
-`data/raw/<run>/`, content-addressed, and every attempt gets a `raw_fetches` row.
+entity-resolution pass over what it wrote and a rollup pass over what it touched, and prints
+both. Fetched bodies land under `data/raw/<run>/`, content-addressed, and every attempt gets a
+`raw_fetches` row.
 
 The crawl is paced by `max_rps` in the category file (one request every five seconds per domain
 today), so a full cycle takes about half a minute of mostly waiting. That is deliberate.
@@ -100,6 +104,33 @@ before any score was seen; the policy is in the file's header), and
 point, the threshold sweep, and every miss with the reason. Re-derive it with one crawl and the
 `eval` line above.
 
+### Price history and rollups
+
+```
+shelf backfill --category keyboards             # a synthetic year behind every observed offer, labeled synthetic; safe to repeat
+shelf rollup --category keyboards               # retire unseen offers, recompute every rollup (the coordinator does this per cycle, scoped)
+shelf rollup --category keyboards --run 12      # only what run 12 touched — exactly what the post-cycle hook does
+scripts/explain.sh out/ scripts/bench/*.sql     # EXPLAIN (ANALYZE, BUFFERS) the representative queries into out/
+```
+
+`price_observations` is RANGE-partitioned by month; a crawl creates the partitions it needs at
+the start of each cycle, the backfill creates the ones it writes. `price_rollups` is a table,
+not a materialized view — one statement per grain recomputes exactly the offers and products a
+cycle touched, in the same transaction that retires whatever the cycle proved gone, and
+`shelf rollup` rebuilds it from nothing. A product's row is over the *cheapest in-stock live
+listing at each instant*; `current_in_stock` says whether its current price is buyable, `synthetic_365d`
+how much of the year is backfill. `data/benchmarks/m4/` holds the plans before and after,
+the sizes, and the covering index that was measured and declined.
+
+A few more queries for `make psql`:
+
+```sql
+select source, count(*) from price_observations group by 1;
+select p.canonical_name, r.current_price_cents, r.list_price_cents, r.percentile_365d, r.sale_days_365d
+  from price_rollups r join products p on p.id = r.product_id where r.current_in_stock order by r.percentile_365d limit 10;
+select count(*) filter (where retired_at is not null) as retired, count(*) from offers;
+```
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -121,20 +152,22 @@ environment variable that holds it.
 ```
 categories/           per-category config (spec schema, retailers, seed products)
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
-scripts/              throughput.sh — the 1-vs-N worker benchmark
+scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, eval
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, eval
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
   crawl/cluster/      coordinator (leader election, cycles, reaping) + worker pool
   resolve/            entity resolution: blocking, scoring, the review queue, the eval (M3)
-  rollup/             price rollups        (M4)
+  rollup/             the post-cycle pass: offer retirement + price rollups (M4)
+  backfill/           the labeled synthetic history (M4)
   signal/             buy/wait signal + backtest (M5)
   api/                Javalin query API    (M6)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
 data/labels/          hand-labeled resolution pairs + the committed eval report
+data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable); api in M6
@@ -149,9 +182,9 @@ few seconds, responses cached on disk, and no circumvention of any anti-bot meas
 that ask not to be crawled are left out — several were, during the M0 survey (see
 `docs/Sessions.md`).
 
-Any price data this project reports as observed was observed. Synthetic history — which M4
-adds for depth — is labelled `synthetic` in `price_observations.source` and stays labelled
-everywhere it is used.
+Any price data this project reports as observed was observed. The synthetic history M4 adds
+for depth is labelled `synthetic` in `price_observations.source` from the moment it is written,
+counted separately in every rollup, and never mixed into a number reported as observed.
 
 ## Planning docs
 

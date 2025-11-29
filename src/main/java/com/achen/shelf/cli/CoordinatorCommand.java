@@ -9,6 +9,7 @@ import com.achen.shelf.db.CrawlRunDao;
 import com.achen.shelf.db.Database;
 import com.achen.shelf.resolve.ResolutionRun;
 import com.achen.shelf.resolve.Resolver;
+import com.achen.shelf.rollup.RollupRun;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Clock;
@@ -26,7 +27,8 @@ import picocli.CommandLine;
  * to take over. {@code --once} opens a cycle immediately, waits for it to finish, prints what it
  * did and exits — the shape the throughput benchmark and the recovery tests use.
  *
- * <p>When a run closes, the leader runs an entity-resolution pass over that category (M3).
+ * <p>When a run closes, the leader runs an entity-resolution pass over that category (M3), then a
+ * rollup pass scoped to that run (M4): retire what the run proved gone, recompute what it touched.
  */
 @CommandLine.Command(
     name = "coordinator",
@@ -68,6 +70,14 @@ public final class CoordinatorCommand implements Callable<Integer> {
   private int maxAttempts;
 
   @CommandLine.Option(
+      names = "--retire-after",
+      defaultValue = "3",
+      description =
+          "Consecutive completed cycles an offer may go unseen before it stops counting as"
+              + " current (default ${DEFAULT-VALUE}).")
+  private int retireAfter;
+
+  @CommandLine.Option(
       names = "--once",
       description = "Open one cycle now, wait for it to finish, print a summary and exit.")
   private boolean once;
@@ -95,9 +105,12 @@ public final class CoordinatorCommand implements Callable<Integer> {
                 configs,
                 settings,
                 Clock.systemUTC(),
-                run ->
-                    new ResolutionRun(db, Resolver.Thresholds.defaults())
-                        .run(byName.get(run.category())))) {
+                run -> {
+                  CategoryConfig category = byName.get(run.category());
+                  new ResolutionRun(db, Resolver.Thresholds.defaults()).run(category);
+                  new RollupRun(db, new RollupRun.Settings(retireAfter), Clock.systemUTC())
+                      .run(category, new RollupRun.Scope.Run(run.runId()));
+                })) {
       Runtime.getRuntime().addShutdownHook(new Thread(coordinator::stop, "coordinator-shutdown"));
       if (!once) {
         coordinator.run();

@@ -1,0 +1,28 @@
+-- deal-query-rollup  2026-09-12T18:09:42Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- execution time, three consecutive runs: 0.153 ms, 0.137 ms, 0.100 ms (plan below is run 3)
+-- partitions in the plan: 
+
+Limit  (cost=26.96..27.01 rows=20 width=45) (actual time=0.067..0.069 rows=16 loops=1)
+  Buffers: shared hit=45
+  ->  Sort  (cost=26.96..28.86 rows=758 width=45) (actual time=0.067..0.067 rows=16 loops=1)
+        Sort Key: r.percentile_365d, r.current_price_cents
+        Sort Method: quicksort  Memory: 26kB
+        Buffers: shared hit=45
+        ->  Merge Join  (cost=5.18..6.79 rows=758 width=45) (actual time=0.025..0.057 rows=16 loops=1)
+              Merge Cond: (r.product_id = p.id)
+              Buffers: shared hit=39
+              ->  Index Scan using price_rollups_product_idx on price_rollups r  (cost=0.14..197.71 rows=758 width=28) (actual time=0.007..0.035 rows=16 loops=1)
+                    Filter: (current_in_stock AND (current_price_cents >= 10000) AND (current_price_cents <= 20000))
+                    Rows Removed by Filter: 34
+                    Buffers: shared hit=36
+              ->  Sort  (cost=5.04..5.16 rows=50 width=25) (actual time=0.016..0.017 rows=50 loops=1)
+                    Sort Key: p.id
+                    Sort Method: quicksort  Memory: 27kB
+                    Buffers: shared hit=3
+                    ->  Seq Scan on products p  (cost=0.00..3.62 rows=50 width=25) (actual time=0.002..0.008 rows=50 loops=1)
+                          Filter: (category = 'keyboards'::text)
+                          Buffers: shared hit=3
+Planning:
+  Buffers: shared hit=285
+Planning Time: 0.322 ms
+Execution Time: 0.100 ms

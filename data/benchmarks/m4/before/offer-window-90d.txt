@@ -1,0 +1,29 @@
+-- offer-window-90d  2026-09-12T17:18:27Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- execution time, three consecutive runs: 0.090 ms, 0.099 ms, 0.090 ms (plan below is run 3)
+-- partitions in the plan: price_observations_2026_09 price_observations_2026_10 price_observations_2026_11 
+
+Aggregate  (cost=47.61..47.62 rows=1 width=16) (actual time=0.052..0.053 rows=1 loops=1)
+  Buffers: shared hit=15
+  InitPlan 1 (returns $0)
+    ->  Index Scan using offers_url_key on offers  (cost=0.41..8.43 rows=1 width=8) (actual time=0.023..0.023 rows=1 loops=1)
+          Index Cond: (url = 'https://www.keychron.com/products/keychron-q2-qmk-custom-mechanical-keyboard?variant=39610695647321'::text)
+          Buffers: shared hit=4
+  ->  Append  (cost=4.35..39.13 rows=7 width=4) (actual time=0.035..0.050 rows=5 loops=1)
+        Buffers: shared hit=15
+        ->  Bitmap Heap Scan on price_observations_2026_09 price_observations_1  (cost=4.35..22.75 rows=5 width=4) (actual time=0.035..0.045 rows=5 loops=1)
+              Recheck Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Heap Blocks: exact=5
+              Buffers: shared hit=11
+              ->  Bitmap Index Scan on price_observations_2026_09_pkey  (cost=0.00..4.34 rows=5 width=0) (actual time=0.031..0.031 rows=5 loops=1)
+                    Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+                    Buffers: shared hit=6
+        ->  Index Scan using price_observations_2026_10_pkey on price_observations_2026_10 price_observations_2  (cost=0.15..8.17 rows=1 width=4) (actual time=0.002..0.002 rows=0 loops=1)
+              Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Buffers: shared hit=2
+        ->  Index Scan using price_observations_2026_11_pkey on price_observations_2026_11 price_observations_3  (cost=0.15..8.17 rows=1 width=4) (actual time=0.002..0.002 rows=0 loops=1)
+              Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Buffers: shared hit=2
+Planning:
+  Buffers: shared hit=460
+Planning Time: 0.446 ms
+Execution Time: 0.090 ms

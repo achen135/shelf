@@ -1,0 +1,27 @@
+-- sizes  2026-09-12T18:06:39Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+
+          relation          |    heap    | indexes |  total   | rows_est 
+----------------------------+------------+---------+----------+----------
+ crawl_runs                 | 16 kB      | 16 kB   | 32 kB    |        6
+ crawl_tasks                | 16 kB      | 80 kB   | 96 kB    |       20
+ offers                     | 7232 kB    | 2848 kB | 10080 kB |     7556
+ price_observations         | 0 bytes    | 0 bytes | 0 bytes  |        0
+ price_observations_2025_09 | 20 MB      | 9024 kB | 28 MB    |   151120
+ price_observations_2025_10 | 32 MB      | 13 MB   | 45 MB    |   234236
+ price_observations_2025_11 | 32 MB      | 12 MB   | 44 MB    |   226680
+ price_observations_2025_12 | 37 MB      | 12 MB   | 48 MB    |   234236
+ price_observations_2026_01 | 27 MB      | 16 MB   | 42 MB    |   234236
+ price_observations_2026_02 | 25 MB      | 14 MB   | 39 MB    |   211568
+ price_observations_2026_03 | 29 MB      | 15 MB   | 44 MB    |   234236
+ price_observations_2026_04 | 37 MB      | 10 MB   | 47 MB    |   226680
+ price_observations_2026_05 | 38 MB      | 10 MB   | 48 MB    |   234236
+ price_observations_2026_06 | 37 MB      | 9672 kB | 46 MB    |   226680
+ price_observations_2026_07 | 38 MB      | 10 MB   | 48 MB    |   234236
+ price_observations_2026_08 | 38 MB      | 10 MB   | 48 MB    |   234236
+ price_observations_2026_09 | 14 MB      | 6288 kB | 20 MB    |   113340
+ price_observations_2026_10 | 8192 bytes | 16 kB   | 24 kB    |        0
+ price_observations_2026_11 | 8192 bytes | 16 kB   | 24 kB    |        0
+ price_rollups              | 36 MB      | 984 kB  | 36 MB    |     7606
+ products                   | 56 kB      | 32 kB   | 88 kB    |       50
+(21 rows)
+

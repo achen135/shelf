@@ -1,0 +1,106 @@
+-- deal-query-raw  2026-09-12T17:18:26Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- execution time, three consecutive runs: 11.686 ms, 9.924 ms, 9.526 ms (plan below is run 3)
+-- partitions in the plan: price_observations_2026_09 price_observations_2026_10 price_observations_2026_11 
+
+Limit  (cost=5501.26..5501.27 rows=1 width=49) (actual time=9.319..9.323 rows=16 loops=1)
+  Buffers: shared hit=970
+  CTE linked
+    ->  Bitmap Heap Scan on offers  (cost=22.82..958.34 rows=100 width=16) (actual time=0.031..0.316 rows=869 loops=1)
+          Recheck Cond: (product_id IS NOT NULL)
+          Filter: (resolution_status = ANY ('{auto,reviewed}'::text[]))
+          Heap Blocks: exact=145
+          Buffers: shared hit=149
+          ->  Bitmap Index Scan on offers_product_id_idx  (cost=0.00..22.80 rows=869 width=0) (actual time=0.021..0.021 rows=869 loops=1)
+                Index Cond: (product_id IS NOT NULL)
+                Buffers: shared hit=4
+  CTE current
+    ->  GroupAggregate  (cost=2868.78..2870.53 rows=100 width=12) (actual time=6.244..6.269 rows=44 loops=1)
+          Group Key: latest.product_id
+          Buffers: shared hit=542
+          ->  Sort  (cost=2868.78..2869.03 rows=100 width=12) (actual time=6.241..6.250 rows=330 loops=1)
+                Sort Key: latest.product_id
+                Sort Method: quicksort  Memory: 37kB
+                Buffers: shared hit=542
+                ->  Subquery Scan on latest  (cost=2764.55..2865.46 rows=100 width=12) (actual time=5.937..6.220 rows=330 loops=1)
+                      Filter: latest.in_stock
+                      Rows Removed by Filter: 539
+                      Buffers: shared hit=542
+                      ->  Unique  (cost=2764.55..2863.46 rows=200 width=29) (actual time=5.934..6.183 rows=869 loops=1)
+                            Buffers: shared hit=542
+                            ->  Sort  (cost=2764.55..2814.00 rows=19782 width=29) (actual time=5.934..6.032 rows=4345 loops=1)
+                                  Sort Key: po_4.offer_id, po_4.observed_at DESC
+                                  Sort Method: quicksort  Memory: 430kB
+                                  Buffers: shared hit=542
+                                  ->  Hash Join  (cost=3.25..1352.91 rows=19782 width=29) (actual time=0.463..5.348 rows=4345 loops=1)
+                                        Hash Cond: (po_4.offer_id = l_1.offer_id)
+                                        Buffers: shared hit=539
+                                        ->  Append  (cost=0.00..1003.48 rows=39565 width=21) (actual time=0.003..3.325 rows=37780 loops=1)
+                                              Buffers: shared hit=390
+                                              ->  Seq Scan on price_observations_2026_09 po_5  (cost=0.00..768.25 rows=37825 width=21) (actual time=0.003..1.992 rows=37780 loops=1)
+                                                    Buffers: shared hit=390
+                                              ->  Seq Scan on price_observations_2026_10 po_6  (cost=0.00..18.70 rows=870 width=21) (actual time=0.001..0.001 rows=0 loops=1)
+                                              ->  Seq Scan on price_observations_2026_11 po_7  (cost=0.00..18.70 rows=870 width=21) (actual time=0.001..0.001 rows=0 loops=1)
+                                        ->  Hash  (cost=2.00..2.00 rows=100 width=16) (actual time=0.451..0.452 rows=869 loops=1)
+                                              Buckets: 1024  Batches: 1  Memory Usage: 49kB
+                                              Buffers: shared hit=149
+                                              ->  CTE Scan on linked l_1  (cost=0.00..2.00 rows=100 width=16) (actual time=0.033..0.402 rows=869 loops=1)
+                                                    Buffers: shared hit=149
+  ->  Sort  (cost=1672.39..1672.39 rows=1 width=49) (actual time=9.318..9.320 rows=16 loops=1)
+        Sort Key: (((count(*) FILTER (WHERE ((min(po.price_cents)) < c_1.current_price_cents)))::double precision / (count(*))::double precision)), c.current_price_cents
+        Sort Method: quicksort  Memory: 27kB
+        Buffers: shared hit=970
+        ->  Nested Loop  (cost=1611.53..1672.38 rows=1 width=49) (actual time=9.262..9.309 rows=16 loops=1)
+              Join Filter: (p.id = c.product_id)
+              Buffers: shared hit=964
+              ->  Merge Join  (cost=1611.39..1672.11 rows=1 width=40) (actual time=9.254..9.290 rows=16 loops=1)
+                    Merge Cond: (c.product_id = l.product_id)
+                    Buffers: shared hit=932
+                    ->  Sort  (cost=2.51..2.51 rows=1 width=12) (actual time=6.277..6.277 rows=16 loops=1)
+                          Sort Key: c.product_id
+                          Sort Method: quicksort  Memory: 25kB
+                          Buffers: shared hit=542
+                          ->  CTE Scan on current c  (cost=0.00..2.50 rows=1 width=12) (actual time=6.245..6.272 rows=16 loops=1)
+                                Filter: ((current_price_cents >= 10000) AND (current_price_cents <= 20000))
+                                Rows Removed by Filter: 28
+                                Buffers: shared hit=542
+                    ->  GroupAggregate  (cost=1608.88..1667.08 rows=200 width=28) (actual time=2.976..3.009 rows=44 loops=1)
+                          Group Key: l.product_id
+                          Buffers: shared hit=390
+                          ->  Sort  (cost=1608.88..1615.65 rows=2710 width=16) (actual time=2.968..2.973 rows=220 loops=1)
+                                Sort Key: l.product_id
+                                Sort Method: quicksort  Memory: 33kB
+                                Buffers: shared hit=390
+                                ->  Hash Join  (cost=1298.55..1454.35 rows=2710 width=16) (actual time=2.907..2.952 rows=220 loops=1)
+                                      Hash Cond: (l.product_id = c_1.product_id)
+                                      Buffers: shared hit=390
+                                      ->  HashAggregate  (cost=1295.30..1349.49 rows=5419 width=20) (actual time=2.901..2.930 rows=220 loops=1)
+                                            Group Key: l.product_id, po.observed_at
+                                            Batches: 1  Memory Usage: 225kB
+                                            Buffers: shared hit=390
+                                            ->  Hash Join  (cost=3.25..1254.66 rows=5419 width=20) (actual time=0.090..2.748 rows=1648 loops=1)
+                                                  Hash Cond: (po.offer_id = l.offer_id)
+                                                  Buffers: shared hit=390
+                                                  ->  Append  (cost=0.00..1156.58 rows=10838 width=20) (actual time=0.002..2.165 rows=10610 loops=1)
+                                                        Buffers: shared hit=390
+                                                        ->  Seq Scan on price_observations_2026_09 po_1  (cost=0.00..1051.94 rows=10548 width=20) (actual time=0.002..1.779 rows=10610 loops=1)
+                                                              Filter: (in_stock AND (observed_at > (now() - '365 days'::interval)))
+                                                              Rows Removed by Filter: 27170
+                                                              Buffers: shared hit=390
+                                                        ->  Seq Scan on price_observations_2026_10 po_2  (cost=0.00..25.23 rows=145 width=20) (actual time=0.002..0.002 rows=0 loops=1)
+                                                              Filter: (in_stock AND (observed_at > (now() - '365 days'::interval)))
+                                                        ->  Seq Scan on price_observations_2026_11 po_3  (cost=0.00..25.23 rows=145 width=20) (actual time=0.001..0.001 rows=0 loops=1)
+                                                              Filter: (in_stock AND (observed_at > (now() - '365 days'::interval)))
+                                                  ->  Hash  (cost=2.00..2.00 rows=100 width=16) (actual time=0.081..0.081 rows=869 loops=1)
+                                                        Buckets: 1024  Batches: 1  Memory Usage: 49kB
+                                                        ->  CTE Scan on linked l  (cost=0.00..2.00 rows=100 width=16) (actual time=0.000..0.033 rows=869 loops=1)
+                                      ->  Hash  (cost=2.00..2.00 rows=100 width=12) (actual time=0.004..0.004 rows=44 loops=1)
+                                            Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                            ->  CTE Scan on current c_1  (cost=0.00..2.00 rows=100 width=12) (actual time=0.000..0.002 rows=44 loops=1)
+              ->  Index Scan using products_pkey on products p  (cost=0.14..0.26 rows=1 width=25) (actual time=0.001..0.001 rows=1 loops=16)
+                    Index Cond: (id = l.product_id)
+                    Filter: (category = 'keyboards'::text)
+                    Buffers: shared hit=32
+Planning:
+  Buffers: shared hit=578
+Planning Time: 0.722 ms
+Execution Time: 9.526 ms
