@@ -23,6 +23,7 @@ import picocli.CommandLine;
       ResolveCommand.class,
       ReviewCommand.class,
       RollupCommand.class,
+      BackfillCommand.class,
       EvalCommand.class,
       ApiCommand.class
     })
