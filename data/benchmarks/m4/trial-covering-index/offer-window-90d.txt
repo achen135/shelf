@@ -1,0 +1,37 @@
+-- offer-window-90d  2026-09-12T18:06:42Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- execution time, three consecutive runs: 0.145 ms, 0.138 ms, 0.158 ms (plan below is run 3)
+-- partitions in the plan: price_observations_2026_06 price_observations_2026_07 price_observations_2026_08 price_observations_2026_09 price_observations_2026_10 price_observations_2026_11 
+
+Aggregate  (cost=69.29..69.30 rows=1 width=16) (actual time=0.098..0.098 rows=1 loops=1)
+  Buffers: shared hit=20
+  InitPlan 1 (returns $0)
+    ->  Index Scan using offers_url_key on offers  (cost=0.41..8.43 rows=1 width=8) (actual time=0.026..0.026 rows=1 loops=1)
+          Index Cond: (url = 'https://www.keychron.com/products/keychron-q2-qmk-custom-mechanical-keyboard?variant=39610695647321'::text)
+          Buffers: shared hit=4
+  ->  Append  (cost=0.42..60.08 rows=104 width=4) (actual time=0.045..0.093 rows=93 loops=1)
+        Buffers: shared hit=20
+        Subplans Removed: 9
+        ->  Index Only Scan using price_observations_2026_06_offer_id_observed_at_price_cents_idx on price_observations_2026_06 price_observations_1  (cost=0.42..4.75 rows=16 width=4) (actual time=0.045..0.046 rows=16 loops=1)
+              Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Heap Fetches: 0
+              Buffers: shared hit=8
+        ->  Index Only Scan using price_observations_2026_07_offer_id_observed_at_price_cents_idx on price_observations_2026_07 price_observations_2  (cost=0.42..5.04 rows=31 width=4) (actual time=0.012..0.014 rows=31 loops=1)
+              Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Heap Fetches: 0
+              Buffers: shared hit=4
+        ->  Index Only Scan using price_observations_2026_08_offer_id_observed_at_price_cents_idx on price_observations_2026_08 price_observations_3  (cost=0.42..5.04 rows=31 width=4) (actual time=0.013..0.015 rows=31 loops=1)
+              Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Heap Fetches: 0
+              Buffers: shared hit=4
+        ->  Index Only Scan using price_observations_2026_09_offer_id_observed_at_price_cents_idx on price_observations_2026_09 price_observations_4  (cost=0.42..4.72 rows=15 width=4) (actual time=0.013..0.013 rows=15 loops=1)
+              Index Cond: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+              Heap Fetches: 0
+              Buffers: shared hit=4
+        ->  Seq Scan on price_observations_2026_10 price_observations_5  (cost=0.00..0.00 rows=1 width=4) (actual time=0.001..0.001 rows=0 loops=1)
+              Filter: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+        ->  Seq Scan on price_observations_2026_11 price_observations_6  (cost=0.00..0.00 rows=1 width=4) (actual time=0.001..0.001 rows=0 loops=1)
+              Filter: ((offer_id = $0) AND (observed_at > (now() - '90 days'::interval)))
+Planning:
+  Buffers: shared hit=1597
+Planning Time: 1.560 ms
+Execution Time: 0.158 ms

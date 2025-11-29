@@ -1,0 +1,225 @@
+-- deal-query-raw  2026-09-12T18:06:42Z  PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+-- execution time, three consecutive runs: 225.023 ms, 220.394 ms, 222.105 ms (plan below is run 3)
+-- partitions in the plan: price_observations_2025_09 price_observations_2025_10 price_observations_2025_11 price_observations_2025_12 price_observations_2026_01 price_observations_2026_02 price_observations_2026_03 price_observations_2026_04 price_observations_2026_05 price_observations_2026_06 price_observations_2026_07 price_observations_2026_08 price_observations_2026_09 price_observations_2026_10 price_observations_2026_11 
+
+Limit  (cost=22482.12..22482.12 rows=1 width=49) (actual time=219.416..219.427 rows=16 loops=1)
+  Buffers: shared hit=71742, temp read=1658 written=1664
+  CTE linked
+    ->  Bitmap Heap Scan on offers  (cost=22.82..958.34 rows=100 width=16) (actual time=0.037..0.343 rows=869 loops=1)
+          Recheck Cond: (product_id IS NOT NULL)
+          Filter: (resolution_status = ANY ('{auto,reviewed}'::text[]))
+          Heap Blocks: exact=145
+          Buffers: shared hit=149
+          ->  Bitmap Index Scan on offers_product_id_idx  (cost=0.00..22.80 rows=869 width=0) (actual time=0.023..0.023 rows=869 loops=1)
+                Index Cond: (product_id IS NOT NULL)
+                Buffers: shared hit=4
+  CTE current
+    ->  HashAggregate  (cost=9888.17..9890.17 rows=200 width=12) (actual time=137.936..137.945 rows=44 loops=1)
+          Group Key: latest.product_id
+          Batches: 1  Memory Usage: 40kB
+          Buffers: shared hit=35928, temp read=1658 written=1664
+          ->  Subquery Scan on latest  (cost=9608.02..9869.42 rows=3750 width=12) (actual time=116.826..137.896 rows=330 loops=1)
+                Filter: latest.in_stock
+                Rows Removed by Filter: 539
+                Buffers: shared hit=35928, temp read=1658 written=1664
+                ->  Unique  (cost=9608.02..9794.43 rows=7499 width=29) (actual time=116.782..137.854 rows=869 loops=1)
+                      Buffers: shared hit=35928, temp read=1658 written=1664
+                      ->  Sort  (cost=9608.02..9701.23 rows=37281 width=29) (actual time=116.781..129.099 rows=321530 loops=1)
+                            Sort Key: po_16.offer_id, po_16.observed_at DESC
+                            Sort Method: external merge  Disk: 13264kB
+                            Buffers: shared hit=35928, temp read=1658 written=1664
+                            ->  Nested Loop  (cost=0.42..6777.25 rows=37281 width=29) (actual time=0.053..54.007 rows=321530 loops=1)
+                                  Buffers: shared hit=35925
+                                  ->  CTE Scan on linked l_1  (cost=0.00..2.00 rows=100 width=16) (actual time=0.038..0.453 rows=869 loops=1)
+                                        Buffers: shared hit=149
+                                  ->  Append  (cost=0.42..64.03 rows=372 width=21) (actual time=0.001..0.045 rows=370 loops=869)
+                                        Buffers: shared hit=35776
+                                        ->  Index Only Scan using price_observations_2025_09_offer_id_observed_at_price_cents_idx on price_observations_2025_09 po_17  (cost=0.42..4.57 rows=20 width=21) (actual time=0.001..0.002 rows=20 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2700
+                                        ->  Index Only Scan using price_observations_2025_10_offer_id_observed_at_price_cents_idx on price_observations_2025_10 po_18  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2025_11_offer_id_observed_at_price_cents_idx on price_observations_2025_11 po_19  (cost=0.42..4.82 rows=30 width=21) (actual time=0.001..0.002 rows=30 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2752
+                                        ->  Index Only Scan using price_observations_2025_12_offer_id_observed_at_price_cents_idx on price_observations_2025_12 po_20  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2026_01_offer_id_observed_at_price_cents_idx on price_observations_2026_01 po_21  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2026_02_offer_id_observed_at_price_cents_idx on price_observations_2026_02 po_22  (cost=0.42..4.79 rows=28 width=21) (actual time=0.001..0.002 rows=28 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2738
+                                        ->  Index Only Scan using price_observations_2026_03_offer_id_observed_at_price_cents_idx on price_observations_2026_03 po_23  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2026_04_offer_id_observed_at_price_cents_idx on price_observations_2026_04 po_24  (cost=0.42..4.82 rows=30 width=21) (actual time=0.001..0.002 rows=30 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2752
+                                        ->  Index Only Scan using price_observations_2026_05_offer_id_observed_at_price_cents_idx on price_observations_2026_05 po_25  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2026_06_offer_id_observed_at_price_cents_idx on price_observations_2026_06 po_26  (cost=0.42..4.82 rows=30 width=21) (actual time=0.001..0.002 rows=30 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2752
+                                        ->  Index Only Scan using price_observations_2026_07_offer_id_observed_at_price_cents_idx on price_observations_2026_07 po_27  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2026_08_offer_id_observed_at_price_cents_idx on price_observations_2026_08 po_28  (cost=0.42..4.84 rows=31 width=21) (actual time=0.001..0.002 rows=31 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2771
+                                        ->  Index Only Scan using price_observations_2026_09_offer_id_observed_at_price_cents_idx on price_observations_2026_09 po_29  (cost=0.42..4.44 rows=15 width=21) (actual time=0.001..0.002 rows=15 loops=869)
+                                              Index Cond: (offer_id = l_1.offer_id)
+                                              Heap Fetches: 0
+                                              Buffers: shared hit=2685
+                                        ->  Seq Scan on price_observations_2026_10 po_30  (cost=0.00..0.00 rows=1 width=21) (actual time=0.000..0.000 rows=0 loops=869)
+                                              Filter: (offer_id = l_1.offer_id)
+                                        ->  Seq Scan on price_observations_2026_11 po_31  (cost=0.00..0.00 rows=1 width=21) (actual time=0.000..0.000 rows=0 loops=869)
+                                              Filter: (offer_id = l_1.offer_id)
+  ->  Sort  (cost=11633.60..11633.61 rows=1 width=49) (actual time=219.415..219.419 rows=16 loops=1)
+        Sort Key: (((count(*) FILTER (WHERE (s.price_cents < c_1.current_price_cents)))::double precision / (count(*))::double precision)), c.current_price_cents
+        Sort Method: quicksort  Memory: 27kB
+        Buffers: shared hit=71742, temp read=1658 written=1664
+        ->  Nested Loop  (cost=10483.37..11633.59 rows=1 width=49) (actual time=216.892..219.383 rows=16 loops=1)
+              Join Filter: (p.id = c.product_id)
+              Buffers: shared hit=71736, temp read=1658 written=1664
+              ->  Merge Join  (cost=10483.23..11633.32 rows=1 width=40) (actual time=216.882..219.363 rows=16 loops=1)
+                    Merge Cond: (c.product_id = s.product_id)
+                    Buffers: shared hit=71704, temp read=1658 written=1664
+                    ->  Sort  (cost=5.01..5.01 rows=1 width=12) (actual time=137.957..137.958 rows=16 loops=1)
+                          Sort Key: c.product_id
+                          Sort Method: quicksort  Memory: 25kB
+                          Buffers: shared hit=35928, temp read=1658 written=1664
+                          ->  CTE Scan on current c  (cost=0.00..5.00 rows=1 width=12) (actual time=137.939..137.947 rows=16 loops=1)
+                                Filter: ((current_price_cents >= 10000) AND (current_price_cents <= 20000))
+                                Rows Removed by Filter: 28
+                                Buffers: shared hit=35928, temp read=1658 written=1664
+                    ->  GroupAggregate  (cost=10478.22..11625.79 rows=200 width=28) (actual time=78.923..81.399 rows=44 loops=1)
+                          Group Key: s.product_id
+                          Buffers: shared hit=35776
+                          ->  Merge Join  (cost=10478.22..11006.56 rows=35156 width=16) (actual time=78.860..80.240 rows=16131 loops=1)
+                                Merge Cond: (c_1.product_id = s.product_id)
+                                Buffers: shared hit=35776
+                                ->  Sort  (cost=11.64..12.14 rows=200 width=12) (actual time=0.009..0.013 rows=44 loops=1)
+                                      Sort Key: c_1.product_id
+                                      Sort Method: quicksort  Memory: 26kB
+                                      ->  CTE Scan on current c_1  (cost=0.00..4.00 rows=200 width=12) (actual time=0.000..0.003 rows=44 loops=1)
+                                ->  Sort  (cost=10466.58..10554.47 rows=35156 width=12) (actual time=78.848..79.272 rows=17583 loops=1)
+                                      Sort Key: s.product_id
+                                      Sort Method: quicksort  Memory: 1455kB
+                                      Buffers: shared hit=35776
+                                      ->  Subquery Scan on s  (cost=7108.92..7812.04 rows=35156 width=12) (actual time=75.806..77.655 rows=17583 loops=1)
+                                            Buffers: shared hit=35776
+                                            ->  HashAggregate  (cost=7108.92..7460.48 rows=35156 width=20) (actual time=75.805..76.917 rows=17583 loops=1)
+                                                  Group Key: l.product_id, po.observed_at
+                                                  Batches: 1  Memory Usage: 2833kB
+                                                  Buffers: shared hit=35776
+                                                  ->  Nested Loop  (cost=0.42..6845.25 rows=35156 width=20) (actual time=0.015..54.744 rows=303936 loops=1)
+                                                        Buffers: shared hit=35776
+                                                        ->  CTE Scan on linked l  (cost=0.00..2.00 rows=100 width=16) (actual time=0.000..0.077 rows=869 loops=1)
+                                                        ->  Append  (cost=0.42..64.89 rows=354 width=20) (actual time=0.001..0.047 rows=350 loops=869)
+                                                              Buffers: shared hit=35776
+                                                              ->  Index Only Scan using price_observations_2025_09_offer_id_observed_at_price_cents_idx on price_observations_2025_09 po_1  (cost=0.42..4.58 rows=17 width=20) (actual time=0.001..0.002 rows=17 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2700
+                                                              ->  Index Only Scan using price_observations_2025_10_offer_id_observed_at_price_cents_idx on price_observations_2025_10 po_2  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=30 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2025_11_offer_id_observed_at_price_cents_idx on price_observations_2025_11 po_3  (cost=0.42..4.90 rows=29 width=20) (actual time=0.001..0.003 rows=29 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2752
+                                                              ->  Index Only Scan using price_observations_2025_12_offer_id_observed_at_price_cents_idx on price_observations_2025_12 po_4  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=30 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2026_01_offer_id_observed_at_price_cents_idx on price_observations_2026_01 po_5  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=30 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2026_02_offer_id_observed_at_price_cents_idx on price_observations_2026_02 po_6  (cost=0.42..4.87 rows=27 width=20) (actual time=0.001..0.002 rows=27 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2738
+                                                              ->  Index Only Scan using price_observations_2026_03_offer_id_observed_at_price_cents_idx on price_observations_2026_03 po_7  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=30 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2026_04_offer_id_observed_at_price_cents_idx on price_observations_2026_04 po_8  (cost=0.42..4.90 rows=29 width=20) (actual time=0.001..0.003 rows=29 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2752
+                                                              ->  Index Only Scan using price_observations_2026_05_offer_id_observed_at_price_cents_idx on price_observations_2026_05 po_9  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=30 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2026_06_offer_id_observed_at_price_cents_idx on price_observations_2026_06 po_10  (cost=0.42..4.90 rows=29 width=20) (actual time=0.001..0.003 rows=29 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2752
+                                                              ->  Index Only Scan using price_observations_2026_07_offer_id_observed_at_price_cents_idx on price_observations_2026_07 po_11  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=30 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 1
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2026_08_offer_id_observed_at_price_cents_idx on price_observations_2026_08 po_12  (cost=0.42..4.92 rows=30 width=20) (actual time=0.001..0.003 rows=29 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 2
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2771
+                                                              ->  Index Only Scan using price_observations_2026_09_offer_id_observed_at_price_cents_idx on price_observations_2026_09 po_13  (cost=0.42..4.48 rows=11 width=20) (actual time=0.001..0.002 rows=11 loops=869)
+                                                                    Index Cond: ((offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                                    Filter: in_stock
+                                                                    Rows Removed by Filter: 4
+                                                                    Heap Fetches: 0
+                                                                    Buffers: shared hit=2685
+                                                              ->  Seq Scan on price_observations_2026_10 po_14  (cost=0.00..0.00 rows=1 width=20) (actual time=0.000..0.000 rows=0 loops=869)
+                                                                    Filter: (in_stock AND (offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+                                                              ->  Seq Scan on price_observations_2026_11 po_15  (cost=0.00..0.00 rows=1 width=20) (actual time=0.000..0.000 rows=0 loops=869)
+                                                                    Filter: (in_stock AND (offer_id = l.offer_id) AND (observed_at > (now() - '365 days'::interval)))
+              ->  Index Scan using products_pkey on products p  (cost=0.14..0.26 rows=1 width=25) (actual time=0.001..0.001 rows=1 loops=16)
+                    Index Cond: (id = s.product_id)
+                    Filter: (category = 'keyboards'::text)
+                    Buffers: shared hit=32
+Planning:
+  Buffers: shared hit=1760
+Planning Time: 5.307 ms
+Execution Time: 222.105 ms
