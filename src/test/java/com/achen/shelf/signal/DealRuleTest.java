@@ -11,6 +11,7 @@ import static com.achen.shelf.signal.ReasonCode.NO_PRICE;
 import static com.achen.shelf.signal.ReasonCode.NO_SALE_HISTORY;
 import static com.achen.shelf.signal.ReasonCode.ON_SALE;
 import static com.achen.shelf.signal.ReasonCode.OUT_OF_STOCK;
+import static com.achen.shelf.signal.ReasonCode.SALES_RARE;
 import static com.achen.shelf.signal.ReasonCode.SALES_RECUR;
 import static com.achen.shelf.signal.ReasonCode.THIN_HISTORY;
 import static com.achen.shelf.signal.ReasonCode.YEAR_LOW;
@@ -149,14 +150,29 @@ class DealRuleTest {
     DealRule eager = new DealRule(DealRule.Thresholds.defaults().withWaitPercentile(0.30));
     assertThat(eager.decide(row(9000, 0.35, 200)).signal()).isEqualTo(Signal.WAIT);
 
-    assertThatThrownBy(() -> new DealRule.Thresholds(0.5, 0.5, 1.05, 30))
+    assertThatThrownBy(() -> new DealRule.Thresholds(0.5, 0.5, 1.05, 30, 1))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 1.5, 1.05, 30))
+    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 1.5, 1.05, 30, 1))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 0.5, 0.99, 30))
+    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 0.5, 0.99, 30, 1))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 0.5, 1.05, 0))
+    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 0.5, 1.05, 0, 1))
         .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new DealRule.Thresholds(0.2, 0.5, 1.05, 30, 0))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void aProductWhoseSalesAreTooRareToWaitForGetsNoCall() {
+    // The default bar is one window: any sale makes waiting advice.
+    assertThat(rule.decide(row(10000, 0.15, 40)).signal()).isEqualTo(Signal.WAIT);
+    // Raised to three, a product with one window in its year is a no-call at list...
+    DealRule demanding = new DealRule(DealRule.Thresholds.defaults().withMinSaleWindows(3));
+    assertThat(demanding.decide(row(10000, 0.15, 40)))
+        .isEqualTo(new Decision(Signal.NEUTRAL, List.of(AT_LIST, LOW_PERCENTILE, SALES_RARE)));
+    // ...and on a sale most of the year beat; a good sale is still a buy
+    assertThat(demanding.decide(row(9000, 0.50, 200)).reasons()).endsWith(SALES_RARE);
+    assertThat(demanding.decide(row(7000, 0.0, 10)).signal()).isEqualTo(Signal.BUY);
   }
 
   @Test

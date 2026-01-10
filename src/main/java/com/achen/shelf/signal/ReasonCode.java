@@ -25,7 +25,8 @@ public enum ReasonCode {
   MIDDLING_SALE("a sale, but neither near the year's low nor unusually cheap for this product"),
 
   // -- whether waiting has ever paid for this product
-  SALES_RECUR("this product has been on sale in the trailing year"),
+  SALES_RECUR("this product goes on sale, often enough to wait for the next one"),
+  SALES_RARE("this product goes on sale, but too rarely to count on one soon"),
   NO_SALE_HISTORY("no sale in the trailing year — nothing says a better price is coming"),
 
   // -- the split

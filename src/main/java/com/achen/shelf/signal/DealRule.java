@@ -20,10 +20,11 @@ import java.util.List;
  *       the cheapest of its variants sat 20% off for most of the year, is not a deal.
  *   <li><b>Wait</b> when the price is not a sale, or is a sale that most of the year beat ({@code
  *       waitPercentile} or more of the year below it), <em>and</em> the product does go on sale —
- *       the trailing year has at least one sale day. A product that never discounts gets no call at
- *       list: nothing says a better price is coming.
- *   <li><b>Neutral</b> otherwise — mostly a sale that is neither near the low nor unusually cheap
- *       for this product.
+ *       at least {@code minSaleWindows} sale windows in the trailing year (one, by default: any
+ *       sale). A product that never discounts gets no call at list: nothing says a better price is
+ *       coming.
+ *   <li><b>Neutral</b> otherwise — a sale that is neither near the low nor unusually cheap for this
+ *       product, or a product whose sales are too rare to wait for.
  * </ul>
  *
  * <p>All time arithmetic uses the row's own {@code as_of}, never the clock, so the same rule gives
@@ -36,11 +37,18 @@ public final class DealRule {
 
   /** The rule's numbers. Defaults were fixed before the backtest was run. */
   public record Thresholds(
-      double buyPercentile, double waitPercentile, double nearLowFactor, int minObservations) {
+      double buyPercentile,
+      double waitPercentile,
+      double nearLowFactor,
+      int minObservations,
+      int minSaleWindows) {
 
-    /** buy ≤ 0.20 of the year below; wait ≥ 0.50; within 5% of the low; 30 points. */
+    /**
+     * buy ≤ 0.20 of the year below; wait ≥ 0.50; within 5% of the low; 30 points; any sale in the
+     * year makes the product one that goes on sale.
+     */
     public static Thresholds defaults() {
-      return new Thresholds(0.20, 0.50, 1.05, 30);
+      return new Thresholds(0.20, 0.50, 1.05, 30, 1);
     }
 
     public Thresholds {
@@ -53,19 +61,27 @@ public final class DealRule {
       if (nearLowFactor < 1) {
         throw new IllegalArgumentException("nearLowFactor must be at least 1");
       }
-      if (minObservations < 1) {
-        throw new IllegalArgumentException("minObservations must be at least 1");
+      if (minObservations < 1 || minSaleWindows < 1) {
+        throw new IllegalArgumentException("minObservations and minSaleWindows must be at least 1");
       }
     }
 
     /** The same thresholds with a different buy percentile — what the backtest sweeps. */
     public Thresholds withBuyPercentile(double value) {
-      return new Thresholds(value, waitPercentile, nearLowFactor, minObservations);
+      return new Thresholds(value, waitPercentile, nearLowFactor, minObservations, minSaleWindows);
     }
 
     /** The same thresholds with a different wait percentile. */
     public Thresholds withWaitPercentile(double value) {
-      return new Thresholds(buyPercentile, value, nearLowFactor, minObservations);
+      return new Thresholds(buyPercentile, value, nearLowFactor, minObservations, minSaleWindows);
+    }
+
+    /**
+     * The same thresholds with a different bar for "goes on sale": the sale windows a product needs
+     * in its trailing year before a wait is advice rather than a guess.
+     */
+    public Thresholds withMinSaleWindows(int value) {
+      return new Thresholds(buyPercentile, waitPercentile, nearLowFactor, minObservations, value);
     }
   }
 
@@ -118,7 +134,8 @@ public final class DealRule {
     boolean nearLow = !yearLow && price <= low * t.nearLowFactor();
     boolean lowPercentile = percentile <= t.buyPercentile();
     boolean highPercentile = percentile >= t.waitPercentile();
-    boolean salesRecur = r.saleDays365d() > 0;
+    boolean hasSales = r.saleDays365d() > 0;
+    boolean salesRecur = hasSales && r.saleWindows().size() >= t.minSaleWindows();
 
     List<ReasonCode> reasons = new ArrayList<>();
     reasons.add(
@@ -142,12 +159,12 @@ public final class DealRule {
     } else if (salesRecur && (!onSale || highPercentile)) {
       signal = Signal.WAIT;
       reasons.add(ReasonCode.SALES_RECUR);
-    } else if (onSale) {
-      signal = Signal.NEUTRAL;
-      reasons.add(ReasonCode.MIDDLING_SALE);
     } else {
       signal = Signal.NEUTRAL;
-      reasons.add(ReasonCode.NO_SALE_HISTORY);
+      reasons.add(
+          !hasSales
+              ? ReasonCode.NO_SALE_HISTORY
+              : salesRecur ? ReasonCode.MIDDLING_SALE : ReasonCode.SALES_RARE);
     }
     if (r.synthetic365d() * 2 > r.observations365d()) {
       reasons.add(ReasonCode.MOSTLY_SYNTHETIC);

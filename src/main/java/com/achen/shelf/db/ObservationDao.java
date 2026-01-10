@@ -2,9 +2,12 @@ package com.achen.shelf.db;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Optional;
 
 /** Writes into the partitioned {@code price_observations} table. */
 public final class ObservationDao {
@@ -25,10 +28,50 @@ public final class ObservationDao {
     }
   }
 
+  /**
+   * Where a set of retailers' observations start and end, by source. {@code firstObserved} / {@code
+   * lastSynthetic} are null when there is nothing of that source.
+   */
+  public record Span(Instant first, Instant last, Instant firstObserved, Instant lastSynthetic) {}
+
   private final Database db;
 
   public ObservationDao(Database db) {
     this.db = db;
+  }
+
+  /** The span of every observation at the given retailers; empty when there are none. */
+  public static Optional<Span> span(Connection c, Collection<String> retailers)
+      throws SQLException {
+    String sql =
+        """
+        select min(po.observed_at), max(po.observed_at),
+               min(po.observed_at) filter (where po.source = 'observed'),
+               max(po.observed_at) filter (where po.source = 'synthetic')
+        from price_observations po
+        join offers o on o.id = po.offer_id
+        where o.retailer = any (?)
+        """;
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
+      ps.setArray(1, c.createArrayOf("text", retailers.toArray()));
+      try (ResultSet rs = ps.executeQuery()) {
+        rs.next();
+        Timestamp first = rs.getTimestamp(1);
+        if (first == null) {
+          return Optional.empty();
+        }
+        return Optional.of(
+            new Span(
+                first.toInstant(),
+                rs.getTimestamp(2).toInstant(),
+                instantOrNull(rs.getTimestamp(3)),
+                instantOrNull(rs.getTimestamp(4))));
+      }
+    }
+  }
+
+  private static Instant instantOrNull(Timestamp t) {
+    return t == null ? null : t.toInstant();
   }
 
   /**
