@@ -8,20 +8,24 @@ A *category* is a config file — its spec schema, its retailers and how to fetc
 products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
 never touches the open web: it visits the paths a category file names, and nothing else.
 
-> **Status: M4 complete.** `price_observations` now holds **2.8 M rows** — 37,780 observed
-> over five live retailers plus a labeled **synthetic** year behind every offer (`shelf
-> backfill`; `source = 'synthetic'` on every such row) — in monthly partitions, and
-> `price_rollups` summarises them per offer and per product after every crawl cycle: current
-> price, list price, trailing 7/30/90/365-day min/median/max, where today sits in the year,
-> volatility, the detected sale windows, and the synthetic share of it all. Offers a retailer
-> has stopped listing retire after three unseen cycles and stop counting. The representative
-> deal query — keyboards in a price range, ordered by how today's price sits in the trailing
-> year — went from **321 ms** against raw observations to **0.10 ms** against the rollups on the
-> same data (plans in `data/benchmarks/m4/`; the partition pruning behind it is asserted by a
-> test, not claimed). Resolution (M3: precision 1.000 / recall 0.976 on 235 labeled pairs) and
-> the distributed crawler (M2: SIGKILL recovery in 13.0 s / 4.9 s) are unchanged. See
-> `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each one actually did,
-> and `CLAUDE.md` for the working agreement.
+> **Status: M5 complete.** Every product now carries a **buy / wait / neutral** call
+> (`deal_signals`) with the reasons behind it — a readable rule over its `price_rollups` row
+> (on sale by the rollup's own definition and at or near the year's low or in its cheapest
+> fifth → buy; not a deal, on a product that does go on sale → wait; nothing to buy, thin
+> history, or a middling sale → no call), refreshed after every crawl cycle as the last step
+> of the resolution → rollup → signal chain. `shelf eval backtest` replays the rule over every
+> day of the trailing year — each day's rollup row **recomputed as of that day** by the rollup
+> statement itself, so nothing after it leaks in — and judges each call by what the price did
+> over the next 30 days: **0.744 hit rate at 84.5% coverage vs 0.360 for "always buy" and
+> 0.712 for "buy below median"**, on 11,798 product-days of a **labeled synthetic year** (the
+> report says so on every line; the real history is two days old). The rule was written and
+> committed before the backtest was run; the report sweeps its thresholds and shows that the
+> one change that raises the hit rate (to 0.829) cuts what a shopper following it saves from
+> 8.2% to 2.5% — so it was not made. Rollups (M4: 2.8 M observations, the deal query 321 ms →
+> 0.10 ms), resolution (M3: precision 1.000 / recall 0.976) and the distributed crawler (M2:
+> SIGKILL recovery in 13.0 s / 4.9 s) are unchanged. See `docs/Spec.md` §7 for the milestone
+> plan, `docs/Sessions.md` for what each one actually did, and `CLAUDE.md` for the working
+> agreement.
 
 ## Prereqs
 
@@ -50,8 +54,8 @@ make crawl     # shelf crawl --category keyboards --once
 ```
 
 It prints a per-retailer summary — pages, offers, price points, errors — then runs an
-entity-resolution pass over what it wrote and a rollup pass over what it touched, and prints
-both. Fetched bodies land under `data/raw/<run>/`, content-addressed, and every attempt gets a
+entity-resolution pass over what it wrote, a rollup pass over what it touched and a signal
+pass over the products that recomputed, and prints all three. Fetched bodies land under `data/raw/<run>/`, content-addressed, and every attempt gets a
 `raw_fetches` row.
 
 The crawl is paced by `max_rps` in the category file (one request every five seconds per domain
@@ -131,6 +135,35 @@ select p.canonical_name, r.current_price_cents, r.list_price_cents, r.percentile
 select count(*) filter (where retired_at is not null) as retired, count(*) from offers;
 ```
 
+### The deal signal
+
+```
+shelf signal --category keyboards                  # buy / wait / neutral for every product, from its rollup row (the coordinator does this per cycle, scoped)
+shelf eval backtest --category keyboards --out data/benchmarks/m5/keyboards-backtest.txt
+shelf eval backtest --category keyboards --horizon 7 --tolerance 0.05   # judge over a week, count only 5% drops
+```
+
+The rule (`signal/DealRule`) is a handful of readable tests over the product's `price_rollups`
+row, each leaving a reason code: `buy` when today's price is a sale (at or below 90% of the
+year's list price) and a good one for this product (at or within 5% of the year's low, or in
+its cheapest fifth); `wait` when it is not a sale, or is one that half the year beat, and the
+product does go on sale; no call when there is nothing in stock, fewer than thirty points
+behind the price, or a sale that is merely middling for its product. Every call also says
+`MOSTLY_SYNTHETIC` when it is.
+
+The backtest is what makes the rule a claim rather than a guess. For every day of the
+category's history it recomputes every product's rollup row *as of the end of that day* — the
+same SQL that writes `price_rollups`, with a `select` in place of the upsert, so the stored row
+(which knows the future) is never read — asks the rule what it would have said, and judges the
+call by whether a lower price came within the horizon, beside "always buy" and "buy below
+median". `data/benchmarks/m5/keyboards-backtest.txt` is the committed report; its first lines
+say how much of the history behind it is synthetic (today: all of it).
+
+```sql
+select s.signal, s.reason_codes, p.canonical_name, r.current_price_cents, r.list_price_cents, round(r.percentile_365d::numeric, 2)
+  from deal_signals s join products p on p.id = s.product_id join price_rollups r on r.product_id = p.id order by s.signal, p.id;
+```
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -154,7 +187,7 @@ categories/           per-category config (spec schema, retailers, seed products
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
 scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, eval
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
@@ -162,12 +195,13 @@ src/main/java/com/achen/shelf/
   resolve/            entity resolution: blocking, scoring, the review queue, the eval (M3)
   rollup/             the post-cycle pass: offer retirement + price rollups (M4)
   backfill/           the labeled synthetic history (M4)
-  signal/             buy/wait signal + backtest (M5)
+  signal/             the buy/wait/neutral rule, the per-cycle signal pass, the backtest (M5)
   api/                Javalin query API    (M6)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
 data/labels/          hand-labeled resolution pairs + the committed eval report
 data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
+data/benchmarks/m5/   the committed backtest report
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable); api in M6
