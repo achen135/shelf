@@ -7,8 +7,8 @@ import picocli.CommandLine;
  *
  * <p>One binary, one subcommand per role: the crawl, the distributed coordinator and worker (M2),
  * entity resolution, its review queue and its eval (M3), the rollup pass and the backfill (M4), the
- * query API in M6. They share a process so that a demo is {@code docker compose up} and a different
- * {@code command:} per service, not a different image.
+ * signal pass and the backtest (M5), the query API in M6. They share a process so that a demo is
+ * {@code docker compose up} and a different {@code command:} per service, not a different image.
  */
 @CommandLine.Command(
     name = "shelf",
@@ -24,6 +24,7 @@ import picocli.CommandLine;
       ReviewCommand.class,
       RollupCommand.class,
       BackfillCommand.class,
+      SignalCommand.class,
       EvalCommand.class,
       ApiCommand.class
     })

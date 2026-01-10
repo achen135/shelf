@@ -60,14 +60,25 @@ public final class RollupRun {
     }
   }
 
-  /** What a pass did. */
+  /**
+   * What a pass did. {@code products} are the ids whose rows were recomputed — the signal pass's
+   * scope.
+   */
   public record Summary(
       String category,
       Instant asOf,
       int retired,
       int offersRecomputed,
-      int productsRecomputed,
-      Duration took) {}
+      List<Long> products,
+      Duration took) {
+    public Summary {
+      products = List.copyOf(products);
+    }
+
+    public int productsRecomputed() {
+      return products.size();
+    }
+  }
 
   private final Database db;
   private final Settings settings;
@@ -110,8 +121,9 @@ public final class RollupRun {
                   .filter(p -> p != null)
                   .forEach(products::add);
               int o = RollupDao.recomputeOffers(c, offers, asOf);
-              int p = RollupDao.recomputeProducts(c, products, asOf);
-              return new Summary(category.name(), asOf, retired.size(), o, p, Duration.ZERO);
+              RollupDao.recomputeProducts(c, products, asOf);
+              return new Summary(
+                  category.name(), asOf, retired.size(), o, List.copyOf(products), Duration.ZERO);
             });
     summary =
         new Summary(
@@ -119,7 +131,7 @@ public final class RollupRun {
             summary.asOf(),
             summary.retired(),
             summary.offersRecomputed(),
-            summary.productsRecomputed(),
+            summary.products(),
             Duration.ofNanos(System.nanoTime() - started));
     log.info(
         "rollup pass for {} ({}): {} offer(s) retired, {} offer and {} product rollup(s) recomputed"

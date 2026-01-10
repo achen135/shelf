@@ -21,7 +21,10 @@ import java.util.Optional;
  *
  * <p>Each grain is one SQL statement over {@code price_observations} that ends in an upsert, so a
  * rollup row is a pure function of the observations and the instant it was computed at — recompute
- * it and you get the same row. The two grains differ only in what their <em>series</em> is:
+ * it and you get the same row. The same statement, with a plain {@code select} in place of the
+ * upsert, <em>returns</em> the rows instead ({@link #computeProducts}): that is how the backtest
+ * (M5) asks what a rollup said at a past instant without a second implementation of the rollup that
+ * could drift from this one. The two grains differ only in what their <em>series</em> is:
  *
  * <ul>
  *   <li>an <b>offer</b>'s series is its own observations, and its current price is its latest one;
@@ -131,8 +134,8 @@ public final class RollupDao {
       ),
       """;
 
-  /** Everything after the series: list price, sales, windows, and the upsert. */
-  private static final String TAIL =
+  /** Everything after the series: list price, sales and windows, ending in one row per key. */
+  private static final String ANALYSIS =
       """
       listp as (
         select key, mode() within group (order by price_cents desc) as list_price_cents
@@ -195,7 +198,43 @@ public final class RollupDao {
         cross join params p
         left join current c on c.key = s.key
         group by s.key
+      ), computed as (
+        select k.key, p.as_of,
+               c.price_cents as current_price_cents, c.observed_at as current_observed_at,
+               c.in_stock as current_in_stock, c.offer_id as current_offer_id, l.list_price_cents,
+               a.min_7d, round(a.median_7d)::int as median_7d, a.max_7d,
+               a.min_30d, round(a.median_30d)::int as median_30d, a.max_30d,
+               a.min_90d, round(a.median_90d)::int as median_90d, a.max_90d,
+               a.min_365d, round(a.median_365d)::int as median_365d, a.max_365d,
+               a.percentile_365d, a.volatility_365d,
+               coalesce(a.observations_365d, 0) as observations_365d,
+               coalesce(a.synthetic_365d, 0) as synthetic_365d,
+               coalesce(sa.sale_windows, '[]'::jsonb) as sale_windows,
+               coalesce(sa.sale_days, 0) as sale_days_365d,
+               sa.last_sale_ended_at
+        from keys k
+        cross join params p
+        left join current c on c.key = k.key
+        left join listp l on l.key = k.key
+        left join agg a on a.key = k.key
+        left join sale_agg sa on sa.key = k.key
       )
+      """;
+
+  /** The computed columns in the table's order, {@code @columns} standing for the two keys. */
+  private static final String COLUMNS =
+      """
+      @columns, as_of,
+      current_price_cents, current_observed_at, current_in_stock, current_offer_id, list_price_cents,
+      min_7d, median_7d, max_7d, min_30d, median_30d, max_30d,
+      min_90d, median_90d, max_90d, min_365d, median_365d, max_365d,
+      percentile_365d, volatility_365d, observations_365d, synthetic_365d,
+      @sale_windows, sale_days_365d, last_sale_ended_at, now()
+      """;
+
+  /** The writing sink: upsert the computed rows into {@code price_rollups}. */
+  private static final String UPSERT =
+      """
       insert into price_rollups (
         offer_id, product_id, as_of,
         current_price_cents, current_observed_at, current_in_stock, current_offer_id, list_price_cents,
@@ -203,22 +242,11 @@ public final class RollupDao {
         min_90d, median_90d, max_90d, min_365d, median_365d, max_365d,
         percentile_365d, volatility_365d, observations_365d, synthetic_365d,
         sale_windows, sale_days_365d, last_sale_ended_at, computed_at)
-      select @columns, p.as_of,
-             c.price_cents, c.observed_at, c.in_stock, c.offer_id, l.list_price_cents,
-             a.min_7d, round(a.median_7d)::int, a.max_7d,
-             a.min_30d, round(a.median_30d)::int, a.max_30d,
-             a.min_90d, round(a.median_90d)::int, a.max_90d,
-             a.min_365d, round(a.median_365d)::int, a.max_365d,
-             a.percentile_365d, a.volatility_365d,
-             coalesce(a.observations_365d, 0), coalesce(a.synthetic_365d, 0),
-             coalesce(sa.sale_windows, '[]'::jsonb), coalesce(sa.sale_days, 0), sa.last_sale_ended_at,
-             now()
-      from keys k
-      cross join params p
-      left join current c on c.key = k.key
-      left join listp l on l.key = k.key
-      left join agg a on a.key = k.key
-      left join sale_agg sa on sa.key = k.key
+      select
+      """
+          + COLUMNS.replace("@sale_windows", "sale_windows")
+          + """
+      from computed
       on conflict (@key) where @key is not null do update set
         as_of = excluded.as_of,
         current_price_cents = excluded.current_price_cents,
@@ -240,10 +268,24 @@ public final class RollupDao {
         computed_at = excluded.computed_at
       """;
 
+  /** The reading sink: the same rows, returned instead of written, in {@link #SELECT}'s order. */
+  private static final String READ =
+      "select "
+          + COLUMNS.replace("@sale_windows", "sale_windows::text")
+          + " from computed order by key";
+
   private static final String OFFER_SQL =
-      OFFER_HEAD + TAIL.replace("@columns", "k.key, null::bigint").replace("@key", "offer_id");
+      OFFER_HEAD
+          + ANALYSIS
+          + UPSERT.replace("@columns", "key, null::bigint").replace("@key", "offer_id");
   private static final String PRODUCT_SQL =
-      PRODUCT_HEAD + TAIL.replace("@columns", "null::bigint, k.key").replace("@key", "product_id");
+      PRODUCT_HEAD
+          + ANALYSIS
+          + UPSERT.replace("@columns", "null::bigint, key").replace("@key", "product_id");
+  private static final String OFFER_READ_SQL =
+      OFFER_HEAD + ANALYSIS + READ.replace("@columns", "key, null::bigint");
+  private static final String PRODUCT_READ_SQL =
+      PRODUCT_HEAD + ANALYSIS + READ.replace("@columns", "null::bigint, key");
 
   private static final String SELECT =
       """
@@ -280,6 +322,43 @@ public final class RollupDao {
       ps.setTimestamp(1, Timestamp.from(asOf));
       ps.setArray(2, c.createArrayOf("bigint", ids.toArray()));
       return ps.executeUpdate();
+    }
+  }
+
+  /**
+   * The rows {@link #recomputeOffers} would write for these offers as of {@code asOf}, returned
+   * instead of written. Same statement up to the sink, so the two cannot disagree.
+   */
+  public static List<Rollup> computeOffers(Connection c, Collection<Long> offerIds, Instant asOf)
+      throws SQLException {
+    return compute(c, OFFER_READ_SQL, offerIds, asOf);
+  }
+
+  /**
+   * The rows {@link #recomputeProducts} would write for these products as of {@code asOf}, returned
+   * instead of written — what the backtest reads at each past instant, since a stored row already
+   * knows what happened after its {@code as_of}.
+   */
+  public static List<Rollup> computeProducts(
+      Connection c, Collection<Long> productIds, Instant asOf) throws SQLException {
+    return compute(c, PRODUCT_READ_SQL, productIds, asOf);
+  }
+
+  private static List<Rollup> compute(Connection c, String sql, Collection<Long> ids, Instant asOf)
+      throws SQLException {
+    if (ids.isEmpty()) {
+      return List.of();
+    }
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
+      ps.setTimestamp(1, Timestamp.from(asOf));
+      ps.setArray(2, c.createArrayOf("bigint", ids.toArray()));
+      try (ResultSet rs = ps.executeQuery()) {
+        List<Rollup> out = new ArrayList<>();
+        while (rs.next()) {
+          out.add(read(rs));
+        }
+        return List.copyOf(out);
+      }
     }
   }
 
@@ -343,6 +422,25 @@ public final class RollupDao {
     try (PreparedStatement ps = c.prepareStatement(SELECT + " where product_id = ?")) {
       ps.setLong(1, productId);
       return one(ps);
+    }
+  }
+
+  /** The stored rollup rows of the given products — those that have one — by product id. */
+  public static List<Rollup> productRollups(Connection c, Collection<Long> productIds)
+      throws SQLException {
+    if (productIds.isEmpty()) {
+      return List.of();
+    }
+    try (PreparedStatement ps =
+        c.prepareStatement(SELECT + " where product_id = any (?) order by product_id")) {
+      ps.setArray(1, c.createArrayOf("bigint", productIds.toArray()));
+      try (ResultSet rs = ps.executeQuery()) {
+        List<Rollup> out = new ArrayList<>();
+        while (rs.next()) {
+          out.add(read(rs));
+        }
+        return List.copyOf(out);
+      }
     }
   }
 

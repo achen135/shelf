@@ -55,9 +55,9 @@ public abstract class PostgresTestBase {
     try (Connection c = DB.connection();
         Statement s = c.createStatement()) {
       s.execute(
-          "truncate price_rollups, price_observations, raw_fetches, resolution_labels, offers,"
-              + " products, crawl_tasks, crawl_runs, robots_cache, domain_rate_limits restart identity"
-              + " cascade");
+          "truncate deal_signals, price_rollups, price_observations, raw_fetches, resolution_labels,"
+              + " offers, products, crawl_tasks, crawl_runs, robots_cache, domain_rate_limits restart"
+              + " identity cascade");
     }
   }
 

@@ -1,0 +1,129 @@
+deal-signal backtest — keyboards: 50 products (48 scored), 2025-09-11 → 2026-09-12 (367 days)
+history: synthetic 2025-09-11 → 2026-09-10, observed 2026-09-11 → 2026-09-12
+rule: buy when on sale and (at or within 5% of the year's low, or ≤ 0.20 of the year below); wait when not on sale, or on sale with ≥ 0.50 of the year below, and sales recur; ≥ 30 points — thresholds fixed before this run
+judged over the next 30 days; a drop is 2% or more below today; the first 90 days are warm-up and not scored
+scored: 11,798 product-days. The features behind them rest on 2,518,062 observations, 2,518,062 (100.0%) synthetic; 96 scored days (0.8%) are judged against at least one observed day
+
+headline (30 days):
+  strategy              days   calls  coverage  hit rate   buys  buy ok  waits  wait ok
+  rule                 11798    9974     0.845     0.744   2073   0.735   7901    0.746
+  always buy           11798   11798     1.000     0.360  11798   0.360      0        —
+  buy below median     11798   11798     1.000     0.712   4000   0.605   7798    0.766
+  on the 9,974 days the rule spoke:
+  always buy            9974    9974     1.000     0.354   9974   0.354      0        —
+  buy below median      9974    9974     1.000     0.738   2728   0.668   7246    0.765
+  base rate: a drop of 2% or more followed 64.0% of scored days
+
+by horizon (drop ≥ 2%; hit rate, with coverage for the rule):
+   days    scored           rule    coverage  buy below median    always
+     30     11798          0.744       0.845             0.712     0.360
+      7     12895          0.460       0.847             0.524     0.721
+     14     12565          0.588       0.847             0.617     0.562
+
+by drop tolerance (30 days):
+   drop    scored           rule    coverage  buy below median    always
+     0%     11798          0.750       0.845             0.706     0.338
+     5%     11798          0.741       0.845             0.715     0.419
+     2%     11798          0.744       0.845             0.712     0.360
+
+buy-percentile sweep (wait 0.50, 30 days):
+  threshold   calls  coverage  hit rate   buys  buy ok  waits  wait ok  mean paid  paid less
+          0    9182     0.778     0.757   1281   0.822   7901    0.746     0.9179      47.3%
+       0.05    9268     0.786     0.756   1367   0.815   7901    0.746     0.9179      47.3%
+       0.10    9479     0.803     0.756   1578   0.805   7901    0.746     0.9179      47.3%
+       0.15    9730     0.825     0.752   1829   0.774   7901    0.746     0.9179      47.3%
+       0.20    9974     0.845     0.744   2073   0.735   7901    0.746     0.9179      47.3%
+       0.25   10310     0.874     0.738   2409   0.709   7901    0.746     0.9179      47.3%
+       0.30   10592     0.898     0.728   2691   0.674   7901    0.746     0.9179      47.3%
+       0.40   10900     0.924     0.716   2999   0.637   7901    0.746     0.9179      47.3%
+
+wait-percentile sweep (buy 0.20, 30 days):
+  threshold   calls  coverage  hit rate   buys  buy ok  waits  wait ok  mean paid  paid less
+       0.30   10460     0.887     0.743   2073   0.735   8387    0.745     0.9173      49.0%
+       0.40   10153     0.861     0.745   2073   0.735   8080    0.747     0.9174      48.1%
+       0.50    9974     0.845     0.744   2073   0.735   7901    0.746     0.9179      47.3%
+       0.60    9858     0.836     0.741   2073   0.735   7785    0.743     0.9198      46.2%
+       0.70    9770     0.828     0.739   2073   0.735   7697    0.740     0.9207      45.7%
+       0.80    9755     0.827     0.739   2073   0.735   7682    0.740     0.9207      45.6%
+       0.90    9755     0.827     0.739   2073   0.735   7682    0.740     0.9207      45.6%
+          1    9755     0.827     0.739   2073   0.735   7682    0.740     0.9207      45.6%
+
+sale-window sweep (sale windows in the year before a wait is advice; 30 days):
+  threshold   calls  coverage  hit rate   buys  buy ok  waits  wait ok  mean paid  paid less
+          1    9974     0.845     0.744   2073   0.735   7901    0.746     0.9179      47.3%
+          3    8767     0.743     0.769   2073   0.735   6694    0.779     0.9228      42.2%
+          5    6883     0.583     0.798   2073   0.735   4810    0.825     0.9421      31.9%
+          7    5185     0.439     0.820   2073   0.735   3112    0.876     0.9590      22.3%
+          9    3788     0.321     0.829   2073   0.735   1715    0.942     0.9754      13.4%
+         13    2542     0.215     0.777   2073   0.735    469    0.964     0.9925       3.8%
+
+reason codes at the operating point (30 days; a call may carry several):
+  code                  buys   waits  neutral  hit rate
+  ON_SALE               2073     219     1102     0.758
+  MILD_DISCOUNT            0    1024       82     0.711
+  AT_LIST                  0    6658      640     0.744
+  YEAR_LOW               634       0       17     0.896
+  NEAR_YEAR_LOW          647      23      170     0.724
+  LOW_PERCENTILE        2047    1623      148     0.656
+  HIGH_PERCENTILE          0    2797      405     0.904
+  MIDDLING_SALE            0       0     1102         —
+  SALES_RECUR              0    7901        0     0.746
+  NO_SALE_HISTORY          0       0      722         —
+  MOSTLY_SYNTHETIC      2073    7901     1824     0.744
+
+following the advice from every scored day for up to 30 days (paid ÷ today's price):
+  strategy             starts   mean paid  paid less     same     more unresolved
+  rule                  11798      0.9179      47.3%    48.0%     4.7%          0
+  always buy            11798      1.0000       0.0%   100.0%     0.0%          0
+  buy below median      11798      0.9174      50.7%    47.1%     2.2%          0
+
+per product (30 days; hit rates):
+  product                              days buy/wait/neutral    rule  median  always  synthetic
+  Keychron Q1 Pro                       247         7/173/67   0.772   0.704   0.291     100.0%
+  Keychron Q2                           247        59/161/27   0.886   0.826   0.239     100.0%
+  Keychron Q4                           247        45/142/60   0.861   0.717   0.150     100.0%
+  Keychron Q6 HE                        247        64/123/60   0.888   0.684   0.320     100.0%
+  Keychron Q7                           247        47/159/41   0.913   0.846   0.340     100.0%
+  Keychron Q8 (Alice)                   247        56/164/27   0.959   0.830   0.259     100.0%
+  Keychron Q15 Max                      247        44/166/37   0.838   0.721   0.251     100.0%
+  Keychron K2 Ultra                     247        22/132/93   0.935   0.773   0.251     100.0%
+  Keychron K5 Ultra                     247         57/190/0   0.713   0.713   0.324     100.0%
+  Keychron K8 Ultra                     247         49/193/5   0.397   0.393   0.615     100.0%
+  Keychron K10 Ultra                    247        51/158/38   0.923   0.789   0.243     100.0%
+  Keychron K6 HE                        247        62/140/45   0.941   0.789   0.324     100.0%
+  Keychron B11 Pro                      228         39/189/0   0.671   0.671   0.368     100.0%
+  Glorious GMMK 3                       247        74/149/24   0.812   0.644   0.134     100.0%
+  Glorious GMMK 3 HE                    247          0/247/0   0.595   0.838   0.405     100.0%
+  Glorious GMMK Pro                     247        65/150/32   0.893   0.850   0.243     100.0%
+  Glorious GMMK Eternal 96%             247        23/197/27   0.714   0.684   0.389     100.0%
+  Glorious GMBK 75%                     247        81/110/56   0.885   0.789   0.247     100.0%
+  Epomaker TH26                         247         30/217/0   0.449   0.449   0.640     100.0%
+  Epomaker TH65                         247        76/128/43   0.873   0.846   0.348     100.0%
+  Epomaker RT75                         247         32/215/0   0.453   0.453   0.676     100.0%
+  Epomaker HE65 V2 TMR                  247         3/229/15   0.470   0.506   0.571     100.0%
+  Epomaker HE75 V2 TMR                  247         60/182/5   0.550   0.534   0.368     100.0%
+  Epomaker HACK70                       239         31/208/0   0.540   0.540   0.590     100.0%
+  KBDfans Tofu60 Redux                  247         0/195/52   0.487   0.785   0.474     100.0%
+  KBDfans Athena 75                     247        69/127/51   0.918   0.802   0.279     100.0%
+  KBDfans KBD75 V3                      247         29/218/0   0.563   0.563   0.530     100.0%
+  KBDfans KBD67 Lite                    247        41/157/49   0.869   0.846   0.312     100.0%
+  KBDfans +84 Classic TKL               247          0/0/247       —   0.785   0.421     100.0%
+  Wooting 60HE V2                       247        77/152/18   0.838   0.733   0.356     100.0%
+  Wooting 60HE+                         232         30/202/0   0.547   0.547   0.582     100.0%
+  Ducky One 2 Mini Pro                  247         0/174/73   0.678   0.870   0.348     100.0%
+  Ducky One 2 SF                        247         71/176/0   0.615   0.615   0.518     100.0%
+  Ducky One X Mini                      231        34/179/18   0.662   0.675   0.515     100.0%
+  Ducky OK-M 65                         247        39/177/31   0.958   0.915   0.271     100.0%
+  Ducky Tinker 65 ProjectD              247         49/198/0   0.668   0.478   0.377     100.0%
+  HHKB Professional Hybrid Type-S       247        37/116/94   0.967   0.802   0.243     100.0%
+  HHKB Professional Classic Type-S      247        39/176/32   0.642   0.595   0.377     100.0%
+  HHKB Studio                           247         27/220/0   0.656   0.729   0.364     100.0%
+  Leopold FC660M                        247        56/171/20   0.925   0.692   0.206     100.0%
+  Leopold FC660MBT                      247        76/124/47   0.910   0.757   0.255     100.0%
+  Leopold FC650MDS                      247        28/92/127   0.933   0.870   0.279     100.0%
+  Varmilo Minilo VXT67                  247        45/147/55   0.781   0.741   0.332     100.0%
+  Varmilo Sword68                       247         29/218/0   0.709   0.753   0.368     100.0%
+  Lofree Flow 2 68                      247        52/175/20   0.819   0.781   0.364     100.0%
+  Lofree Tofu 68                        247         49/198/0   0.818   0.818   0.381     100.0%
+  Akko MU01                             247        84/123/40   0.850   0.741   0.235     100.0%
+  WOBKEY Rainy 75 Pro                   247        35/64/148   0.859   0.648   0.328     100.0%
