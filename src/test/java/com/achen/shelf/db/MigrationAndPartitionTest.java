@@ -27,6 +27,7 @@ class MigrationAndPartitionTest extends PostgresTestBase {
             "offers",
             "price_observations",
             "price_rollups",
+            "deal_signals",
             "crawl_runs",
             "raw_fetches",
             "robots_cache");

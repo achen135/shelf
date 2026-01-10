@@ -227,4 +227,56 @@ class RollupDaoTest extends PostgresTestBase {
     assertThat(second).usingRecursiveComparison().ignoringFields("computedAt").isEqualTo(first);
     assertThat(count("select count(*) from price_rollups")).isEqualTo(1);
   }
+
+  @Test
+  void computingReturnsTheRowRecomputingWouldWriteAndWritesNothing() throws SQLException {
+    long product = history.product("Keychron", "Q2");
+    history.link(offer, product, "auto");
+    long other = history.offer();
+    history.link(other, product, "auto");
+    history.observe(other, at(20), 7000);
+    history.observe(other, at(0), 6000, false, Source.OBSERVED);
+
+    List<Rollup> offers;
+    List<Rollup> products;
+    try (Connection c = DB.connection()) {
+      offers = RollupDao.computeOffers(c, List.of(offer, other), AS_OF);
+      products = RollupDao.computeProducts(c, List.of(product), AS_OF);
+    }
+
+    assertThat(count("select count(*) from price_rollups")).isZero();
+    assertThat(offers).extracting(Rollup::offerId).containsExactly(offer, other);
+    assertThat(offers.get(0))
+        .usingRecursiveComparison()
+        .ignoringFields("computedAt")
+        .isEqualTo(offerRollup(offer));
+    assertThat(products).hasSize(1);
+    assertThat(products.get(0))
+        .usingRecursiveComparison()
+        .ignoringFields("computedAt")
+        .isEqualTo(productRollup(product));
+  }
+
+  @Test
+  void anAsOfInThePastCannotSeeWhatCameAfterIt() throws SQLException {
+    // The backtest's guard: the row as of k = 21 is computed from the first eight points only —
+    // the $80 sale, the stock-out, the $95 and the $50 that follow are the future.
+    long product = history.product("Keychron", "Q2");
+    history.link(offer, product, "auto");
+
+    Rollup then;
+    try (Connection c = DB.connection()) {
+      then = RollupDao.computeProducts(c, List.of(product), at(21)).get(0);
+    }
+
+    assertThat(then.asOf()).isEqualTo(at(21));
+    assertThat(then.currentPriceCents()).isEqualTo(10000);
+    assertThat(then.currentObservedAt()).isEqualTo(at(25));
+    assertThat(then.observations365d()).isEqualTo(8);
+    assertThat(then.d365()).isEqualTo(new Window(9000, 10000, 10000));
+    assertThat(then.saleWindows()).containsExactly(new SaleWindow(at(100), at(99), 9000, 10, 2));
+    assertThat(then.lastSaleEndedAt()).isEqualTo(at(99));
+    // two of the eight points are below $100
+    assertThat(then.percentile365d()).isCloseTo(2.0 / 8, within(1e-9));
+  }
 }
