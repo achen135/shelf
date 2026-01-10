@@ -10,6 +10,8 @@ import com.achen.shelf.db.Database;
 import com.achen.shelf.resolve.ResolutionRun;
 import com.achen.shelf.resolve.Resolver;
 import com.achen.shelf.rollup.RollupRun;
+import com.achen.shelf.signal.DealRule;
+import com.achen.shelf.signal.SignalRun;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Clock;
@@ -28,7 +30,8 @@ import picocli.CommandLine;
  * did and exits — the shape the throughput benchmark and the recovery tests use.
  *
  * <p>When a run closes, the leader runs an entity-resolution pass over that category (M3), then a
- * rollup pass scoped to that run (M4): retire what the run proved gone, recompute what it touched.
+ * rollup pass scoped to that run (M4): retire what the run proved gone, recompute what it touched;
+ * then a signal pass over the products that rollup pass recomputed (M5).
  */
 @CommandLine.Command(
     name = "coordinator",
@@ -108,8 +111,10 @@ public final class CoordinatorCommand implements Callable<Integer> {
                 run -> {
                   CategoryConfig category = byName.get(run.category());
                   new ResolutionRun(db, Resolver.Thresholds.defaults()).run(category);
-                  new RollupRun(db, new RollupRun.Settings(retireAfter), Clock.systemUTC())
-                      .run(category, new RollupRun.Scope.Run(run.runId()));
+                  RollupRun.Summary rolled =
+                      new RollupRun(db, new RollupRun.Settings(retireAfter), Clock.systemUTC())
+                          .run(category, new RollupRun.Scope.Run(run.runId()));
+                  new SignalRun(db, DealRule.defaults()).run(category, rolled.products());
                 })) {
       Runtime.getRuntime().addShutdownHook(new Thread(coordinator::stop, "coordinator-shutdown"));
       if (!once) {
