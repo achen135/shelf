@@ -49,6 +49,26 @@ public final class CategoryConfigLoader {
     return load(file);
   }
 
+  /** Loads every {@code *.yaml} in a directory, by category name — what the API serves. */
+  public List<CategoryConfig> loadAll(Path categoriesDir) {
+    if (!Files.isDirectory(categoriesDir)) {
+      throw new ConfigException(
+          "categories directory not found: " + categoriesDir.toAbsolutePath());
+    }
+    List<Path> files;
+    try (var stream = Files.list(categoriesDir)) {
+      files = stream.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().toList();
+    } catch (IOException e) {
+      throw new ConfigException(
+          "cannot list " + categoriesDir.toAbsolutePath() + ": " + e.getMessage());
+    }
+    List<CategoryConfig> out = new ArrayList<>();
+    for (Path f : files) {
+      out.add(load(f));
+    }
+    return List.copyOf(out);
+  }
+
   /** Loads a specific category file. */
   public CategoryConfig load(Path file) {
     try (InputStream in = Files.newInputStream(file)) {

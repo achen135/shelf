@@ -1,0 +1,317 @@
+{
+    "setup_data": {
+        "bools": [
+            "hot_swap"
+        ],
+        "enums": [
+            {
+                "values": [
+                    "oem",
+                    "cherry",
+                    "sa",
+                    "xda",
+                    "dsa",
+                    "mt3",
+                    "kat"
+                ],
+                "name": "keycap_profile"
+            },
+            {
+                "values": [
+                    "full",
+                    "1800",
+                    "tkl",
+                    "75",
+                    "65",
+                    "60",
+                    "40",
+                    "alice",
+                    "split"
+                ],
+                "name": "layout_size"
+            },
+            {
+                "name": "connectivity",
+                "values": [
+                    "wired",
+                    "2.4ghz",
+                    "bluetooth",
+                    "tri-mode"
+                ]
+            },
+            {
+                "name": "case_material",
+                "values": [
+                    "plastic",
+                    "aluminum",
+                    "polycarbonate",
+                    "wood",
+                    "other"
+                ]
+            },
+            {
+                "name": "keycap_material",
+                "values": [
+                    "abs",
+                    "pbt",
+                    "unknown"
+                ]
+            },
+            {
+                "name": "switch_type",
+                "values": [
+                    "linear",
+                    "tactile",
+                    "clicky",
+                    "silent-linear",
+                    "silent-tactile",
+                    "magnetic",
+                    "topre",
+                    "optical"
+                ]
+            },
+            {
+                "values": [
+                    "tray",
+                    "top",
+                    "gasket",
+                    "o-ring",
+                    "plate",
+                    "unknown"
+                ],
+                "name": "mount_type"
+            }
+        ],
+        "ids": [
+            28,
+            24,
+            33,
+            19,
+            46,
+            13,
+            38,
+            9,
+            21,
+            36,
+            48,
+            35,
+            47,
+            40,
+            10,
+            23,
+            16,
+            37,
+            17,
+            32,
+            11,
+            14,
+            49,
+            12,
+            20,
+            43,
+            8,
+            39,
+            22,
+            2,
+            41,
+            29,
+            42,
+            7,
+            50,
+            44,
+            26,
+            45,
+            18,
+            5,
+            6,
+            34,
+            3,
+            25,
+            1,
+            15,
+            4,
+            31
+        ],
+        "max": 289,
+        "min": 40.49
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status 200": {
+                    "passes": 61304,
+                    "fails": 0,
+                    "name": "status 200",
+                    "path": "::status 200",
+                    "id": "fad9fa412b86fcb03bee97c80dcd61f1"
+                },
+                "is json": {
+                    "id": "05e9c1f6d7747eaf2015aa7c937462e2",
+                    "passes": 61304,
+                    "fails": 0,
+                    "name": "is json",
+                    "path": "::is json"
+                }
+            }
+    },
+    "metrics": {
+        "http_req_blocked": {
+            "max": 1.17,
+            "avg": 0.0018468991615828278,
+            "min": 0,
+            "med": 0.001,
+            "p(90)": 0.002,
+            "p(95)": 0.003,
+            "p(99)": 0.011
+        },
+        "iterations": {
+            "rate": 2042.0249289992955,
+            "count": 61304
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(95)": 14.573749999999997,
+            "p(99)": 24.10789999999999,
+            "max": 117.096,
+            "avg": 7.7438711382245575,
+            "min": 0.427,
+            "med": 6.9165,
+            "p(90)": 11.539
+        },
+        "deals_ms": {
+            "min": 0.459,
+            "med": 4.245,
+            "p(90)": 6.0358,
+            "p(95)": 6.726899999999999,
+            "p(99)": 8.491209999999999,
+            "max": 15.423,
+            "avg": 4.387904246100507
+        },
+        "vus": {
+            "value": 16,
+            "min": 16,
+            "max": 16
+        },
+        "detail_ms": {
+            "p(90)": 16.009200000000003,
+            "p(95)": 19.480399999999996,
+            "p(99)": 36.592679999999994,
+            "max": 117.096,
+            "avg": 9.891644157779512,
+            "min": 1.605,
+            "med": 8.004
+        },
+        "http_req_connecting": {
+            "avg": 0.00009051316347502692,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0.545
+        },
+        "data_received": {
+            "rate": 46439181.62313468,
+            "count": 1394159077
+        },
+        "http_req_duration": {
+            "p(95)": 14.573749999999997,
+            "p(99)": 24.10789999999999,
+            "max": 117.096,
+            "avg": 7.7438711382245575,
+            "min": 0.427,
+            "med": 6.9165,
+            "p(90)": 11.539
+        },
+        "vus_max": {
+            "value": 16,
+            "min": 16,
+            "max": 16
+        },
+        "data_sent": {
+            "count": 7280396,
+            "rate": 242508.64747792567
+        },
+        "http_req_sending": {
+            "max": 0.521,
+            "avg": 0.007165399797734359,
+            "min": 0.001,
+            "med": 0.006,
+            "p(90)": 0.013,
+            "p(95)": 0.019,
+            "p(99)": 0.032
+        },
+        "http_req_receiving": {
+            "min": 0.004,
+            "med": 0.03,
+            "p(90)": 0.069,
+            "p(95)": 0.084,
+            "p(99)": 0.134,
+            "max": 1.257,
+            "avg": 0.037444361073955754
+        },
+        "http_reqs": {
+            "count": 61306,
+            "rate": 2042.0915486302822
+        },
+        "endpoint_errors": {
+            "passes": 0,
+            "fails": 61304,
+            "value": 0
+        },
+        "iteration_duration": {
+            "med": 6.998646,
+            "p(90)": 11.623333100000002,
+            "p(95)": 14.655070549999992,
+            "p(99)": 24.17206397999999,
+            "max": 117.250292,
+            "avg": 7.8250369432500015,
+            "min": 0.489625
+        },
+        "http_req_waiting": {
+            "p(95)": 14.506,
+            "p(99)": 24.052449999999993,
+            "max": 117.011,
+            "avg": 7.699261377352984,
+            "min": 0.374,
+            "med": 6.874,
+            "p(90)": 11.477
+        },
+        "products_ms": {
+            "p(99)": 13.34212,
+            "max": 28.005,
+            "avg": 7.2495336448903505,
+            "min": 1.688,
+            "med": 7.032,
+            "p(90)": 9.617200000000002,
+            "p(95)": 10.669199999999998
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 61306,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_tls_handshaking": {
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "checks": {
+            "passes": 122608,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        }
+    }
+}

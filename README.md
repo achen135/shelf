@@ -8,24 +8,21 @@ A *category* is a config file — its spec schema, its retailers and how to fetc
 products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
 never touches the open web: it visits the paths a category file names, and nothing else.
 
-> **Status: M5 complete.** Every product now carries a **buy / wait / neutral** call
-> (`deal_signals`) with the reasons behind it — a readable rule over its `price_rollups` row
-> (on sale by the rollup's own definition and at or near the year's low or in its cheapest
-> fifth → buy; not a deal, on a product that does go on sale → wait; nothing to buy, thin
-> history, or a middling sale → no call), refreshed after every crawl cycle as the last step
-> of the resolution → rollup → signal chain. `shelf eval backtest` replays the rule over every
-> day of the trailing year — each day's rollup row **recomputed as of that day** by the rollup
-> statement itself, so nothing after it leaks in — and judges each call by what the price did
-> over the next 30 days: **0.744 hit rate at 84.5% coverage vs 0.360 for "always buy" and
-> 0.712 for "buy below median"**, on 11,798 product-days of a **labeled synthetic year** (the
-> report says so on every line; the real history is two days old). The rule was written and
-> committed before the backtest was run; the report sweeps its thresholds and shows that the
-> one change that raises the hit rate (to 0.829) cuts what a shopper following it saves from
-> 8.2% to 2.5% — so it was not made. Rollups (M4: 2.8 M observations, the deal query 321 ms →
-> 0.10 ms), resolution (M3: precision 1.000 / recall 0.976) and the distributed crawler (M2:
-> SIGKILL recovery in 13.0 s / 4.9 s) are unchanged. See `docs/Spec.md` §7 for the milestone
-> plan, `docs/Sessions.md` for what each one actually did, and `CLAUDE.md` for the working
-> agreement.
+> **Status: M6 complete.** The read-only **query API** (`shelf api`, Javalin on virtual threads)
+> serves `GET /products` (category, dollar price range, in-stock, any spec field as a filter,
+> `sort=deal|price|name`), `GET /products/{id}` (the product, its live listings, its daily
+> history) and `GET /deals`, plus `/categories` and `/health`, and a one-page **demo** at `/`
+> with a sparkline per product — dashed where the year is synthetic — and a buy / wait badge
+> with its reasons. Spec filters read the *listings* (with the product's summary filling what
+> a listing did not state) and price the variant that matched. Under k6 on one laptop the
+> knee sits at the 8-connection pool (**2,178 req/s at 8 VUs**); pinned past it at 16 VUs for a
+> minute, **1,529 req/s, p50 9.3 ms / p99 32.1 ms**, zero failures, with a stated ±25%
+> run-to-run bar (`data/benchmarks/m6/`). `docker compose up` now includes the API on
+> :8080. The signal (M5: 0.744 hit rate vs 0.360 / 0.712 baselines on a synthetic year),
+> rollups (M4: 2.8 M observations, the deal query 321 ms → 0.10 ms), resolution (M3: precision
+> 1.000 / recall 0.976) and the distributed crawler (M2: SIGKILL recovery in 13.0 s / 4.9 s)
+> are unchanged. See `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each
+> one actually did, and `CLAUDE.md` for the working agreement.
 
 ## Prereqs
 
@@ -64,7 +61,7 @@ today), so a full cycle takes about half a minute of mostly waiting. That is del
 ### The distributed crawler
 
 ```
-docker compose up --scale worker=4      # postgres + migrate + 2 coordinators (one leads) + 4 workers
+docker compose up --scale worker=4      # postgres + migrate + 2 coordinators (one leads) + 4 workers + the api on :8080
 docker kill shelf-worker-2              # its leased page is back in the queue within 15 s + 5 s
 docker kill $(docker compose ps -q coordinator | head -1)   # the standby leads within 5 s
 ```
@@ -164,6 +161,25 @@ select s.signal, s.reason_codes, p.canonical_name, r.current_price_cents, r.list
   from deal_signals s join products p on p.id = s.product_id join price_rollups r on r.product_id = p.id order by s.signal, p.id;
 ```
 
+### The API and the demo page
+
+```
+shelf api --port 8080                              # or: docker compose up api
+open http://localhost:8080/                        # the demo page
+curl 'localhost:8080/products?category=keyboards&max_price=150&layout_size=75&hot_swap=true&sort=deal'
+curl 'localhost:8080/products/2?days=90'           # a product: price picture, call, live listings, daily history
+curl 'localhost:8080/deals?category=keyboards'     # the buy calls
+scripts/k6/sweep.sh                                # 1 → 64 VUs against a running API; k6 required
+```
+
+Read-only, no auth, JSON in snake_case. A spec filter matches a product when one of its live
+listings — with the product's summary spec filling in the fields the listing did not state —
+carries every requested value, and the price range applies to *that* listing, which is the
+one the row reports. Every price says how much of its year is synthetic; every call carries
+its reason codes and a `stale` flag if it was made on an older rollup than the price beside
+it. Bad input is a 400 that names the problem, using the category schema's own validator.
+`data/benchmarks/m6/` holds the k6 sweep, the pinned run and the pool experiment.
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -185,9 +201,9 @@ environment variable that holds it.
 ```
 categories/           per-category config (spec schema, retailers, seed products)
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
-scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans
+scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans; k6/ — the API load test
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
@@ -196,15 +212,16 @@ src/main/java/com/achen/shelf/
   rollup/             the post-cycle pass: offer retirement + price rollups (M4)
   backfill/           the labeled synthetic history (M4)
   signal/             the buy/wait/neutral rule, the per-cycle signal pass, the backtest (M5)
-  api/                Javalin query API    (M6)
+  api/                the Javalin query API; the demo page is src/main/resources/public/index.html (M6)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
 data/labels/          hand-labeled resolution pairs + the committed eval report
 data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
 data/benchmarks/m5/   the committed backtest report
+data/benchmarks/m6/   the k6 sweep, the pinned run, the pool experiment
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
-docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable); api in M6
+docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable) + api (:8080)
 ```
 
 ## Crawler conduct

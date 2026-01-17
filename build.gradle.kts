@@ -43,6 +43,7 @@ dependencies {
     // --- runtime ---
     implementation("io.javalin:javalin:6.4.0")                       // query API (M6)
     implementation("com.fasterxml.jackson.core:jackson-databind:2.18.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2") // java.time in API JSON (M6)
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2") // category config
     implementation("org.jsoup:jsoup:1.18.3")                         // HTML parsing (M1)
     implementation("com.zaxxer:HikariCP:6.2.1")                      // connection pool
