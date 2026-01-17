@@ -1,12 +1,12 @@
 # Shelf local infra.
 #
 #   docker compose up -d postgres            just the database (M0; `make up`)
-#   docker compose up --scale worker=4       the whole crawler: postgres, migrate, coordinator, 4 workers
+#   docker compose up --scale worker=4       everything: postgres, migrate, coordinator, 4 workers, the api on :8080
 #   docker kill shelf-worker-2               watch the coordinator reap its lease and another worker take the page
 #   docker kill $(docker compose ps -q coordinator | head -1)   ...or kill the leader
 #
-# Every service but postgres is the same image running a different `shelf` subcommand. M6 adds
-# `api` on :8080.
+# Every service but postgres is the same image running a different `shelf` subcommand; `api`
+# serves the query API and the demo page on :8080.
 services:
   postgres:
     image: postgres:16
@@ -64,7 +64,18 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
-  # TODO(M6): api service exposing 8080.
+  # The query API and the demo page (M6), read-only. http://localhost:8080/
+  api:
+    image: shelf:local
+    build: .
+    command: ["api", "--port", "8080"]
+    environment: *shelf_env
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
 volumes:
   shelf_pgdata:

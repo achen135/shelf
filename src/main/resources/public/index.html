@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shelf</title>
+<style>
+  /* Tokens: light first, dark under prefers-color-scheme. The page reads only roles. */
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+    --series: #2a78d6; --good: #0ca30c; --good-ink: #006300; --warn: #fab219; --warn-ink: #5a3d00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10);
+      --series: #3987e5; --good: #0ca30c; --good-ink: #5fd35f; --warn: #fab219; --warn-ink: #fab219;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding-block: 24px 48px; padding-inline: 20px; background: var(--page); color: var(--ink);
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; margin: 24px 0 8px; color: var(--ink-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  p.sub { margin: 4px 0 0; color: var(--ink-2); max-width: 70ch; }
+  a { color: var(--series); }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; }
+  /* filters: one row above the results */
+  form.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; padding: 14px 16px; margin-top: 18px; }
+  form.filters label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink-2); }
+  form.filters select, form.filters input { font: inherit; color: var(--ink); background: var(--page); border: 1px solid var(--ring);
+    border-radius: 6px; padding: 5px 8px; min-width: 7.5em; }
+  form.filters input[type=number] { width: 7.5em; }
+  form.filters .check { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 6px; }
+  .status { color: var(--ink-2); font-size: 13px; margin: 8px 2px; min-height: 1.4em; }
+  /* deals strip */
+  .deals { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .deal { padding: 12px 14px; cursor: pointer; }
+  .deal .name { font-weight: 600; }
+  .deal .price { font-size: 20px; font-weight: 600; margin-top: 2px; }
+  .deal .why { color: var(--ink-2); font-size: 12px; margin-top: 4px; }
+  .empty { padding: 12px 14px; color: var(--ink-2); }
+  /* results table */
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 9px 10px; border-top: 1px solid var(--grid); vertical-align: middle; }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; border-top: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.row { cursor: pointer; }
+  tr.row:hover td { background: color-mix(in srgb, var(--series) 6%, transparent); }
+  tr.row.selected td { background: color-mix(in srgb, var(--series) 12%, transparent); }
+  .name { font-weight: 600; }
+  .variant { color: var(--ink-2); font-size: 12px; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pct { color: var(--ink-2); font-size: 12px; }
+  /* the badge: icon + label, never colour alone */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+           border: 1px solid var(--ring); background: var(--page); color: var(--ink-2); white-space: nowrap; }
+  .badge.buy  { background: color-mix(in srgb, var(--good) 14%, var(--surface)); color: var(--good-ink); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .badge.wait { background: color-mix(in srgb, var(--warn) 18%, var(--surface)); color: var(--warn-ink); border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; display: inline-block; }
+  .reasons { color: var(--muted); font-size: 11px; margin-top: 2px; max-width: 30ch; }
+  svg.spark { display: block; width: 120px; height: 28px; }
+  /* detail panel */
+  .detail { margin-top: 12px; padding: 16px 18px; }
+  .detail header { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+  .detail header .price { font-size: 28px; font-weight: 600; }
+  .detail header .list { color: var(--ink-2); }
+  .chartwrap { position: relative; margin-top: 10px; }
+  svg.chart { display: block; width: 100%; height: 220px; }
+  .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--ring); border-radius: 6px;
+         padding: 4px 8px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); transform: translate(-50%, -110%); white-space: nowrap; display: none; }
+  .legend { color: var(--muted); font-size: 12px; margin-top: 4px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend .key { display: inline-block; width: 22px; border-top: 2px solid var(--series); vertical-align: middle; margin-right: 6px; }
+  .legend .key.syn { border-top-style: dashed; }
+  .reasonlist { margin: 10px 0 0; padding: 0; list-style: none; }
+  .reasonlist li { padding: 2px 0; color: var(--ink-2); }
+  .reasonlist code { color: var(--ink); font-size: 12px; }
+  .offers td { font-size: 13px; }
+  .foot { margin-top: 28px; color: var(--muted); font-size: 12px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Shelf</h1>
+  <p class="sub">Price &amp; deal intelligence for one enthusiast category at a time. Pick a budget and specs, get the list, and a
+    <strong>buy / wait</strong> call per product with the reasons behind it — from a year of price history, most of which is
+    <em>labeled synthetic</em> until the crawler has been running for a while. Every number says how much of it is.</p>
+
+  <form class="filters card" id="filters" onsubmit="return false">
+    <label>Category <select id="category"></select></label>
+    <label>Min $ <input id="min" type="number" min="0" step="1" placeholder="0"></label>
+    <label>Max $ <input id="max" type="number" min="0" step="1" placeholder="any"></label>
+    <span id="specs" style="display: contents"></span>
+    <label>Sort <select id="sort"><option value="deal">best deal first</option><option value="price">price</option><option value="name">name</option></select></label>
+    <label class="check"><input id="instock" type="checkbox" checked> in stock only</label>
+  </form>
+  <div class="status" id="status"></div>
+
+  <h2>Buy calls today</h2>
+  <div id="deals" class="deals"></div>
+
+  <h2>Products</h2>
+  <div class="card tablewrap">
+    <table id="results">
+      <thead><tr>
+        <th>Product</th><th>Matching listing</th><th class="num">Price</th><th class="num">vs list</th><th>Trailing year</th><th>90 days</th><th>Call</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <section id="detail" class="card detail hidden"></section>
+
+  <p class="foot">Read-only demo over <code>GET /products</code>, <code>/products/{id}</code>, <code>/deals</code>, <code>/categories</code>.
+    Prices are the cheapest in-stock listing linked to each product; the year percentile is the share of the trailing year priced below today.
+    Dashed history is synthetic backfill (<code>price_observations.source = 'synthetic'</code>), solid is observed.</p>
+</div>
+
+<script>
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const money = c => c == null ? '—' : '$' + (c / 100).toFixed(2);
+  const pct = x => x == null ? '—' : Math.round(x * 100) + '%';
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+  const state = { categories: [], schema: {}, selected: null, seq: 0 };
+
+  async function json(url) {
+    const r = await fetch(url);
+    const body = await r.json();
+    if (!r.ok) throw new Error(body.title || r.statusText);
+    return body;
+  }
+
+  // ---- filters -------------------------------------------------------------------------------
+  async function init() {
+    state.categories = await json('/categories');
+    const sel = $('#category');
+    sel.innerHTML = state.categories.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+    buildSpecFilters();
+    $('#filters').addEventListener('change', e => { if (e.target.id === 'category') buildSpecFilters(); refresh(); });
+    $('#filters').addEventListener('input', debounce(refresh, 350));
+    await refresh();
+    const deep = /^#product-(\d+)$/.exec(location.hash);
+    if (deep) select(+deep[1]);
+  }
+  function buildSpecFilters() {
+    const cat = state.categories.find(c => c.name === $('#category').value) || state.categories[0];
+    state.schema = cat ? cat.spec_schema : {};
+    const wrap = $('#specs');
+    wrap.innerHTML = '';
+    for (const [field, def] of Object.entries(state.schema)) {
+      if (def.type === 'string' && def.values.length) {
+        wrap.insertAdjacentHTML('beforeend', `<label>${esc(field.replaceAll('_', ' '))}
+          <select data-spec="${esc(field)}"><option value="">any</option>${def.values.map(v => `<option>${esc(v)}</option>`).join('')}</select></label>`);
+      } else if (def.type === 'boolean') {
+        wrap.insertAdjacentHTML('beforeend', `<label>${esc(field.replaceAll('_', ' '))}
+          <select data-spec="${esc(field)}"><option value="">any</option><option value="true">yes</option><option value="false">no</option></select></label>`);
+      }
+    }
+  }
+  function query() {
+    const p = new URLSearchParams({ category: $('#category').value, sort: $('#sort').value, in_stock: $('#instock').checked, limit: 30 });
+    if ($('#min').value) p.set('min_price', $('#min').value);
+    if ($('#max').value) p.set('max_price', $('#max').value);
+    for (const s of document.querySelectorAll('[data-spec]')) if (s.value) p.set(s.dataset.spec, s.value);
+    return p;
+  }
+  function debounce(fn, ms) { let t; return () => { clearTimeout(t); t = setTimeout(fn, ms); }; }
+
+  // ---- the list ------------------------------------------------------------------------------
+  async function refresh() {
+    const seq = ++state.seq;
+    const p = query();
+    $('#status').textContent = 'loading…';
+    try {
+      const [list, deals] = await Promise.all([json('/products?' + p), json('/deals?' + new URLSearchParams({ category: p.get('category') }))]);
+      if (seq !== state.seq) return;
+      renderDeals(deals, list);
+      renderList(list);
+    } catch (e) {
+      if (seq !== state.seq) return;
+      $('#status').textContent = 'Error: ' + e.message;
+    }
+  }
+  function renderDeals(deals, list) {
+    const el = $('#deals');
+    if (deals.products.length) {
+      el.innerHTML = deals.products.slice(0, 8).map(pr => `<div class="card deal" data-id="${pr.id}">
+        <div class="name">${esc(pr.name)}</div>
+        <div class="price">${money(pr.offer.price_cents)} <span class="pct">at ${esc(pr.offer.retailer)}</span></div>
+        <div class="why">${pr.signal.reasons.map(r => esc(r.description)).slice(0, 2).join(' · ')}</div></div>`).join('');
+    } else {
+      const closest = list.products.filter(pr => pr.price.percentile_365d != null).slice(0, 3);
+      el.innerHTML = `<div class="card empty">No <strong>buy</strong> call today in ${esc(list.query.category)}: nothing is on sale against its own year.
+        ${closest.length ? 'Closest: ' + closest.map(pr => `<a href="#" data-id="${pr.id}">${esc(pr.name)}</a> (${pct(pr.price.percentile_365d)} of the year cheaper)`).join(', ') + '.' : ''}</div>`;
+    }
+    el.querySelectorAll('[data-id]').forEach(d => d.addEventListener('click', ev => { ev.preventDefault(); select(+d.dataset.id); }));
+  }
+  function renderList(list) {
+    const tb = $('#results tbody');
+    $('#status').textContent = `${list.total} product${list.total === 1 ? '' : 's'} match` + (list.total > list.products.length ? ` — showing ${list.products.length}` : '');
+    tb.innerHTML = list.products.map(pr => {
+      const off = pr.price.list_cents && pr.offer.price_cents ? pr.offer.price_cents / pr.price.list_cents - 1 : null;
+      return `<tr class="row" data-id="${pr.id}">
+        <td><div class="name">${esc(pr.name)}</div><div class="pct">${esc(pr.brand)} · ${esc(Object.entries(pr.offer.spec).map(([k, v]) => v === true ? k.replace('_', '-') : typeof v === 'number' ? k.replaceAll('_', ' ') + ' ' + v : v).join(' · '))}</div></td>
+        <td><div class="variant" title="${esc(pr.offer.title)}">${esc(pr.offer.title)}</div><div class="pct">at <a href="${esc(pr.offer.url)}" target="_blank" rel="noopener">${esc(pr.offer.retailer)}</a></div></td>
+        <td class="num">${money(pr.offer.price_cents)}</td>
+        <td class="num">${off == null ? '—' : (off <= -0.005 ? Math.round(-off * 100) + '% off' : off >= 0.005 ? '+' + Math.round(off * 100) + '%' : 'at list')}<div class="pct">list ${money(pr.price.list_cents)}</div></td>
+        <td><div>${pct(pr.price.percentile_365d)} of year cheaper</div><div class="pct">low ${money(pr.price.min_365d_cents)} · ${Math.round((pr.price.synthetic_share ?? 0) * 100)}% synthetic</div></td>
+        <td><svg class="spark" data-spark="${pr.id}" viewBox="0 0 120 28" preserveAspectRatio="none"></svg></td>
+        <td>${badge(pr.signal)}<div class="reasons">${(pr.signal ? pr.signal.reasons : []).filter(r => r.code !== 'MOSTLY_SYNTHETIC').map(r => esc(r.description)).slice(0, 2).join(' · ')}</div></td>
+      </tr>`;
+    }).join('');
+    tb.querySelectorAll('tr.row').forEach(tr => tr.addEventListener('click', () => select(+tr.dataset.id)));
+    // sparklines: one detail request per row, drawn as they arrive
+    for (const pr of list.products) {
+      json(`/products/${pr.id}?days=90`).then(d => {
+        const svg = tb.querySelector(`[data-spark="${pr.id}"]`);
+        if (svg) drawLine(svg, d.history, { w: 120, h: 28, pad: 2 });
+      }).catch(() => {});
+    }
+  }
+  function badge(sig) {
+    if (!sig) return '<span class="badge">no call</span>';
+    const icon = { buy: '▲', wait: '⏸', neutral: '·' }[sig.signal] || '·';
+    return `<span class="badge ${esc(sig.signal)}" title="${esc(sig.reasons.map(r => r.code).join(', '))}"><span class="dot"></span>${icon} ${esc(sig.signal)}${sig.stale ? ' (stale)' : ''}</span>`;
+  }
+
+  // ---- lines ---------------------------------------------------------------------------------
+  // One series, drawn twice: a dashed path where the day is synthetic, a solid one where observed.
+  // Gaps (days with nothing in stock) break the path rather than being interpolated across.
+  function scales(history, box) {
+    const pts = history.filter(h => h.price_cents != null);
+    const lo = Math.min(...pts.map(h => h.price_cents)), hi = Math.max(...pts.map(h => h.price_cents));
+    const span = hi - lo || hi * 0.05 || 1;
+    const x = i => box.pad + (i / Math.max(1, history.length - 1)) * (box.w - 2 * box.pad);
+    const y = c => box.h - box.pad - ((c - (lo - span * 0.1)) / (span * 1.2)) * (box.h - 2 * box.pad);
+    return { x, y, lo, hi };
+  }
+  function paths(history, sc) {
+    let syn = '', obs = '';
+    history.forEach((h, i) => {
+      if (h.price_cents == null) return;
+      const prev = history[i - 1];
+      const cont = prev && prev.price_cents != null;
+      const seg = (cont ? 'L' : 'M') + sc.x(i).toFixed(1) + ' ' + sc.y(h.price_cents).toFixed(1);
+      // a segment belongs to the source of the day it ends on; the join point is shared
+      if (h.synthetic) syn += (cont && !prev.synthetic ? 'M' + sc.x(i - 1).toFixed(1) + ' ' + sc.y(prev.price_cents).toFixed(1) : '') + seg;
+      else obs += (cont && prev.synthetic ? 'M' + sc.x(i - 1).toFixed(1) + ' ' + sc.y(prev.price_cents).toFixed(1) : '') + seg;
+    });
+    return { syn, obs };
+  }
+  function drawLine(svg, history, box) {
+    if (!history.some(h => h.price_cents != null)) { svg.innerHTML = ''; return; }
+    const sc = scales(history, box);
+    const { syn, obs } = paths(history, sc);
+    svg.innerHTML = `<path d="${syn}" fill="none" stroke="var(--series)" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="${obs}" fill="none" stroke="var(--series)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+  }
+
+  // ---- detail --------------------------------------------------------------------------------
+  async function select(id) {
+    state.selected = id;
+    history.replaceState(null, '', '#product-' + id);
+    document.querySelectorAll('tr.row').forEach(tr => tr.classList.toggle('selected', +tr.dataset.id === id));
+    const el = $('#detail');
+    el.classList.remove('hidden');
+    el.innerHTML = '<div class="status">loading…</div>';
+    let d;
+    try { d = await json(`/products/${id}?days=365`); } catch (e) { el.innerHTML = `<div class="status">Error: ${esc(e.message)}</div>`; return; }
+    if (state.selected !== id) return;
+    const p = d.price || {}, s = d.signal;
+    el.innerHTML = `
+      <header>
+        <h1>${esc(d.name)}</h1>
+        <span class="price">${money(p.current_cents)}</span>
+        <span class="list">list ${money(p.list_cents)} · year ${money(p.min_365d_cents)}–${money(p.max_365d_cents)} · median ${money(p.median_365d_cents)}
+          · ${pct(p.percentile_365d)} of the year cheaper · on sale ${p.sale_days_365d ?? 0} days</span>
+        ${badge(s)}
+      </header>
+      <div class="chartwrap"><svg class="chart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg><div class="tip"></div></div>
+      <div class="legend"><span><span class="key"></span>observed</span><span><span class="key syn"></span>synthetic backfill</span>
+        <span>${p.observations_365d ?? 0} observations in the trailing year, ${p.synthetic_365d ?? 0} synthetic (${Math.round((p.synthetic_share ?? 0) * 100)}%) · as of ${esc((p.as_of || '').slice(0, 16).replace('T', ' '))} UTC</span></div>
+      ${s ? `<ul class="reasonlist">${s.reasons.map(r => `<li><code>${esc(r.code)}</code> — ${esc(r.description)}</li>`).join('')}</ul>` : '<p class="status">No call has been computed for this product yet.</p>'}
+      <h2>Live listings (${d.offers.length})</h2>
+      <div class="tablewrap"><table class="offers"><thead><tr><th>Retailer</th><th>Listing</th><th class="num">Price</th><th>Stock</th><th class="num">Year pct</th></tr></thead>
+      <tbody>${d.offers.map(o => `<tr><td>${esc(o.retailer)}</td><td><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.title)}</a></td>
+        <td class="num">${money(o.price_cents)}</td><td>${o.in_stock == null ? '—' : o.in_stock ? 'in stock' : 'out of stock'}</td><td class="num">${pct(o.percentile_365d)}</td></tr>`).join('')}</tbody></table></div>`;
+    drawChart($('svg.chart', el), $('.tip', el), d.history);
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function drawChart(svg, tip, history) {
+    const box = { w: 900, h: 220, pad: 14 };
+    if (!history.some(h => h.price_cents != null)) { svg.innerHTML = '<text x="12" y="24" fill="var(--muted)" font-size="13">no history in the window</text>'; return; }
+    const sc = scales(history, box);
+    const { syn, obs } = paths(history, sc);
+    const ticks = [sc.lo, (sc.lo + sc.hi) / 2, sc.hi];
+    svg.innerHTML = ticks.map(t => `<line x1="${box.pad}" x2="${box.w - box.pad}" y1="${sc.y(t).toFixed(1)}" y2="${sc.y(t).toFixed(1)}" stroke="var(--grid)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        <text x="${box.w - box.pad - 4}" y="${(sc.y(t) - 4).toFixed(1)}" text-anchor="end" fill="var(--muted)" font-size="11">${money(t)}</text>`).join('')
+      + `<path d="${syn}" fill="none" stroke="var(--series)" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+         <path d="${obs}" fill="none" stroke="var(--series)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+         <line class="cross" x1="0" x2="0" y1="${box.pad}" y2="${box.h - box.pad}" stroke="var(--axis)" stroke-width="1" vector-effect="non-scaling-stroke" style="display:none"/>
+         <circle class="pt" r="4" fill="var(--series)" stroke="var(--surface)" stroke-width="2" style="display:none"/>`;
+    const cross = svg.querySelector('.cross'), pt = svg.querySelector('.pt');
+    svg.onmousemove = ev => {
+      const r = svg.getBoundingClientRect();
+      const i = Math.max(0, Math.min(history.length - 1, Math.round(((ev.clientX - r.left) / r.width) * (history.length - 1))));
+      const h = history[i];
+      cross.setAttribute('x1', sc.x(i)); cross.setAttribute('x2', sc.x(i)); cross.style.display = '';
+      if (h.price_cents != null) { pt.setAttribute('cx', sc.x(i)); pt.setAttribute('cy', sc.y(h.price_cents)); pt.style.display = ''; } else pt.style.display = 'none';
+      tip.style.display = 'block';
+      tip.style.left = ((sc.x(i) / box.w) * r.width) + 'px';
+      tip.style.top = (h.price_cents != null ? (sc.y(h.price_cents) / box.h) * r.height : 20) + 'px';
+      tip.textContent = `${h.day} · ${h.price_cents != null ? money(h.price_cents) : 'nothing in stock'} · ${h.synthetic ? 'synthetic' : 'observed'} (${h.observations} obs)`;
+    };
+    svg.onmouseleave = () => { cross.style.display = 'none'; pt.style.display = 'none'; tip.style.display = 'none'; };
+  }
+
+  init().catch(e => { $('#status').textContent = 'Error: ' + e.message; });
+})();
+</script>
+</body>
+</html>
