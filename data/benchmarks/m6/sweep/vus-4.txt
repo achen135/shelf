@@ -1,0 +1,44 @@
+
+
+  █ THRESHOLDS 
+
+    checks
+    ✓ 'rate>0.99' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 106912  3561.185068/s
+    checks_succeeded...: 100.00% 106912 out of 106912
+    checks_failed......: 0.00%   0 out of 106912
+
+    ✓ status 200
+    ✓ is json
+
+    CUSTOM
+    deals_ms.......................: avg=397.87µs min=234µs    med=367µs  p(90)=520µs  p(95)=616µs  p(99)=834.6µs max=5.89ms 
+    detail_ms......................: avg=3.43ms   min=950µs    med=2.04ms p(90)=6.81ms p(95)=8.93ms p(99)=20.3ms  max=30.65ms
+    endpoint_errors................: 0.00%  0 out of 53456
+    products_ms....................: avg=1.9ms    min=1.05ms   med=1.84ms p(90)=2.58ms p(95)=2.77ms p(99)=3.31ms  max=10.11ms
+
+    HTTP
+    http_req_duration..............: avg=2.2ms    min=234µs    med=1.73ms p(90)=3.88ms p(95)=6.03ms p(99)=9.87ms  max=30.65ms
+      { expected_response:true }...: avg=2.2ms    min=234µs    med=1.73ms p(90)=3.88ms p(95)=6.03ms p(99)=9.87ms  max=30.65ms
+    http_req_failed................: 0.00%  0 out of 53458
+    http_reqs......................: 53458  1780.659153/s
+
+    EXECUTION
+    iteration_duration.............: avg=2.24ms   min=253.58µs med=1.76ms p(90)=3.91ms p(95)=6.06ms p(99)=9.91ms  max=30.75ms
+    iterations.....................: 53456  1780.592534/s
+    vus............................: 4      min=4          max=4
+    vus_max........................: 4      min=4          max=4
+
+    NETWORK
+    data_received..................: 1.2 GB 41 MB/s
+    data_sent......................: 6.3 MB 211 kB/s
+
+
+

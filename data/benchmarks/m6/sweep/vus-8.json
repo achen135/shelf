@@ -1,0 +1,317 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status 200": {
+                    "fails": 0,
+                    "name": "status 200",
+                    "path": "::status 200",
+                    "id": "fad9fa412b86fcb03bee97c80dcd61f1",
+                    "passes": 65389
+                },
+                "is json": {
+                    "passes": 65389,
+                    "fails": 0,
+                    "name": "is json",
+                    "path": "::is json",
+                    "id": "05e9c1f6d7747eaf2015aa7c937462e2"
+                }
+            }
+    },
+    "metrics": {
+        "iteration_duration": {
+            "p(90)": 6.346066800000002,
+            "p(95)": 9.100583199999997,
+            "p(99)": 18.018027959999984,
+            "max": 72.739334,
+            "avg": 3.665471821055517,
+            "min": 0.269209,
+            "med": 2.982291
+        },
+        "vus_max": {
+            "value": 8,
+            "min": 8,
+            "max": 8
+        },
+        "http_req_blocked": {
+            "avg": 0.0016604272759250614,
+            "min": 0,
+            "med": 0.001,
+            "p(90)": 0.002,
+            "p(95)": 0.003,
+            "p(99)": 0.012,
+            "max": 1.292
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 65391,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "data_sent": {
+            "rate": 258402.72534556253,
+            "count": 7759708
+        },
+        "iterations": {
+            "count": 65389,
+            "rate": 2177.4911900835687
+        },
+        "vus": {
+            "value": 8,
+            "min": 8,
+            "max": 8
+        },
+        "checks": {
+            "passes": 130778,
+            "fails": 0,
+            "thresholds": {
+                "rate>0.99": false
+            },
+            "value": 1
+        },
+        "products_ms": {
+            "min": 1.237,
+            "med": 2.987,
+            "p(90)": 4.459,
+            "p(95)": 5.064,
+            "p(99)": 6.845599999999997,
+            "max": 35.834,
+            "avg": 3.140263547627044
+        },
+        "http_req_tls_handshaking": {
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0,
+            "avg": 0,
+            "min": 0
+        },
+        "http_req_waiting": {
+            "avg": 3.5471128901531057,
+            "min": 0.233,
+            "med": 2.861,
+            "p(90)": 6.214,
+            "p(95)": 8.969499999999996,
+            "p(99)": 17.8373,
+            "max": 72.327
+        },
+        "data_received": {
+            "rate": 49683114.807755955,
+            "count": 1491959742
+        },
+        "deals_ms": {
+            "avg": 0.7063942961534567,
+            "min": 0.248,
+            "med": 0.658,
+            "p(90)": 0.943,
+            "p(95)": 1.089,
+            "p(99)": 1.5619599999999998,
+            "max": 7.319
+        },
+        "http_req_sending": {
+            "max": 1.02,
+            "avg": 0.006536174702939737,
+            "min": 0.001,
+            "med": 0.005,
+            "p(90)": 0.012,
+            "p(95)": 0.018,
+            "p(99)": 0.032
+        },
+        "detail_ms": {
+            "p(99)": 27.50638,
+            "max": 72.623,
+            "avg": 5.479162721505138,
+            "min": 1.256,
+            "med": 3.528,
+            "p(90)": 10.5698,
+            "p(95)": 13.347399999999983
+        },
+        "http_reqs": {
+            "count": 65391,
+            "rate": 2177.5577912302474
+        },
+        "http_req_connecting": {
+            "avg": 0.000030325274120291782,
+            "min": 0,
+            "med": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "p(99)": 0,
+            "max": 0.36
+        },
+        "http_req_duration{expected_response:true}": {
+            "p(90)": 6.27,
+            "p(95)": 9.025,
+            "p(99)": 17.906799999999993,
+            "max": 72.623,
+            "avg": 3.590971265158856,
+            "min": 0.248,
+            "med": 2.905
+        },
+        "http_req_duration": {
+            "max": 72.623,
+            "avg": 3.590971265158856,
+            "min": 0.248,
+            "med": 2.905,
+            "p(90)": 6.27,
+            "p(95)": 9.025,
+            "p(99)": 17.906799999999993
+        },
+        "http_req_receiving": {
+            "min": 0.003,
+            "med": 0.03,
+            "p(90)": 0.07,
+            "p(95)": 0.085,
+            "p(99)": 0.14,
+            "max": 1.358,
+            "avg": 0.03732220030279219
+        },
+        "endpoint_errors": {
+            "passes": 0,
+            "fails": 65389,
+            "value": 0
+        }
+    },
+    "setup_data": {
+        "min": 40.49,
+        "bools": [
+            "hot_swap"
+        ],
+        "enums": [
+            {
+                "name": "switch_type",
+                "values": [
+                    "linear",
+                    "tactile",
+                    "clicky",
+                    "silent-linear",
+                    "silent-tactile",
+                    "magnetic",
+                    "topre",
+                    "optical"
+                ]
+            },
+            {
+                "name": "mount_type",
+                "values": [
+                    "tray",
+                    "top",
+                    "gasket",
+                    "o-ring",
+                    "plate",
+                    "unknown"
+                ]
+            },
+            {
+                "name": "layout_size",
+                "values": [
+                    "full",
+                    "1800",
+                    "tkl",
+                    "75",
+                    "65",
+                    "60",
+                    "40",
+                    "alice",
+                    "split"
+                ]
+            },
+            {
+                "name": "case_material",
+                "values": [
+                    "plastic",
+                    "aluminum",
+                    "polycarbonate",
+                    "wood",
+                    "other"
+                ]
+            },
+            {
+                "name": "keycap_profile",
+                "values": [
+                    "oem",
+                    "cherry",
+                    "sa",
+                    "xda",
+                    "dsa",
+                    "mt3",
+                    "kat"
+                ]
+            },
+            {
+                "name": "connectivity",
+                "values": [
+                    "wired",
+                    "2.4ghz",
+                    "bluetooth",
+                    "tri-mode"
+                ]
+            },
+            {
+                "name": "keycap_material",
+                "values": [
+                    "abs",
+                    "pbt",
+                    "unknown"
+                ]
+            }
+        ],
+        "ids": [
+            28,
+            24,
+            33,
+            19,
+            46,
+            13,
+            38,
+            9,
+            21,
+            36,
+            48,
+            35,
+            47,
+            40,
+            10,
+            23,
+            16,
+            37,
+            17,
+            32,
+            11,
+            14,
+            49,
+            12,
+            20,
+            43,
+            8,
+            39,
+            22,
+            2,
+            41,
+            29,
+            42,
+            7,
+            50,
+            44,
+            26,
+            45,
+            18,
+            5,
+            6,
+            34,
+            3,
+            25,
+            1,
+            15,
+            4,
+            31
+        ],
+        "max": 289
+    }
+}
