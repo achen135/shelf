@@ -5,24 +5,28 @@ spec filters, get a ranked shortlist and a **buy-now / wait** signal grounded in
 history.
 
 A *category* is a config file — its spec schema, its retailers and how to fetch each, its seed
-products — so onboarding one is configuration plus parsers, not new pipeline code. The crawler
-never touches the open web: it visits the paths a category file names, and nothing else.
+products — so onboarding one is configuration plus parsers, not new pipeline code. M7 proved it
+with monitors. The crawler never touches the open web: it visits the paths a category file
+names, and nothing else.
 
-> **Status: M6 complete.** The read-only **query API** (`shelf api`, Javalin on virtual threads)
-> serves `GET /products` (category, dollar price range, in-stock, any spec field as a filter,
-> `sort=deal|price|name`), `GET /products/{id}` (the product, its live listings, its daily
-> history) and `GET /deals`, plus `/categories` and `/health`, and a one-page **demo** at `/`
-> with a sparkline per product — dashed where the year is synthetic — and a buy / wait badge
-> with its reasons. Spec filters read the *listings* (with the product's summary filling what
-> a listing did not state) and price the variant that matched. Under k6 on one laptop the
-> knee sits at the 8-connection pool (**2,178 req/s at 8 VUs**); pinned past it at 16 VUs for a
-> minute, **1,529 req/s, p50 9.3 ms / p99 32.1 ms**, zero failures, with a stated ±25%
-> run-to-run bar (`data/benchmarks/m6/`). `docker compose up` now includes the API on
-> :8080. The signal (M5: 0.744 hit rate vs 0.360 / 0.712 baselines on a synthetic year),
-> rollups (M4: 2.8 M observations, the deal query 321 ms → 0.10 ms), resolution (M3: precision
-> 1.000 / recall 0.976) and the distributed crawler (M2: SIGKILL recovery in 13.0 s / 4.9 s)
-> are unchanged. See `docs/Spec.md` §7 for the milestone plan, `docs/Sessions.md` for what each
-> one actually did, and `CLAUDE.md` for the working agreement.
+> **Status: M7 complete — the second category.** `categories/monitors.yaml` onboarded
+> **monitors** — six Shopify storefronts (Focus Camera, Pixio, Dough, KOORUI, INNOCN, Cooler
+> Master), a nine-field spec schema (panel, resolution, refresh, size, HDR, ports…), 127 seed
+> products — with **one new class** (`MonitorSpecExtractor`, 312 lines) and one line in the
+> parser registry; `git diff --stat` shows nothing else in the crawl, resolution, rollup,
+> signal or API code changed (`data/benchmarks/m7/`). One `shelf crawl --once` ran the
+> unchanged chain end to end: 472 offers, 191 auto-linked, rollups in 51 ms; entity resolution
+> scores **precision 1.000 / recall 1.000 on 206 hand-labeled pairs** (0.984 precision before two
+> bundle phrases were added to the config); a labeled synthetic year, rollups, signals and the
+> backtest all ran as they do for keyboards — and on the monitors' calmer year the fixed rule
+> **loses to always-buy (0.532 vs 0.569)**, which is recorded, not hidden. Two things the
+> category exposed: Focus Camera's `vendor` is a distributor on 63% of its listings, so
+> `brand_source` wants a third option before a third category; and no cross-retailer pair
+> exists yet. The API (M6: 1,529 req/s at 16 VUs, p99 32.1 ms), the signal (M5: 0.744 hit rate
+> on the keyboard year), rollups (M4: 2.98 M observations, deal query 321 ms → 0.10 ms),
+> resolution (M3: 1.000 / 0.976 on keyboards) and the distributed crawler (M2: SIGKILL
+> recovery in 13.0 s / 4.9 s) are unchanged. See `docs/Spec.md` §7 for the milestone plan,
+> `docs/Sessions.md` for what each one actually did, and `CLAUDE.md` for the working agreement.
 
 ## Prereqs
 
@@ -48,6 +52,7 @@ macOS with Docker Desktop this works without further setup; see the comment in
 
 ```
 make crawl     # shelf crawl --category keyboards --once
+shelf crawl --category monitors --once             # the second category (M7): same command, same chain
 ```
 
 It prints a per-retailer summary — pages, offers, price points, errors — then runs an
@@ -169,6 +174,7 @@ open http://localhost:8080/                        # the demo page
 curl 'localhost:8080/products?category=keyboards&max_price=150&layout_size=75&hot_swap=true&sort=deal'
 curl 'localhost:8080/products/2?days=90'           # a product: price picture, call, live listings, daily history
 curl 'localhost:8080/deals?category=keyboards'     # the buy calls
+curl 'localhost:8080/products?category=monitors&panel_type=oled&max_price=800'   # the second category, its own schema
 scripts/k6/sweep.sh                                # 1 → 64 VUs against a running API; k6 required
 ```
 
@@ -199,7 +205,7 @@ environment variable that holds it.
 ## Layout
 
 ```
-categories/           per-category config (spec schema, retailers, seed products)
+categories/           per-category config (spec schema, retailers, seed products): keyboards.yaml, monitors.yaml
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
 scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans; k6/ — the API load test
 src/main/java/com/achen/shelf/
@@ -215,10 +221,11 @@ src/main/java/com/achen/shelf/
   api/                the Javalin query API; the demo page is src/main/resources/public/index.html (M6)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
-data/labels/          hand-labeled resolution pairs + the committed eval report
+data/labels/          hand-labeled resolution pairs + the committed eval reports (keyboards, monitors)
 data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
 data/benchmarks/m5/   the committed backtest report
 data/benchmarks/m6/   the k6 sweep, the pinned run, the pool experiment
+data/benchmarks/m7/   the monitors onboarding: the diff stat, the numbers, the backtest
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable) + api (:8080)

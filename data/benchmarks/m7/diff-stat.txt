@@ -1,0 +1,22 @@
+# git diff --stat cb0e016 6f707f5 — main before the m7/onboard-monitors branch against the commit that onboarded the category
+# (--stat-width=200 so no path is abbreviated). Generated 2026-09-16.
+
+ categories/monitors.yaml                                                | 311 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ docker-compose.yml                                                      |   3 +-
+ src/main/java/com/achen/shelf/crawl/parse/MonitorSpecExtractor.java     | 312 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/main/java/com/achen/shelf/crawl/parse/ParserRegistry.java           |   6 ++-
+ src/test/java/com/achen/shelf/config/CategoryConfigLoaderTest.java      |  23 +++++++++
+ src/test/java/com/achen/shelf/crawl/parse/MonitorFixturesTest.java      | 222 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/test/java/com/achen/shelf/crawl/parse/MonitorSpecExtractorTest.java | 235 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/test/resources/fixtures/README.md                                   |   3 ++
+ src/test/resources/fixtures/shopify/focuscamera-products.json           | 206 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/test/resources/fixtures/shopify/innocn-products.json                | 145 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/test/resources/fixtures/shopify/pixio-products.json                 | 202 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 11 files changed, 1665 insertions(+), 3 deletions(-)
+
+# the same diff restricted to the pipeline packages the milestone promised not to touch:
+# git diff --stat cb0e016 6f707f5 -- src/main/java/com/achen/shelf/{resolve,rollup,signal,api,db,config,cli,backfill} src/main/resources
+(empty)
+
+# and under crawl/ outside crawl/parse/:
+(empty)
