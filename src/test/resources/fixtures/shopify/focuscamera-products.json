@@ -1,0 +1,206 @@
+{
+  "products": [
+    {
+      "id": 7732981760048,
+      "title": "Dell UltraSharp U2725QE 27 Inch 4K UHD IPS Monitor with 120Hz and Thunderbolt 4",
+      "handle": "dell-dell-u2725qe-computers-tablets-monitors",
+      "body_html": "<p>Take your workflow to the next level with the Dell UltraSharp U2725QE 27-inch 4K UHD monitor. Designed for clarity, speed, and accuracy, it features a sharp 3840 x 2160 resolution, a smooth 120 Hz refresh rate, and a fast 5 ms response time perfect for multitasking, content creation, and everyday",
+      "published_at": "2025-09-02T12:28:31-04:00",
+      "created_at": "2025-09-02T05:13:19-04:00",
+      "updated_at": "2026-09-16T13:50:40-04:00",
+      "vendor": "Dell",
+      "product_type": "Professional Monitor",
+      "tags": [
+        "120Hz monitor",
+        "27 inch 4K monitor",
+        "4K HDR monitor",
+        "4K UHD monitor",
+        "Aspect Ratio: 16:9",
+        "Buy With Prime-add-back",
+        "color accurate monitor",
+        "ComfortView Plus",
+        "Comp-Office-Deals-2025",
+        "Connectivity: Thunderbolt 4",
+        "Dell U2725QE",
+        "Dell UltraSharp",
+        "ergonomic monitor",
+        "high resolution display",
+        "in-stock",
+        "IPS monitor",
+        "missing_attribute_set",
+        "Panel Type: IPS",
+        "professional monitor",
+        "Refresh Rate: 120Hz",
+        "Resolution: 4K UHD (3840×2160)",
+        "sale",
+        "Screen Shape: Flat",
+        "Screen Size: 27",
+        "sku-base:DELL-U2725QE",
+        "Thunderbolt 4 monitor",
+        "top-deals-6-8-26",
+        "top-deals-8-5-26",
+        "updated sale 2026-09-16",
+        "USB-A ports",
+        "USB-C monitor"
+      ],
+      "variants": [
+        {
+          "id": 42378021961776,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "DELL-U2725QE",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "639.00",
+          "grams": 0,
+          "compare_at_price": "699.00",
+          "position": 1,
+          "product_id": 7732981760048,
+          "created_at": "2025-09-02T05:13:19-04:00",
+          "updated_at": "2026-09-16T13:50:40-04:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7746573566000,
+      "title": "SAMSUNG 32-Inch ViewFinity Black S8 S80UD UHD Monitor | (LS32D802UANXGO)",
+      "handle": "samsung-ls32d802uanxgo-computers-tablets-monitors",
+      "body_html": "<h3>4K UHD Resolution</h3><p>Content springs to life in 4K OLED. Brilliant imagery shines with 250 nits (typ) of brightness and a wider spectrum of colors, shades, and contrasts. The NQ8 AI Gen3 Processor also upscales lower resolutions to nearly 4K, so you can enjoy higher quality images through th",
+      "published_at": "2025-09-26T13:31:55-04:00",
+      "created_at": "2025-09-19T12:13:37-04:00",
+      "updated_at": "2026-09-16T13:50:40-04:00",
+      "vendor": "SAMSUNG",
+      "product_type": "Gaming Monitor",
+      "tags": [
+        "240Hz",
+        "4K",
+        "AI",
+        "Aspect Ratio: 16:9",
+        "burn-in",
+        "cooling",
+        "DisplayPort",
+        "gaming",
+        "glare-free",
+        "HDMI",
+        "Hub",
+        "immersive",
+        "monitor",
+        "OLED",
+        "out-of-stock",
+        "processor",
+        "protection",
+        "Resolution: UHD (3840×2160)",
+        "response",
+        "Screen Shape: Flat",
+        "Screen Size: 32",
+        "sku-base:LS32D802UANXGO",
+        "Smart",
+        "UHD",
+        "updated sale 2026-06-18",
+        "upscaling",
+        "visuals"
+      ],
+      "variants": [
+        {
+          "id": 42417508188208,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "LS32D802UANXGO",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": false,
+          "price": "399.99",
+          "grams": 0,
+          "compare_at_price": "399.99",
+          "position": 1,
+          "product_id": 7746573566000,
+          "created_at": "2025-09-19T12:13:37-04:00",
+          "updated_at": "2026-09-16T13:50:40-04:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7896341610544,
+      "title": "Dell UltraSharp U2725QE 27\" 4K UHS IPS Black Monitor (Used)",
+      "handle": "dell-dell-u2725qefcvg-fc-computers-tablets-monitors",
+      "body_html": "<p><strong>Condition:</strong> Used – Very Good<br><strong>Condition Details:</strong> Fully functional with light cosmetic wear such as small scratches or blemishes.</p>\n<hr>\n<p>Take your workflow to the next level with the Dell UltraSharp U2725QE 27-inch 4K UHD monitor. Designed for clarity, speed",
+      "published_at": "2026-02-16T10:44:38-05:00",
+      "created_at": "2026-02-11T13:23:46-05:00",
+      "updated_at": "2026-09-16T13:50:40-04:00",
+      "vendor": "Used Department",
+      "product_type": "Professional Monitor",
+      "tags": [
+        "Computers & Tablets",
+        "in-stock",
+        "Monitors",
+        "new",
+        "new-2026-09-11T16:40:52Z",
+        "new-2026-09-12T20:39:40Z",
+        "new-2026-09-15T09:16:06Z",
+        "sale",
+        "sku-base:DELL-U2725QE",
+        "U/R-Collection",
+        "updated sale 2026-09-15",
+        "Used"
+      ],
+      "variants": [
+        {
+          "id": 42773393178672,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "DELL-U2725QE_FCVG-FC",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "504.99",
+          "grams": 0,
+          "compare_at_price": "572.70",
+          "position": 1,
+          "product_id": 7896341610544,
+          "created_at": "2026-02-11T13:23:46-05:00",
+          "updated_at": "2026-09-16T13:50:40-04:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    }
+  ]
+}

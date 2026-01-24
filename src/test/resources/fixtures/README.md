@@ -12,6 +12,9 @@ which is what makes a failure here mean "the retailer changed" or "we broke the 
 | `shopify/mechanicalkeyboards-products.json` | `https://mechanicalkeyboards.com/collections/compact-keyboards-60/products.json` | 2026-09-10 | as above; picked for three different vendors (HHKB, Ducky, Wooting) |
 | `shopify/kbdfans-products.json` | `https://kbdfans.com/collections/keyboard-category/products.json` | 2026-09-10 | as above; keeps one product priced `0.00` (a store placeholder) next to a real one |
 | `shopify/empty-products.json` | — | — | hand-written: what a store returns past the last page |
+| `shopify/pixio-products.json` | `https://www.pixiogaming.com/collections/monitors/products.json` | 2026-09-16 | 3 products kept (a Wave with colourways, a dual-mode 4K, a certified-refurbished listing); images emptied, `body_html` truncated to 300 chars, 2 variants each. Field values are verbatim. (M7, monitors) |
+| `shopify/focuscamera-products.json` | `https://www.focuscamera.com/collections/monitors/products.json` | 2026-09-16 | as above; picked for a Dell with the manufacturer as `vendor`, a Samsung whose free-text tags are wrong ("240Hz", "OLED" on a 60 Hz IPS panel), and the same Dell sold used under `vendor` "Used Department" |
+| `shopify/innocn-products.json` | `https://innocn.com/en-us/collections/brand-new/products.json` | 2026-09-16 | as above; a model-last title, a super-ultrawide, and a two-monitor "Combo" bundle |
 | `html/mechanicalkeyboards-collection.html` | `https://mechanicalkeyboards.com/collections/75-keyboards` | 2026-09-10 | first 4 product cards, verbatim except `<style>`/`<script>`/`<svg>`/`<img>`/quick-add markup removed; wrapped in the page's own `<ul class="grid product-grid">` |
 | `robots/*.txt` | — | — | hand-written. `shopify-style.txt` is a faithful subset of the rules the surveyed storefronts serve |
 | `categories/*.yaml` | — | — | hand-written config cases for the loader tests |

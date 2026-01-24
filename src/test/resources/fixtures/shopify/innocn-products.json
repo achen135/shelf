@@ -1,0 +1,145 @@
+{
+  "products": [
+    {
+      "id": 9877454815456,
+      "title": "INNOCN | 27\" 4K 120Hz IPS HDR500 Professional Monitor | CB27U1",
+      "handle": "innocn-27-4k-120hz-ips-hdr500-professional-monitor-cb27u1",
+      "body_html": "<p><img src=\"https://cdn.shopify.com/s/files/1/0632/1920/4320/files/CB27U1-01.webp?v=1782205521\" alt=\"\"><img src=\"https://cdn.shopify.com/s/files/1/0632/1920/4320/files/CB27U1-02.webp?v=1782205540\" alt=\"\"><img src=\"https://cdn.shopify.com/s/files/1/0632/1920/4320/files/CB27U1-03.webp?v=1782205540\" a",
+      "published_at": "2026-06-23T02:53:16-07:00",
+      "created_at": "2026-06-23T02:08:31-07:00",
+      "updated_at": "2026-09-16T10:51:12-07:00",
+      "vendor": "INNOCN",
+      "product_type": "Computer Monitors",
+      "tags": [
+        "144-240Hz",
+        "23\"-27\"",
+        "Professional",
+        "professional-design"
+      ],
+      "variants": [
+        {
+          "id": 53192027668704,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "CB27U1",
+          "requires_shipping": true,
+          "taxable": false,
+          "featured_image": null,
+          "available": true,
+          "price": "349.99",
+          "grams": 10000,
+          "compare_at_price": "499.99",
+          "position": 1,
+          "product_id": 9877454815456,
+          "created_at": "2026-06-23T02:08:31-07:00",
+          "updated_at": "2026-09-16T10:51:12-07:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8864235815136,
+      "title": "INNOCN | 49\" Dual QHD 240Hz Ultrawide Curved Gaming Monitor | 49C1S",
+      "handle": "innocn-49-inch-computer-monitor-49c1s",
+      "body_html": "<div>\n<img style=\"display: inline-block; margin: 0; padding: 0; border: 0; vertical-align: top;\" alt=\"\" src=\"https://cdn.shopify.com/s/files/1/0632/1920/4320/files/49C1S-1464_01.jpg?v=1744264699\"><img style=\"display: inline-block; margin: 0; padding: 0; border: 0; vertical-align: top;\" alt=\"\" src=\"h",
+      "published_at": "2025-07-27T20:29:43-07:00",
+      "created_at": "2025-04-08T02:31:43-07:00",
+      "updated_at": "2026-09-16T10:51:12-07:00",
+      "vendor": "INNOCN",
+      "product_type": "Computer Monitors",
+      "tags": [
+        "144-240Hz",
+        "40\"-49\"",
+        "Curved",
+        "productivity"
+      ],
+      "variants": [
+        {
+          "id": 47236838260960,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "49C1S",
+          "requires_shipping": true,
+          "taxable": false,
+          "featured_image": null,
+          "available": true,
+          "price": "874.99",
+          "grams": 15600,
+          "compare_at_price": "874.99",
+          "position": 1,
+          "product_id": 8864235815136,
+          "created_at": "2025-04-10T01:43:52-07:00",
+          "updated_at": "2026-09-16T10:51:12-07:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9670016499936,
+      "title": "GA27S1Q ×2 + Monitor Arm Combo",
+      "handle": "ga27s1q-dual-monitor-combo",
+      "body_html": "<ul>\n<li>Includes: 2 × GA27S1Q + 1 × Adjustable Dual Monitor Desk Arm</li>\n<li>Two 27\" QHD 280Hz QD-OLED gaming monitors with 0.03ms response time, perfect blacks, and vibrant colors + full-motion dual monitor arm. Elevate your competitive gaming and free your desk.</li>\n<li>For complete specificati",
+      "published_at": "2026-04-13T02:32:20-07:00",
+      "created_at": "2026-04-13T00:25:43-07:00",
+      "updated_at": "2026-09-16T10:51:12-07:00",
+      "vendor": "INNOCN",
+      "product_type": "Bundle",
+      "tags": [
+        "bogos-bundle"
+      ],
+      "variants": [
+        {
+          "id": 51432626192608,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "GA27S1Q-Combo",
+          "requires_shipping": true,
+          "taxable": false,
+          "featured_image": null,
+          "available": true,
+          "price": "1229.97",
+          "grams": 0,
+          "compare_at_price": "1229.97",
+          "position": 1,
+          "product_id": 9670016499936,
+          "created_at": "2026-04-13T00:25:43-07:00",
+          "updated_at": "2026-09-16T10:51:12-07:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    }
+  ]
+}

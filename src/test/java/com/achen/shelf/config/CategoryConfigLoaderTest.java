@@ -82,6 +82,29 @@ class CategoryConfigLoaderTest {
   }
 
   @Test
+  void theShippedMonitorsConfigIsValid() {
+    // The second category (M7). The same loader, the same rules; a hand edit fails here first.
+    CategoryConfig cfg = loader.load(Path.of("categories"), "monitors");
+
+    assertThat(cfg.name()).isEqualTo("monitors");
+    assertThat(cfg.specSchema())
+        .containsKeys("panel_type", "resolution", "refresh_hz", "size_in", "hdr");
+    assertThat(cfg.seedProducts()).hasSizeGreaterThanOrEqualTo(100);
+    assertThat(cfg.enabledRetailers()).hasSize(6);
+    assertThat(cfg.enabledRetailers())
+        .allSatisfy(
+            r -> {
+              assertThat(r.fetch().maxRps())
+                  .isLessThanOrEqualTo(CategoryConfigLoader.MAX_ALLOWED_RPS);
+              assertThat(r.fetch().respectRobots()).isTrue();
+              assertThat(r.parser()).isEqualTo("shopify_products_json");
+            });
+    assertThat(cfg.resolution().identityFields()).containsExactly("size_in");
+    assertThat(cfg.resolution().nonProductPhrases())
+        .contains("used", "open box", "refurbished", "combo");
+  }
+
+  @Test
   void rejectsAnUnknownKey() {
     assertThatThrownBy(() -> loader.load(FIXTURES.resolve("bad-unknown-key.yaml")))
         .isInstanceOf(ConfigException.class)

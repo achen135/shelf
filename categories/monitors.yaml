@@ -1,0 +1,311 @@
+# Shelf category config — computer monitors (M7, the second category).
+# Same shape as keyboards.yaml: a spec schema, retailers with a per-retailer fetch strategy, a
+# resolution section, a seed product list. The pipeline learned about this category from this
+# file and one `SpecExtractor` implementation; nothing in the crawl, resolution, rollup, signal
+# or API code changed (docs/benchmarks/m7-onboard-monitors.md has the diff stat).
+#
+# Retailer selection (verified 2026-09-16, survey in docs/Sessions.md M7): every retailer below
+# is a Shopify storefront whose public product JSON robots.txt permits — the same outcome as the
+# M0 keyboard survey. Rejected: sceptre.com (OpenCart, server-rendered, robots-open — but it
+# lists MSRPs beside "buy at your e-tailers" links and has no cart, so its price is a list price,
+# not a sold one); us.aoc.com (redirect loop on the storefront JSON); antonline.com,
+# monoprice.com, msi.com (403 to a plain crawler); abt.com (Cloudflare challenge); lg.com,
+# dell.com, samsung.com, viewsonic.com (client-rendered prices); ktcgaming.com, titanarmy.com,
+# store.viewsonic.com (unreachable from here). Portable-only brands (Arzopa, Uperfect, Mobile
+# Pixels) were left out to keep the category desk monitors.
+
+name: monitors
+
+# --- spec schema ---------------------------------------------------------------
+# Field -> {type, enum?, unit?}. Validated against every listing's extracted spec and every
+# API filter. The enum fields are what the demo page turns into selects; the numbers are
+# filterable through the API (`refresh_hz=240`) and shown in the row.
+spec_schema:
+  panel_type:   { type: string,  enum: [ips, va, tn, oled, qd-oled, mini-led] }
+  resolution:   { type: string,  enum: ["1080p", "1440p", "4k", "5k", "6k", ultrawide-1080p, ultrawide-1440p, ultrawide-5k2k, dual-1440p, dual-4k] }
+  aspect_ratio: { type: string,  enum: ["16:9", "16:10", "21:9", "32:9"] }
+  refresh_hz:   { type: integer, unit: hz }
+  size_in:      { type: number,  unit: in }
+  curved:       { type: boolean }
+  hdr:          { type: string,  enum: [hdr10, hdr400, hdr500, hdr600, hdr1000, hdr1400, true-black-400, true-black-500] }
+  usb_c:        { type: boolean }
+  speakers:     { type: boolean }
+
+# --- entity resolution ---------------------------------------------------------
+resolution:
+  # Every variant of one monitor shares its panel size — a Spectrum Black 27 and a Spectrum
+  # Black 32 are different products, and Pixio's colourways of a PX277 are all 27". Measured on
+  # the label set with it on and off (docs/benchmarks/m7-onboard-monitors.md): identical
+  # numbers either way — no labeled pair conflicts on size that the model tokens had not already
+  # decided — so it is on for the reasoning, not for a measured gain. Contrast keyboards, where
+  # layout_size cost four matches and is off.
+  identity_fields: [size_in]
+  # Used / open-box / refurbished stock is sold under the new product's title at these
+  # retailers (Focus Camera's "Used Department", Pixio's "Certified Refurbished", Dough's
+  # "B-Stock"); their prices are real but they are not the product's price. Bundles and
+  # multi-packs likewise. "mouse" and "expansion hub" were added after the first eval pass: the
+  # two false positives were a Dell P2425H "with Gaming Mouse and Extended Mouse Pad" and one
+  # "with 3-Port USB-C Portable Expansion Hub" — bundles that never say "bundle". "stand" and
+  # "arm" are deliberately absent: "with Adjustable Stand" is in a third of the real titles, and
+  # "USB-C Hub Monitor" is a monitor.
+  non_product_phrases: ["used", "open box", "refurbished", "renewed", "b stock", "bundle", "combo", "2 pack", "3 items", "monitor arm", "desk arm", "mouse", "expansion hub"]
+
+# --- retailers ---------------------------------------------------------------
+retailers:
+  - name: focuscamera
+    base_url: "https://www.focuscamera.com"
+    brand_source: vendor         # genuine multi-brand retailer: Dell, LG, Samsung, BenQ, Asus…
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/monitors/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 2               # 246 listings on 2026-09-16
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      The cross-retailer anchor for this category, and the one place the config format shows a
+      seam: about half of its `vendor` values are the distributor the stock came through ("Nine
+      Trading LLC", "New Age Electronics (Synnex)") or "Used Department", not the manufacturer,
+      and `brand_source` offers only `vendor` or `fixed`. Those listings are crawled and priced
+      but block under the distributor's name and never reach a product; the count is in the M7
+      benchmark. A `brand_source: title` would be the fix and is deliberately not in this pass.
+
+  - name: pixio
+    base_url: "https://www.pixiogaming.com"
+    brand_source: fixed
+    brand: Pixio
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/monitors/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1               # 34 products / 140 colour variants
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      The richest tags of the set: every listing carries its resolution ("1440p"), refresh
+      ("180Hz"), size ("27") and panel ("FAST IPS", "Fast VA", "OLED") as separate tags.
+      Refurbished and open-box stock is listed as its own product under the same model name.
+
+  - name: dough
+    base_url: "https://dough.tech"
+    brand_source: fixed          # `vendor` is "Dough" on some listings and "doughtechglobal" on others
+    brand: Dough
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/spectrum-gaming-monitors/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      No tags and no product_type, so every spec comes from the title. Variants are the panel
+      finish (matte / glossy / Gorilla Glass) and hub, priced apart.
+
+  - name: koorui
+    base_url: "https://www.koorui.net"
+    brand_source: fixed
+    brand: KOORUI
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/gaming-monitors/products.json?limit={limit}&page={page}"
+        - "/collections/business-monitor/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      Every listing was `available: false` on 2026-09-16 — the storefront shows prices and
+      sends buyers to Amazon — so it contributes prices but no in-stock signal until that changes.
+
+  - name: innocn
+    base_url: "https://innocn.com"
+    brand_source: fixed
+    brand: INNOCN
+    fetch:
+      mode: api
+      list_paths:
+        - "/en-us/collections/brand-new/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      A localized storefront: the collection lives under /en-us/ and www redirects there. Titles
+      are "INNOCN | 27" 4K 120Hz IPS HDR500 Professional Monitor | CB27U1" — the model last.
+      The same collection lists "×2 + Monitor Arm Combo" bundles, hence `combo`.
+
+  - name: coolermaster
+    base_url: "https://store.coolermaster.com"
+    brand_source: fixed          # `vendor` is "Cooler Master North America"
+    brand: Cooler Master
+    fetch:
+      mode: api
+      list_paths:
+        - "/collections/monitors/products.json?limit={limit}&page={page}"
+      page_size: 250
+      max_pages: 1
+      max_rps: 0.2
+      respect_robots: true
+      auth: { mode: none }
+    parser: shopify_products_json
+    notes: >
+      Six listings, all out of stock on 2026-09-16, titled by bare model ("Tempest GP27U") with
+      product_type "Accessories" and no tags. Kept because Focus Camera stocks the same brand,
+      which makes it the category's one direct cross-retailer pair.
+
+# --- seed products ---------------------------------------------------------------
+# Every entry was taken from a live listing at the retailers above on 2026-09-16, not from
+# memory. Models are the retailer's own designation: Dell, BenQ, LG, Samsung, KOORUI and INNOCN
+# sell by model code, Pixio and Dough by name.
+seed_products:
+  # Dell (at Focus Camera)
+  - { brand: "Dell", model: "U2725QE",  canonical_name: "Dell UltraSharp U2725QE" }
+  - { brand: "Dell", model: "U3425WE",  canonical_name: "Dell UltraSharp U3425WE" }
+  - { brand: "Dell", model: "U4025QW",  canonical_name: "Dell UltraSharp U4025QW" }
+  - { brand: "Dell", model: "U3225QE",  canonical_name: "Dell UltraSharp U3225QE" }
+  - { brand: "Dell", model: "U2724DE",  canonical_name: "Dell UltraSharp U2724DE" }
+  - { brand: "Dell", model: "U2724D",   canonical_name: "Dell UltraSharp U2724D" }
+  - { brand: "Dell", model: "U4924DW",  canonical_name: "Dell UltraSharp U4924DW" }
+  - { brand: "Dell", model: "U3226Q",   canonical_name: "Dell UltraSharp U3226Q" }
+  - { brand: "Dell", model: "U2723QE",  canonical_name: "Dell UltraSharp U2723QE" }
+  - { brand: "Dell", model: "P2725QE",  canonical_name: "Dell Pro Plus P2725QE" }
+  - { brand: "Dell", model: "P3225QE",  canonical_name: "Dell Pro Plus P3225QE" }
+  - { brand: "Dell", model: "P3425WE",  canonical_name: "Dell Pro 34 Plus P3425WE" }
+  - { brand: "Dell", model: "P2725DE",  canonical_name: "Dell Pro 27 Plus P2725DE" }
+  - { brand: "Dell", model: "P2425H",   canonical_name: "Dell P2425H" }
+  - { brand: "Dell", model: "P2424HT",  canonical_name: "Dell P2424HT" }
+  - { brand: "Dell", model: "P2225H",   canonical_name: "Dell P2225H" }
+  - { brand: "Dell", model: "S2725HS",  canonical_name: "Dell S2725HS" }
+  - { brand: "Dell", model: "SE2725HM", canonical_name: "Dell SE2725HM" }
+  - { brand: "Dell", model: "AW2725Q",  canonical_name: "Dell Alienware AW2725Q" }
+  # Samsung (at Focus Camera)
+  - { brand: "Samsung", model: "G95SD", canonical_name: "Samsung Odyssey OLED G9 G95SD" }
+  - { brand: "Samsung", model: "G95NC", canonical_name: "Samsung Odyssey Neo G9 G95NC" }
+  - { brand: "Samsung", model: "S80UD", canonical_name: "Samsung ViewFinity S8 S80UD" }
+  - { brand: "Samsung", model: "S65TC", canonical_name: "Samsung ViewFinity S65TC" }
+  - { brand: "Samsung", model: "S50GC", canonical_name: "Samsung ViewFinity S50GC" }
+  - { brand: "Samsung", model: "M50D",  canonical_name: "Samsung M5 M50D Smart Monitor" }
+  - { brand: "Samsung", model: "S33A",  canonical_name: "Samsung S33A" }
+  - { brand: "Samsung", model: "T35F",  canonical_name: "Samsung T35F" }
+  - { brand: "Samsung", model: "S30B",  canonical_name: "Samsung S30B" }
+  # LG (at Focus Camera)
+  - { brand: "LG", model: "45GS95QE", canonical_name: "LG UltraGear OLED 45GS95QE" }
+  - { brand: "LG", model: "45GR65DC", canonical_name: "LG UltraGear 45GR65DC" }
+  - { brand: "LG", model: "32G810SA", canonical_name: "LG UltraGear 32G810SA" }
+  - { brand: "LG", model: "27GX790B", canonical_name: "LG UltraGear OLED 27GX790B" }
+  - { brand: "LG", model: "52G930B",  canonical_name: "LG UltraGear evo G9 52G930B" }
+  - { brand: "LG", model: "32GN600",  canonical_name: "LG UltraGear 32GN600" }
+  - { brand: "LG", model: "27MS500",  canonical_name: "LG 27MS500" }
+  - { brand: "LG", model: "24MK430H", canonical_name: "LG 24MK430H" }
+  # BenQ (at Focus Camera)
+  - { brand: "BenQ", model: "GW2790Q",  canonical_name: "BenQ GW2790Q" }
+  - { brand: "BenQ", model: "GW2790QT", canonical_name: "BenQ GW2790QT" }
+  - { brand: "BenQ", model: "GW2790",   canonical_name: "BenQ GW2790" }
+  - { brand: "BenQ", model: "GW3290QT", canonical_name: "BenQ GW3290QT" }
+  - { brand: "BenQ", model: "GW2786TC", canonical_name: "BenQ GW2786TC" }
+  - { brand: "BenQ", model: "PD2706U",  canonical_name: "BenQ DesignVue PD2706U" }
+  - { brand: "BenQ", model: "PD2706QN", canonical_name: "BenQ DesignVue PD2706QN" }
+  - { brand: "BenQ", model: "PD3225U",  canonical_name: "BenQ DesignVue PD3225U" }
+  - { brand: "BenQ", model: "SW272Q",   canonical_name: "BenQ PhotoVue SW272Q" }
+  - { brand: "BenQ", model: "SW321C",   canonical_name: "BenQ PhotoVue SW321C" }
+  - { brand: "BenQ", model: "MA320U",   canonical_name: "BenQ MA320U" }
+  - { brand: "BenQ", model: "MA270U",   canonical_name: "BenQ MA270U" }
+  # Asus (at Focus Camera)
+  - { brand: "Asus", model: "PA32UCDM", canonical_name: "ASUS ProArt PA32UCDM" }
+  - { brand: "Asus", model: "PA27UCGE", canonical_name: "ASUS ProArt PA27UCGE" }
+  - { brand: "Asus", model: "VA27EHE",  canonical_name: "ASUS VA27EHE" }
+  - { brand: "Asus", model: "BE279QSK", canonical_name: "ASUS BE279QSK" }
+  - { brand: "Asus", model: "BE24ECSBT", canonical_name: "ASUS BE24ECSBT" }
+  # Cooler Master (own store + Focus Camera)
+  - { brand: "Cooler Master", model: "Tempest GP27U",  canonical_name: "Cooler Master Tempest GP27U" }
+  - { brand: "Cooler Master", model: "Tempest GP2711", canonical_name: "Cooler Master Tempest GP2711" }
+  - { brand: "Cooler Master", model: "Tempest GZ2711", canonical_name: "Cooler Master Tempest GZ2711" }
+  - { brand: "Cooler Master", model: "GM27-FQS",       canonical_name: "Cooler Master GM27-FQS ARGB" }
+  - { brand: "Cooler Master", model: "GM27-CFX",       canonical_name: "Cooler Master GM27-CFX" }
+  - { brand: "Cooler Master", model: "GM34-CWQ",       canonical_name: "Cooler Master GM34-CWQ ARGB" }
+  - { brand: "Cooler Master", model: "GA2701S",        canonical_name: "Cooler Master GA2701S" }
+  # Pixio
+  - { brand: "Pixio", model: "PX248 Wave",       canonical_name: "Pixio PX248 Wave" }
+  - { brand: "Pixio", model: "PX249 Wave",       canonical_name: "Pixio PX249 Wave" }
+  - { brand: "Pixio", model: "PX246 Wave",       canonical_name: "Pixio PX246 Wave" }
+  - { brand: "Pixio", model: "PX275 Wave",       canonical_name: "Pixio PX275 Wave" }
+  - { brand: "Pixio", model: "PX279 Wave",       canonical_name: "Pixio PX279 Wave" }
+  - { brand: "Pixio", model: "PX27U Wave",       canonical_name: "Pixio PX27U Wave" }
+  - { brand: "Pixio", model: "PX32U Wave",       canonical_name: "Pixio PX32U Wave" }
+  - { brand: "Pixio", model: "PX160 Wave",       canonical_name: "Pixio PX160 Wave" }
+  - { brand: "Pixio", model: "PXC248 Wave",      canonical_name: "Pixio PXC248 Wave" }
+  - { brand: "Pixio", model: "PXC278 Wave",      canonical_name: "Pixio PXC278 Wave" }
+  - { brand: "Pixio", model: "PXC279 Wave",      canonical_name: "Pixio PXC279 Wave" }
+  - { brand: "Pixio", model: "PX24Q Pro",        canonical_name: "Pixio PX24Q Pro" }
+  - { brand: "Pixio", model: "PX248 Pro V2",     canonical_name: "Pixio PX248 Pro V2" }
+  - { brand: "Pixio", model: "PX277 OLED MAX V2", canonical_name: "Pixio PX277 OLED MAX V2" }
+  - { brand: "Pixio", model: "PX277 Prime Neo",  canonical_name: "Pixio PX277 Prime Neo" }
+  - { brand: "Pixio", model: "PX279 Prime Neo",  canonical_name: "Pixio PX279 Prime Neo" }
+  - { brand: "Pixio", model: "PX27U Prime Neo",  canonical_name: "Pixio PX27U Prime Neo" }
+  - { brand: "Pixio", model: "PX27UM",           canonical_name: "Pixio PX27UM Mini LED" }
+  - { brand: "Pixio", model: "PXC328",           canonical_name: "Pixio PXC328" }
+  - { brand: "Pixio", model: "PXC348C Neo",      canonical_name: "Pixio PXC348C Neo" }
+  # Dough
+  - { brand: "Dough", model: "Spectrum One",      canonical_name: "Dough Spectrum One" }
+  - { brand: "Dough", model: "Spectrum Black 27", canonical_name: "Dough Spectrum Black 27" }
+  - { brand: "Dough", model: "Spectrum Black 32", canonical_name: "Dough Spectrum Black 32" }
+  # KOORUI
+  - { brand: "KOORUI", model: "G2711P",  canonical_name: "KOORUI G2711P" }
+  - { brand: "KOORUI", model: "G2411P",  canonical_name: "KOORUI G2411P" }
+  - { brand: "KOORUI", model: "G2421V",  canonical_name: "KOORUI G2421V" }
+  - { brand: "KOORUI", model: "G2721P",  canonical_name: "KOORUI G2721P" }
+  - { brand: "KOORUI", model: "G2722P",  canonical_name: "KOORUI G2722P" }
+  - { brand: "KOORUI", model: "GN02",    canonical_name: "KOORUI GN02" }
+  - { brand: "KOORUI", model: "24E6CA",  canonical_name: "KOORUI 24E6CA" }
+  - { brand: "KOORUI", model: "27E6CA",  canonical_name: "KOORUI 27E6CA" }
+  - { brand: "KOORUI", model: "27E6QCA", canonical_name: "KOORUI 27E6QCA" }
+  - { brand: "KOORUI", model: "34E6UC",  canonical_name: "KOORUI 34E6UC" }
+  - { brand: "KOORUI", model: "24E4",    canonical_name: "KOORUI 24E4" }
+  - { brand: "KOORUI", model: "24E3",    canonical_name: "KOORUI 24E3" }
+  - { brand: "KOORUI", model: "27N5CA",  canonical_name: "KOORUI 27N5CA" }
+  - { brand: "KOORUI", model: "24N5CA",  canonical_name: "KOORUI 24N5CA" }
+  - { brand: "KOORUI", model: "N07",     canonical_name: "KOORUI N07" }
+  - { brand: "KOORUI", model: "E2412F",  canonical_name: "KOORUI E2412F" }
+  - { brand: "KOORUI", model: "E2411H",  canonical_name: "KOORUI E2411H" }
+  - { brand: "KOORUI", model: "E2411K",  canonical_name: "KOORUI E2411K" }
+  - { brand: "KOORUI", model: "E2711F",  canonical_name: "KOORUI E2711F" }
+  # INNOCN
+  - { brand: "INNOCN", model: "25M2S",   canonical_name: "INNOCN 25M2S" }
+  - { brand: "INNOCN", model: "25G2S",   canonical_name: "INNOCN 25G2S" }
+  - { brand: "INNOCN", model: "27G2T",   canonical_name: "INNOCN 27G2T" }
+  - { brand: "INNOCN", model: "GA27T1M", canonical_name: "INNOCN GA27T1M" }
+  - { brand: "INNOCN", model: "GA27S1Q", canonical_name: "INNOCN GA27S1Q" }
+  - { brand: "INNOCN", model: "GA27M1Q", canonical_name: "INNOCN GA27M1Q" }
+  - { brand: "INNOCN", model: "GA27W1Q", canonical_name: "INNOCN GA27W1Q" }
+  - { brand: "INNOCN", model: "CB27U1",  canonical_name: "INNOCN CB27U1" }
+  - { brand: "INNOCN", model: "CB32U1",  canonical_name: "INNOCN CB32U1" }
+  - { brand: "INNOCN", model: "27C1U-D", canonical_name: "INNOCN 27C1U-D" }
+  - { brand: "INNOCN", model: "29C1F-D", canonical_name: "INNOCN 29C1F-D" }
+  - { brand: "INNOCN", model: "32M2V",   canonical_name: "INNOCN 32M2V" }
+  - { brand: "INNOCN", model: "34C1R",   canonical_name: "INNOCN 34C1R" }
+  - { brand: "INNOCN", model: "34C1U",   canonical_name: "INNOCN 34C1U" }
+  - { brand: "INNOCN", model: "40C1R",   canonical_name: "INNOCN 40C1R" }
+  - { brand: "INNOCN", model: "40C1U",   canonical_name: "INNOCN 40C1U" }
+  - { brand: "INNOCN", model: "44C1G",   canonical_name: "INNOCN 44C1G" }
+  - { brand: "INNOCN", model: "45C1R",   canonical_name: "INNOCN 45C1R" }
+  - { brand: "INNOCN", model: "49C1G",   canonical_name: "INNOCN 49C1G" }
+  - { brand: "INNOCN", model: "49C1R",   canonical_name: "INNOCN 49C1R" }
+  - { brand: "INNOCN", model: "49C1S",   canonical_name: "INNOCN 49C1S" }
+  - { brand: "INNOCN", model: "49Q1R",   canonical_name: "INNOCN 49Q1R" }
+  - { brand: "INNOCN", model: "49Q1S",   canonical_name: "INNOCN 49Q1S" }
+  - { brand: "INNOCN", model: "E49M1G",  canonical_name: "INNOCN E49M1G" }
+  - { brand: "INNOCN", model: "E49M1R",  canonical_name: "INNOCN E49M1R" }
