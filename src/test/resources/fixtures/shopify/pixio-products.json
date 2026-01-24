@@ -1,0 +1,202 @@
+{
+  "products": [
+    {
+      "id": 10035640959108,
+      "title": "PXC278 Wave 27\" Curved Gaming Monitor",
+      "handle": "pxc278-wave",
+      "body_html": "<p><span data-sheets-root=\"1\">Unleash your gaming potential and elevate your setup with the Pixio PXC278 Wave, a 27-inch curved gaming monitor designed for both performance and aesthetics. Featuring a stunning Fast VA panel, a blazing-fast 180Hz refresh rate, and a minuscule 1ms GTG response time, t",
+      "published_at": "2025-06-06T09:10:11-07:00",
+      "created_at": "2025-06-03T16:26:48-07:00",
+      "updated_at": "2026-09-16T10:50:45-07:00",
+      "vendor": "Pixio",
+      "product_type": "Monitor",
+      "tags": [
+        "1440p",
+        "180Hz",
+        "1ms (GTG)",
+        "27",
+        "Black",
+        "Blue",
+        "Curved",
+        "Fast VA",
+        "Monitors",
+        "New",
+        "Pink",
+        "PXC278 Wave",
+        "Support",
+        "VESA Compatible",
+        "Wave Series",
+        "White"
+      ],
+      "variants": [
+        {
+          "id": 50726004293764,
+          "title": "White",
+          "option1": "White",
+          "option2": null,
+          "option3": null,
+          "sku": "PXC278WAVEW",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "289.99",
+          "grams": 5897,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 10035640959108,
+          "created_at": "2025-06-03T16:26:51-07:00",
+          "updated_at": "2026-09-16T10:50:45-07:00"
+        },
+        {
+          "id": 50726004326532,
+          "title": "Pink",
+          "option1": "Pink",
+          "option2": null,
+          "option3": null,
+          "sku": "PXC278WAVEK",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "289.99",
+          "grams": 5897,
+          "compare_at_price": null,
+          "position": 2,
+          "product_id": 10035640959108,
+          "created_at": "2025-06-03T16:26:51-07:00",
+          "updated_at": "2026-09-16T10:50:45-07:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Color",
+          "position": 1,
+          "values": [
+            "White",
+            "Pink",
+            "Blue",
+            "Black",
+            "Mint Green",
+            "Purple"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10235993948292,
+      "title": "Pixio PX27U Prime Neo 27\" Dual Mode Gaming Monitor",
+      "handle": "pixio-px27u-prime-neo-27-dual-mode-gaming-monitor",
+      "body_html": "<p>Level up your setup with the Pixio PX27U Prime Neo 27-inch Dual Mode Gaming Monitor, engineered for competitive performance and stunning visual clarity. Designed for gamers who demand both ultra-high resolution and elite refresh speeds, this versatile display lets you switch between 4K UHD at 160",
+      "published_at": "2026-05-15T16:44:37-07:00",
+      "created_at": "2026-02-18T10:43:52-08:00",
+      "updated_at": "2026-09-16T10:50:45-07:00",
+      "vendor": "Pixio",
+      "product_type": "Monitor",
+      "tags": [
+        "1080p",
+        "160Hz",
+        "1ms (GTG)",
+        "2160p",
+        "27",
+        "320Hz",
+        "4K",
+        "Black",
+        "Dual Mode",
+        "FAST IPS",
+        "FHD",
+        "Flat",
+        "Full Adjustable",
+        "Monitors",
+        "New",
+        "PX7UPN",
+        "Support",
+        "UHD"
+      ],
+      "variants": [
+        {
+          "id": 51543966187652,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "PX27UPN",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "399.99",
+          "grams": 7711,
+          "compare_at_price": null,
+          "position": 1,
+          "product_id": 10235993948292,
+          "created_at": "2026-02-18T10:43:52-08:00",
+          "updated_at": "2026-09-16T10:50:45-07:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7235659661444,
+      "title": "PXC279 Curved Gaming Monitor - Certified Refurbished",
+      "handle": "pxc279-curved-gaming-monitor-certified-refurbished",
+      "body_html": "<div data-packed=\"true\" data-vertical-text=\"false\" class=\"txtNew\" id=\"comp-kcu4x1x8\">\n<p data-mce-fragment=\"1\"><u data-mce-fragment=\"1\"><strong data-mce-fragment=\"1\">PXC279 - Certified Refurbished</strong></u></p>\n<ul data-mce-fragment=\"1\">\n<li data-mce-fragment=\"1\">\n<p data-mce-fragment=\"1\">Factory",
+      "published_at": "2024-03-04T14:27:20-08:00",
+      "created_at": "2024-03-04T14:23:52-08:00",
+      "updated_at": "2026-09-16T10:50:45-07:00",
+      "vendor": "Pixio",
+      "product_type": "Monitor",
+      "tags": [
+        "1080p",
+        "240Hz",
+        "27",
+        "Certified Refurbished",
+        "Curved",
+        "New",
+        "PXC279",
+        "VA"
+      ],
+      "variants": [
+        {
+          "id": 41761360806020,
+          "title": "Default Title",
+          "option1": "Default Title",
+          "option2": null,
+          "option3": null,
+          "sku": "PXC279-R",
+          "requires_shipping": true,
+          "taxable": true,
+          "featured_image": null,
+          "available": true,
+          "price": "175.99",
+          "grams": 6804,
+          "compare_at_price": "239.99",
+          "position": 1,
+          "product_id": 7235659661444,
+          "created_at": "2024-03-04T14:23:52-08:00",
+          "updated_at": "2026-09-16T10:50:45-07:00"
+        }
+      ],
+      "images": [],
+      "options": [
+        {
+          "name": "Title",
+          "position": 1,
+          "values": [
+            "Default Title"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -39,10 +39,11 @@ services:
         condition: service_healthy
 
   # The leader-elected scheduler. `deploy.replicas: 2` gives a standby; only one holds the lock.
+  # One coordinator schedules every category it is given (M7 added monitors).
   coordinator:
     image: shelf:local
     build: .
-    command: ["coordinator", "--category", "keyboards"]
+    command: ["coordinator", "--category", "keyboards", "monitors"]
     environment: *shelf_env
     depends_on:
       migrate:

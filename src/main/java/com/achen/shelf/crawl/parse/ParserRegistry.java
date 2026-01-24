@@ -22,13 +22,15 @@ public final class ParserRegistry {
   /**
    * Builds the registry for a category.
    *
-   * <p>The spec extractor is chosen by category name — the one place the pipeline knows keyboards
-   * exist. M7 adds a branch here for monitors and, per docs/Spec.md §7, nothing else in the crawl.
+   * <p>The spec extractor is chosen by category name — the one place the pipeline knows which
+   * categories exist. M7 added the monitors branch and, per docs/Spec.md §7, nothing else in the
+   * crawl.
    */
   public static ParserRegistry forCategory(CategoryConfig category) {
     SpecExtractor extractor =
         switch (category.name()) {
           case "keyboards" -> new KeyboardSpecExtractor();
+          case "monitors" -> new MonitorSpecExtractor();
           default -> SpecExtractor.NONE;
         };
     Map<String, Parser> parsers = new LinkedHashMap<>();

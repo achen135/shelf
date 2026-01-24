@@ -1,0 +1,227 @@
+# Shelf — entity-resolution labels for the monitors category (M7).
+#
+# One line per (offer, seed product) pair: is this listing a purchasable variant of that product?
+# Written by hand from listing titles alone — before the resolver had scored a single monitor
+# listing — over the storefront JSON captured 2026-09-16 (six retailers, 349 listings, 127 seed
+# products). One representative variant URL stands for each distinct product title at a retailer.
+#
+# Policy, carried from the keyboards set. A listing matches when it is the seed product in any
+# purchasable new form: a colourway, a panel finish (matte / glossy / Gorilla Glass), a "with hub"
+# or "without hub" configuration, a listing that spells the model with or without its suffix
+# ("45GS95QE" for "45GS95QE-B"). It does not match when it is a sibling model in the same line
+# (PX279 Prime Neo vs PX279 Wave, GM27-FQS vs GM27-CFX, U3223QE vs U3225QE, Spectrum Black 27
+# vs 32), used / open-box / refurbished / B-stock stock of the product (a real price, but not the
+# product's), a bundle with other goods (a keyboard, a mouse, a hub, a cable — whether or not the
+# word "bundle" appears), a two-monitor combo, or an accessory (a stand, an arm). A title that
+# states no size for a product sold in two sizes ("Spectrum Black") is labeled a non-match for
+# both: the label is what the title says, not what the labeler happens to know.
+#
+# Columns (tab-separated): offer_url  title  brand  model  match  note. `title` is for the reader;
+# `shelf eval resolution` keys the offer by URL and the product by brand + model.
+offer_url	title	brand	model	match	note
+https://www.focuscamera.com/products/dell-dell-u3425we-computers-tablets-monitors?variant=42162401804336	Dell UltraSharp U3425WE 34-In. UW-QHD 21:9 Curved LED Monitor 120Hz Thunderbolt 4 Hub (Black/Silver)	Dell	U3425WE	true	
+https://www.focuscamera.com/products/samsung-ls32d802uanxgo-computers-tablets-monitors?variant=42417508188208	SAMSUNG 32-Inch ViewFinity Black S8 S80UD UHD Monitor | (LS32D802UANXGO)	Samsung	S80UD	true	
+https://www.focuscamera.com/products/samsung-ls34c650tanxgo-computers-tablets-monitors?variant=42378171351088	Samsung 34 inch ViewFinity S65TC Curved Ultra-WQHD Monitor with Built-in Speaker	Samsung	S65TC	true	
+https://www.focuscamera.com/products/dell-u4025qw-computers-tablets-monitors?variant=42164126154800	Dell UltraSharp U4025QW 40-Inch Curved Thunderbolt Hub Monitor with 5K Display (Silver)	Dell	U4025QW	true	
+https://www.focuscamera.com/products/samsung-ls49dg956snxgo-computers-tablets-monitors?variant=42259409895472	Samsung Odyssey QD-OLED G9 G95SD 49-Inch 240 Hz Curved Ultrawide Gaming Monitor	Samsung	G95SD	true	
+https://www.focuscamera.com/products/samsung-ls32dm500enxgo-computers-tablets-monitors?variant=42417510776880	Samsung 32-Inch M5 (M50D) FHD 1920x1080 Flat Screen Smart Monitor	Samsung	M50D	true	
+https://www.focuscamera.com/products/samsung-ls22a338nhnxza-computers-tablets-monitors?variant=42162867470384	Samsung S33A FHD 1080p Wide Viewing Angle Flat Monitor with HDMI, VA Panel, and Eye Saver (22-Inch)	Samsung	S33A	true	
+https://www.focuscamera.com/products/dell-dell-u2725qe-computers-tablets-monitors?variant=42378021961776	Dell UltraSharp U2725QE 27 Inch 4K UHD IPS Monitor with 120Hz and Thunderbolt 4	Dell	U2725QE	true	
+https://www.focuscamera.com/products/dell-dell-p3225qe-computers-tablets-monitors?variant=42417205182512	Dell Pro Plus P3225QE 32-inch 100Hz Class 4K UHD LED Monitor	Dell	P3225QE	true	
+https://www.focuscamera.com/products/dell-dell-p2424ht-computers-tablets-monitors?variant=42417205149744	Dell P2424HT 24-Inch Multi-Touch FHD 16:9 IPS Display Monitor with USB-C Hub	Dell	P2424HT	true	
+https://www.focuscamera.com/products/dell-dell-p2725qe-computers-tablets-monitors?variant=42378019995696	Dell Pro Plus P2725QE 27-Inch Class 4K UHD IPS Backlit-LED LCD USB-C Hub Monitor	Dell	P2725QE	true	
+https://www.focuscamera.com/products/dell-u4025qw-kt1-computers-tablets-monitors?variant=42164127006768	Dell UltraSharp U4025QW 40-Inch Curved Thunderbolt Hub Monitor with USB Hub and HDMI Cable Bundle	Dell	U4025QW	false	bundle with a USB hub and a cable
+https://www.focuscamera.com/products/asus-pa32ucdm-computers-tablets-monitors?variant=43406780039216	ASUS ProArt PA32UCDM 4K-HDR QD-OLED 31.5-inch Professional Monitor with 10-bit Color for Creators	Asus	PA32UCDM	true	
+https://www.focuscamera.com/products/dell-delaw2725q-computers-tablets-monitors?variant=42657236582448	Dell Alienware AW2725Q 27-inch QD-OLED 4K UHD 240Hz G-SYNC Gaming Monitor	Dell	AW2725Q	true	
+https://www.focuscamera.com/products/lg-45gs95qe-b-computers-tablets-monitors?variant=42415027486768	LG 45GS95QE Ultragear OLED Curved Gaming Monitor 45-Inch WQHD 800R 240Hz (Black)	LG	45GS95QE	true	
+https://www.focuscamera.com/products/benq-america-sw272q-kt1-computers-tablets-monitors?variant=42378358784048	BenQ PhotoVue SW272Q 27-Inch 1440p HDR Monitor (Black) Bundle	BenQ	SW272Q	false	bundle
+https://www.focuscamera.com/products/dell-dell-u4924dw-computers-tablets-monitors?variant=42378022780976	Dell UltraSharp U4924DW 49-Inch DQHD Curved Screen Edge WLED LCD Monitor (Black)	Dell	U4924DW	true	
+https://www.focuscamera.com/products/dell-dell-u2724de-computers-tablets-monitors?variant=42378021470256	Dell UltraSharp U2724DE 27-Inch QHD Thunderbolt 4 IPS Panel Monitor	Dell	U2724DE	true	
+https://www.focuscamera.com/products/dell-u2723qe-computers-tablets-monitors?variant=42164124483632	Dell U2723QE UltraSharp 27-Inch 4K USB-C Hub Monitor	Dell	U2723QE	true	
+https://www.focuscamera.com/products/benq-america-benq-gw3290qt-computers-tablets-monitors?variant=42161099407408	BenQ GW3290QT 31.5 Inch 2K QHD USB-C Ergonomic Eye-Care Professional Monitor (White)	BenQ	GW3290QT	true	
+https://www.focuscamera.com/products/benq-benq-pd2706u-mint-computers-tablets-monitors?variant=43583719243824	BenQ DesignVue PD2706U 27-inch 4K UHD HDR Designer Monitor with Hotkey Puck G2 (Open Box)	BenQ	PD2706U	false	open box
+https://www.focuscamera.com/products/asus-va27ehe-mint-computers-tablets-monitors?variant=43554205925424	Asus VA27EHE 27-Inch 75 Hz Full HD IPS LED Eye Care Monitor (Black) (Open Box)	Asus	VA27EHE	false	open box
+https://www.focuscamera.com/products/ls22a338nhnxza-mint-computers-tablets-monitors?variant=43554185510960	SAMSUNG S33A Series 22-Inch FHD 1080p Computer Monitor, HDMI, VA Panel, Wideview Screen, Eye Saver /Game Mode (Open Box)	Samsung	S33A	false	open box
+https://www.focuscamera.com/products/samsung-ls49dg956snxgo-mint-computers-tablets-monitors?variant=43511847321648	Samsung Odyssey QD-OLED G9 G95SD 49-Inch 240 Hz Curved Ultrawide Gaming Monitor (Open Box)	Samsung	G95SD	false	open box
+https://www.focuscamera.com/products/dell-dell-p2225h-mint-computers-tablets-monitors?variant=43511825498160	Dell P2225H 22" Class Full HD LED Monitor (Open Box)	Dell	P2225H	false	open box
+https://www.focuscamera.com/products/lg-45gs95qe-b-mint-computers-tablets-monitors?variant=43511806033968	LG 45GS95QE Ultragear OLED Curved Gaming Monitor 45-Inch WQHD 800R 240Hz (Black) (Open Box)	LG	45GS95QE	false	open box
+https://www.focuscamera.com/products/dell-dell-u3226q-computers-tablets-monitors?variant=43458382037040	Dell UltraSharp U3226Q QD-OLED 32 Inch 4K HDR 120 Hz Monitor with Hood	Dell	U3226Q	true	
+https://www.focuscamera.com/products/asus-pa27ucge-computers-tablets-monitors?variant=43406777221168	ASUS ProArt PA27UCGE 27-inch 4K HDR Professional Monitor with 160Hz Refresh Rate and 10-Bit Color	Asus	PA27UCGE	true	
+https://www.focuscamera.com/products/asus-be279qsk-computers-tablets-monitors?variant=43406770896944	ASUS BE279QSK 27-inch 1080P Full HD Video Conference Monitor with Built-in 2MP Full HD Webcam	Asus	BE279QSK	true	
+https://www.focuscamera.com/products/asus-be24ecsbt-computers-tablets-monitors?variant=43406770929712	ASUS BE24ECSBT 23.8-inch Full HD IPS Multi-touch Business Monitor with 80W USB-C Power Delivery	Asus	BE24ECSBT	true	
+https://www.focuscamera.com/products/lg-52g930b-computers-tablets-monitors?variant=43383164796976	LG 52G930B-B 52-inch Ultragear evo G9 5K2K (5120x2160) Curved Gaming Monitor	LG	52G930B	true	
+https://www.focuscamera.com/products/lg-27gx790b-b-computers-tablets-monitors?variant=43350503882800	LG 27GX790B-B 27-Inch Ultragear QHD (3440 x 1440) OLED Gaming Monitor Dual Mode	LG	27GX790B	true	
+https://www.focuscamera.com/products/dell-se2725hm-computers-tablets-monitors?variant=42889129754672	Dell SE2725HM 27-Inch 100Hz Full HD (1920x1080) IPS LED Monitor	Dell	SE2725HM	true	
+https://www.focuscamera.com/products/asus-va27ehe-computers-tablets-monitors?variant=42875666300976	Asus VA27EHE 27-Inch 75 Hz Full HD IPS LED Eye Care Monitor (Black)	Asus	VA27EHE	true	
+https://www.focuscamera.com/products/dell-dell-p2225h-computers-tablets-monitors?variant=42744074633264	Dell P2225H 22-Inch Class Full HD 100Hz IPS LED Flat-Screen Monitor	Dell	P2225H	true	
+https://www.focuscamera.com/products/samsung-lf27t350fhnxza-computers-tablets-monitors?variant=42674449023024	Samsung 27-Inch T35F FHD IPS Monitor 75Hz FreeSync Borderless Display (Black)	Samsung	T35F	true	
+https://www.focuscamera.com/products/dell-s2725hs-computers-tablets-monitors?variant=42612503838768	Dell S2725HS 27-inch FHD LED Monitor - 100Hz Refresh Rate, Dual 5W Speakers	Dell	S2725HS	true	
+https://www.focuscamera.com/products/dell-dell-p3425we-computers-tablets-monitors?variant=42458366443568	Dell Pro 34-Inch Plus P3425WE WQHD 100Hz USB-C Hub Curved IPS Monitor	Dell	P3425WE	true	
+https://www.focuscamera.com/products/dell-p2425h-kt1-computers-tablets-monitors?variant=42417683497008	Dell P2425H 24-in. FHD LED Monitor 16:9 with Gaming Mouse and Extended Mouse Pad	Dell	P2425H	false	bundle with a mouse and a mouse pad; the word "bundle" is absent
+https://www.focuscamera.com/products/dell-p2424ht-kt1-computers-tablets-monitors?variant=42417683300400	Dell P2424HT 24-Inch Multi-Touch FHD 16:9 IPS Display Monitor Bundle	Dell	P2424HT	false	bundle
+https://www.focuscamera.com/products/samsung-ls57cg950nnxza-computers-tablets-monitors?variant=42417516380208	Samsung 57-Inch Odyssey Neo G9 G95NC Dual UHD Quantum Matrix Gaming Monitor	Samsung	G95NC	true	
+https://www.focuscamera.com/products/lg-45gr65dc-b-computers-tablets-monitors?variant=42415027454000	LG 45GR65DC-B Ultragear 45-In. QHD 200Hz 1ms 200Hz Curved Gaming Monitor (Black)	LG	45GR65DC	true	
+https://www.focuscamera.com/products/lg-27ms500-b-computers-tablets-monitors?variant=42414890287152	LG 27MS500-B 27-Inch Monitor IPS Full HD 1920x1080 100Hz (Black)	LG	27MS500	true	
+https://www.focuscamera.com/products/lg-24mk430h-b-computers-tablets-monitors?variant=42414869446704	LG 24MK430H-B 24-inch FHD IPS Monitor AMD FreeSync OnScreen Control Slim Bezel	LG	24MK430H	true	
+https://www.focuscamera.com/products/benq-america-sw321c-kt1-computers-tablets-monitors?variant=42378359210032	BenQ SW321C 32-Inch 4K HDR IPS Photo and Video Editing Monitor (Black) Bundle	BenQ	SW321C	false	bundle
+https://www.focuscamera.com/products/samsung-ls32b300nwnxgo-computers-tablets-monitors?variant=42378170269744	Samsung 32-Inch Class S30B Series FHD AMD 75Hz Refresh Rate FreeSync Monitor	Samsung	S30B	true	
+https://www.focuscamera.com/products/cooler-master-gm27fqs-cmkb-computers-tablets-monitors?variant=42170394378288	Cooler Master GM27-FQS ARGB 27-Inch Gaming Monitor with Cooler Master Wired Gaming Keyboard Bundle	Cooler Master	GM27-FQS	false	bundle with a keyboard
+https://www.focuscamera.com/products/cooler-master-gm27fqs-cmkb-computers-tablets-monitors?variant=42170394378288	Cooler Master GM27-FQS ARGB 27-Inch Gaming Monitor with Cooler Master Wired Gaming Keyboard Bundle	Cooler Master	GM27-CFX	false	bundle, and a sibling model (FQS is not CFX)
+https://www.focuscamera.com/products/lg-32gn600-b-computers-tablets-monitors?variant=42166568288304	LG 32GN600-B 32-Inch QHD 2560x1440 Display 165Hz HDR10 Ultragear Gaming Monitor (Black)	LG	32GN600	true	
+https://www.focuscamera.com/products/dell-u4924dw-kt1-computers-tablets-monitors?variant=42378375069744	Dell UltraSharp U4924DW 49-Inch DQHD Curved Screen Edge Monitor (Black) Bundle	Dell	U4924DW	false	bundle
+https://www.focuscamera.com/products/dell-u2725qe-k1-computers-tablets-monitors?variant=42378373955632	Dell UltraSharp U2725QE 27-Inch 4K UHD IPS Black Monitor with Accessories Bundle	Dell	U2725QE	false	bundle with accessories
+https://www.focuscamera.com/products/dell-p2725de-computers-tablets-monitors?variant=42378225909808	Dell Pro 27 inch Plus P2725DE QHD USB-C Hub IPS Monitor	Dell	P2725DE	true	
+https://www.focuscamera.com/products/benq-america-benq-pd3225u-computers-tablets-monitors?variant=42377992405040	BenQ PD3225U 31.5-In. Designer Monitor 16:9 4K UHD HDR10 Thunderbolt 3 IPS Black	BenQ	PD3225U	true	
+https://www.focuscamera.com/products/benq-america-benq-pd2706u-computers-tablets-monitors?variant=42377991258160	BenQ DesignVue PD2706U 27-inch 4K UHD HDR Designer Monitor with Hotkey Puck G2	BenQ	PD2706U	true	
+https://www.focuscamera.com/products/benq-america-benq-pd2706qn-computers-tablets-monitors?variant=42377991192624	BenQ DesignVue PD2706QN 27-Inch 2560x1440p QHD 100 Hz Monitor	BenQ	PD2706QN	true	
+https://www.focuscamera.com/products/benq-america-benq-ma320u-computers-tablets-monitors?variant=42377991159856	BenQ MA320U 32-Inch 4K HDR Monitor for MacBooks with 3840 x 2160 at 60 Hz (Gray)	BenQ	MA320U	true	
+https://www.focuscamera.com/products/benq-america-benq-ma270u-computers-tablets-monitors?variant=42377991127088	BenQ MA270U 27-Inch 4K HDR Monitor for MacBooks with 3840 x 2160 at 60 Hz (Gray)	BenQ	MA270U	true	
+https://www.focuscamera.com/products/benq-america-benq-gw2790q-computers-tablets-monitors?variant=42377991094320	BenQ GW2790Q 27 Inch 2K QHD Monitor 100Hz Eye-Care Low Blue Light Flicker-Free	BenQ	GW2790Q	true	
+https://www.focuscamera.com/products/dell-dell-p2425h-k1-computers-tablets-monitors?variant=42151628341296	Dell P2425H 24-Inch 1920 x 1080 FHD Flat Screen LED Monitor with 3-Port USB-C Portable Expansion Hub	Dell	P2425H	false	bundle with a USB-C hub; the word "bundle" is absent
+https://www.focuscamera.com/products/dell-dell-p2425h-computers-tablets-monitors?variant=42151627358256	Dell P2425H 24-Inch 1920 x 1080 FHD Flat Screen LED Monitor with IPS Technology (Black and Silver)	Dell	P2425H	true	
+https://www.focuscamera.com/products/samsung-lc34c502ganxza-computers-tablets-monitors?variant=42162699173936	Samsung 34-Inch ViewFinity S50GC UWQHD 100Hz AMD FreeSync Monitor with DisplayPort and HDMI (Black)	Samsung	S50GC	true	
+https://www.focuscamera.com/products/cooler-master-cmiga2701sus-computers-tablets-monitors?variant=42161316921392	Cooler Master GA2701S 27-Inch FHD Gaming Monitor with 100Hz IPS Panel and Slim Design (Black)	Cooler Master	GA2701S	true	
+https://www.focuscamera.com/products/benq-america-benq-gw2790qt-computers-tablets-monitors?variant=42161098293296	BenQ GW2790QT 27 Inch 2K QHD USB-C Ergonomic Eye-Care Professional Monitor (White)	BenQ	GW2790QT	true	
+https://www.focuscamera.com/products/benq-america-benq-gw2790-computers-tablets-monitors?variant=42161097572400	BenQ GW2790 27-Inch 100Hz Eye-Care Monitor - 1080p IPS Flicker Free (Black)	BenQ	GW2790	true	
+https://www.focuscamera.com/products/benq-america-benq-gw2786tc-computers-tablets-monitors?variant=42161096687664	BenQ GW2786TC Office USB Hub Monitor 27-Inch Full HD IPS Display with 100Hz Refresh Rate (White)	BenQ	GW2786TC	true	
+https://www.pixiogaming.com/products/px24q-pro-gaming-monitor-open-box?variant=52727836016772	Pixio PX24Q Pro 24-inch QHD 180Hz Fast IPS Gaming Monitor, Open Box	Pixio	PX24Q Pro	false	open box
+https://www.pixiogaming.com/products/px246-wave-open-box?variant=51900796272772	PX246 Wave - Open Box — Black	Pixio	PX246 Wave	false	open box
+https://www.pixiogaming.com/products/px249-wave-24-inch-240hz-gaming-monitor-certified-refurbished?variant=51900774776964	PX249 Wave 24-inch 240Hz Gaming Monitor - Certified Refurbished — Black	Pixio	PX249 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/pixio-px27u-prime-neo-27-dual-mode-gaming-monitor-certified-refurbished?variant=51900771434628	Pixio PX27U Prime Neo 27" Dual Mode Gaming Monitor - Certified Refurbished	Pixio	PX27U Wave	false	sibling: the Prime Neo is not the Wave
+https://www.pixiogaming.com/products/pixio-px27u-prime-neo-27-dual-mode-gaming-monitor-certified-refurbished?variant=51900771434628	Pixio PX27U Prime Neo 27" Dual Mode Gaming Monitor - Certified Refurbished	Pixio	PX27U Prime Neo	false	certified refurbished
+https://www.pixiogaming.com/products/px249-wave-24-inch-240hz-gaming-monitor?variant=51594562470020	PX249 Wave 24-inch 240Hz Gaming Monitor — Black	Pixio	PX249 Wave	true	
+https://www.pixiogaming.com/products/pixio-px27u-prime-neo-27-dual-mode-gaming-monitor?variant=51543966187652	Pixio PX27U Prime Neo 27" Dual Mode Gaming Monitor	Pixio	PX27U Wave	false	sibling: the Prime Neo is not the Wave
+https://www.pixiogaming.com/products/pixio-px27u-prime-neo-27-dual-mode-gaming-monitor?variant=51543966187652	Pixio PX27U Prime Neo 27" Dual Mode Gaming Monitor	Pixio	PX27U Prime Neo	true	
+https://www.pixiogaming.com/products/pixio-px27u-mini-led-white-27-dual-mode-gaming-monitor?variant=51511245144196	Pixio PX27UM Mini LED White 27" Dual Mode Gaming Monitor	Pixio	PX27UM	true	
+https://www.pixiogaming.com/products/luma-oled-aura-gen2?variant=51405353418884	PX277 OLED MAX V2 Gaming Monitor — Black	Pixio	PX248 Pro V2	false	a different model sharing "V2"
+https://www.pixiogaming.com/products/luma-oled-aura-gen2?variant=51405353418884	PX277 OLED MAX V2 Gaming Monitor — Black	Pixio	PX277 OLED MAX V2	true	
+https://www.pixiogaming.com/products/luma-oled-aura-gen2?variant=51405353418884	PX277 OLED MAX V2 Gaming Monitor — Black	Pixio	PX277 Prime Neo	false	sibling: the OLED MAX V2 is not the Prime Neo
+https://www.pixiogaming.com/products/pxc279-wave?variant=50783530942596	PXC279 Wave 27" Curved Gaming Monitor — White	Pixio	PXC279 Wave	true	
+https://www.pixiogaming.com/products/pxc278-wave-certified-refurbished?variant=50726020120708	PXC278 Wave - Certified Refurbished — Black	Pixio	PXC278 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/pxc278-wave?variant=50726004293764	PXC278 Wave 27" Curved Gaming Monitor — White	Pixio	PXC278 Wave	true	
+https://www.pixiogaming.com/products/pxc328-certified-refurbished?variant=50708476067972	PXC328 Curved Gaming Monitor - Certified Refurbished	Pixio	PXC328	false	certified refurbished
+https://www.pixiogaming.com/products/px248-pro-v2-24in-premium-fast-ips-1080p-1ms-gtg-200hz-gaming-monitor-copy?variant=50631010254980	PX248 Pro V2 - Certified Refurbished	Pixio	PX248 Wave	false	sibling: the Pro V2 is not the Wave
+https://www.pixiogaming.com/products/px248-pro-v2-24in-premium-fast-ips-1080p-1ms-gtg-200hz-gaming-monitor-copy?variant=50631010254980	PX248 Pro V2 - Certified Refurbished	Pixio	PX248 Pro V2	false	certified refurbished
+https://www.pixiogaming.com/products/px248-pro-v2-24in-premium-fast-ips-1080p-1ms-gtg-200hz-gaming-monitor-copy?variant=50631010254980	PX248 Pro V2 - Certified Refurbished	Pixio	PX277 OLED MAX V2	false	a different model sharing "V2"
+https://www.pixiogaming.com/products/px248-pro-v2?variant=50626265776260	PX248 Pro V2 24-inch Gaming Monitor	Pixio	PX248 Wave	false	sibling: the Pro V2 is not the Wave
+https://www.pixiogaming.com/products/px248-pro-v2?variant=50626265776260	PX248 Pro V2 24-inch Gaming Monitor	Pixio	PX248 Pro V2	true	
+https://www.pixiogaming.com/products/px248-pro-v2?variant=50626265776260	PX248 Pro V2 24-inch Gaming Monitor	Pixio	PX277 OLED MAX V2	false	a different model sharing "V2"
+https://www.pixiogaming.com/products/px160-wave-15-6-inch-portable-gaming-monitor-copy?variant=50517110751364	PX160 Wave 15.6 inch Portable Gaming Monitor - Certified Refurbished — Black	Pixio	PX160 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/px24q-pro-24in-premium-fast-ips-1440p-1ms-gtg-180hz-gaming-monitor-copy?variant=50517100068996	PX24Q Pro Gaming Monitor - Certified Refurbished	Pixio	PX24Q Pro	false	certified refurbished
+https://www.pixiogaming.com/products/pixio-px275-wave-certified-refurbished?variant=44759818862724	PX275 Wave - Certified Refurbished — Black	Pixio	PX275 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/pxc248-wave-certified-refurbished?variant=44737538359428	PXC248 Wave 24-inch Curved Gaming Monitor - Certified Refurbished — Black	Pixio	PXC248 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/pixio-px246-wave-24-inch-1080p-120hz-gaming-monitor-with-ips-and-adaptive-sync-copy?variant=44727623090308	PX246 Wave - Certified Refurbished — Black	Pixio	PX246 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/px275-wave?variant=44726619275396	PX275 Wave 27-inch Gaming Monitor — Black	Pixio	PX275 Wave	true	
+https://www.pixiogaming.com/products/pxc248-wave?variant=44726475456644	PXC248 Wave 24-inch Curved Gaming Monitor — White	Pixio	PXC248 Wave	true	
+https://www.pixiogaming.com/products/px246-wave?variant=44725888647300	PX246 Wave 24-inch Gaming Monitor — White	Pixio	PX246 Wave	true	
+https://www.pixiogaming.com/products/pixio-pxc348c-neo-ultra-wide-curved-productivity-gaming-monitor-certified-refurbished?variant=51789693157508	PXC348C Neo Ultra Wide Curved Productivity Gaming Monitor - Certified Refurbished — Black	Pixio	PXC348C Neo	false	certified refurbished
+https://www.pixiogaming.com/products/px160-wave?variant=50517110194308	PX160 Wave 15.6-inch Portable Gaming Monitor — White	Pixio	PX160 Wave	true	
+https://www.pixiogaming.com/products/pixio-px279-wave-gaming-monitor-certified-refurbished?variant=44631033413764	PX279 Wave Gaming Monitor - Certified Refurbished — White	Pixio	PX279 Wave	false	certified refurbished
+https://www.pixiogaming.com/products/pixio-px279-wave-gaming-monitor-certified-refurbished?variant=44631033413764	PX279 Wave Gaming Monitor - Certified Refurbished — White	Pixio	PX279 Prime Neo	false	sibling and refurbished
+https://www.pixiogaming.com/products/px279-wave?variant=44631030005892	PX279 Wave Gaming Monitor — White	Pixio	PX279 Wave	true	
+https://www.pixiogaming.com/products/px279-wave?variant=44631030005892	PX279 Wave Gaming Monitor — White	Pixio	PX279 Prime Neo	false	sibling: the Wave is not the Prime Neo
+https://www.pixiogaming.com/products/pxc328?variant=41892886937732	PXC328 Curved Gaming Monitor	Pixio	PXC328	true	
+https://www.pixiogaming.com/products/px32u-wave?variant=41857353973892	PX32U Wave 32" 4K 144Hz Gaming Monitor — White	Pixio	PX32U Wave	true	
+https://www.pixiogaming.com/products/pxc348c-neo?variant=51789681033348	PXC348C Neo Ultra Wide Curved Productivity Gaming Monitor — Black	Pixio	PXC348C Neo	true	
+https://www.pixiogaming.com/products/px279-prime-neo?variant=41846221963396	PX279 Prime Neo 27" 1080p Fast IPS FHD 240Hz Gaming Monitor	Pixio	PX279 Wave	false	sibling: the Prime Neo is not the Wave
+https://www.pixiogaming.com/products/px279-prime-neo?variant=41846221963396	PX279 Prime Neo 27" 1080p Fast IPS FHD 240Hz Gaming Monitor	Pixio	PX279 Prime Neo	true	
+https://www.pixiogaming.com/products/px27u-wave?variant=41845311897732	PX27U Wave 27" 4K 160Hz Gaming Monitor — White	Pixio	PX27U Wave	true	
+https://www.pixiogaming.com/products/px27u-wave?variant=41845311897732	PX27U Wave 27" 4K 160Hz Gaming Monitor — White	Pixio	PX27U Prime Neo	false	sibling: the Wave is not the Prime Neo
+https://www.pixiogaming.com/products/pixio-px277-prime-neo-gaming-monitor-certified-refurbished?variant=41780861730948	PX277 Prime Neo Gaming Monitor - Certified Refurbished	Pixio	PX277 OLED MAX V2	false	sibling and refurbished
+https://www.pixiogaming.com/products/pixio-px277-prime-neo-gaming-monitor-certified-refurbished?variant=41780861730948	PX277 Prime Neo Gaming Monitor - Certified Refurbished	Pixio	PX277 Prime Neo	false	certified refurbished
+https://www.pixiogaming.com/products/pxc279-curved-gaming-monitor-certified-refurbished?variant=41761360806020	PXC279 Curved Gaming Monitor - Certified Refurbished	Pixio	PXC279 Wave	false	certified refurbished; and the PXC279 without "Wave" is the earlier model
+https://www.pixiogaming.com/products/px248-wave?variant=41652594311300	Pixio PX248 Wave 24-inch FHD 200Hz Fast IPS Gaming Monitor — White	Pixio	PX248 Wave	true	
+https://www.pixiogaming.com/products/px248-wave?variant=41652594311300	Pixio PX248 Wave 24-inch FHD 200Hz Fast IPS Gaming Monitor — White	Pixio	PX248 Pro V2	false	sibling: the Wave is not the Pro V2
+https://dough.tech/products/spectrum-black-32?variant=52500091765107	Spectrum Black 32 — Matte without Hub	Dough	Spectrum Black 32	true	
+https://dough.tech/products/spectrum-4k-144hz?variant=52500091863411	Spectrum One — Matte	Dough	Spectrum One	true	
+https://dough.tech/products/spectrum-black-27-480hz?variant=52500090585459	Spectrum Black 27 — Matte without Hub	Dough	Spectrum Black 27	true	
+https://dough.tech/products/spectrum-one-refurbished?variant=52835494265203	Spectrum One Refurbished — Matte	Dough	Spectrum One	false	refurbished
+https://dough.tech/products/spectrum-one-bstock?variant=52835437216115	Spectrum One B-Stock — Matte	Dough	Spectrum One	false	B-stock
+https://www.koorui.net/products/koorui-27-inch-fhd-200hz-ips-g2711p?variant=50112171901214	KOORUI G2711P 27-inch IPS FHD 200Hz Gaming Monitor	KOORUI	G2711P	true	
+https://www.koorui.net/products/koorui-24-inch-fhd-200hz-ips-hdr400-g2411p?variant=50112173834526	KOORUI G2411P 24-inch IPS FHD 200Hz Gaming Monitor	KOORUI	G2411P	true	
+https://www.koorui.net/products/koorui-24-inch-qhd-180hz-ips-g2421v?variant=50112170721566	KOORUI G2421V 24-inch IPS QHD 180Hz Gaming Monitor	KOORUI	G2421V	true	
+https://www.koorui.net/products/koorui-27-inch-fhd-240hz-va-gn02?variant=50112173244702	KOORUI GN02 27-inch VA FHD 240Hz Gaming Monitor	KOORUI	GN02	true	
+https://www.koorui.net/products/24-inch-curved-180hz-gaming-monitor-24e6ca?variant=50112174981406	KOORUI 24E6CA 24-inch VA FHD 180Hz Curved Gaming Monitor	KOORUI	24E6CA	true	
+https://www.koorui.net/products/koorui-34-inch-ultrawide-curved-wqhd-34e6uc?variant=50112170033438	KOORUI 34E6UC 34-inch VA WQHD 180Hz Curved Gaming Monitor	KOORUI	34E6UC	true	
+https://www.koorui.net/products/koorui-27e6ca-27-fhd-180hz-va-curved-gaming-monitor-1500r-27e6ca?variant=50112168493342	KOORUI 27E6CA 27-inch VA FHD 180Hz Curved Gaming Monitor	KOORUI	27E6CA	true	
+https://www.koorui.net/products/koorui-g2722p-27-inch-gaming-monitor-200hz-g2722p?variant=50112169378078	KOORUI G2722P 27-inch IPS QHD 200Hz Gaming Monitor	KOORUI	G2722P	true	
+https://www.koorui.net/products/koorui-24-inch-fhd-165hz-va-gaming-monitor-24e4?variant=50112175145246	KOORUI 24E4 24-inch VA FHD 165Hz Gaming Monitor	KOORUI	24E4	true	
+https://www.koorui.net/products/koorui-24-inch-fhd-165hz-ips-24e3?variant=50112174457118	KOORUI 24E3 24-inch IPS FHD 165Hz Gaming Monitor	KOORUI	24E3	true	
+https://www.koorui.net/products/koorui-g2721p-27-qhd-200hz-ips-gaming-monitor-hdr400-g2721p?variant=50112167837982	KOORUI G2721P 27-inch IPS QHD 200Hz Gaming Monitor	KOORUI	G2721P	true	
+https://www.koorui.net/products/koorui-27e6qca-27-qhd-180hz-va-curved-gaming-monitor-1500r-27e6qca?variant=50112168296734	KOORUI 27E6QCA 27-inch VA QHD 180Hz Curved Gaming Monitor	KOORUI	27E6QCA	true	
+https://www.koorui.net/products/koorui-27n5ca-27-fhd-75hz-va-curved-monitor-1500r-eye-care-27n5ca?variant=50112168657182	KOORUI 27N5CA 27-inch VA FHD 75Hz Curved Gaming Monitor	KOORUI	27N5CA	true	
+https://www.koorui.net/products/koorui-24-inch-fhd-100hz-va-e2412f?variant=50112174588190	KOORUI E2412F 24-inch VA FHD 100Hz Business Monitor	KOORUI	E2412F	true	
+https://www.koorui.net/products/koorui-24-inch-curved-computer-monitor-full-hd-1080p-24n5ca?variant=50112173998366	KOORUI 24N5CA 24-inch VA FHD 75Hz 1500R Curved Gaming Monitor	KOORUI	24N5CA	true	
+https://www.koorui.net/products/koorui-27-inch-4k-uhd-ips-n07?variant=50112172065054	KOORUI N07 27-inch IPS 4K UHD 60Hz Business Monitor	KOORUI	N07	true	
+https://www.koorui.net/products/koorui-24-inch-fhd-120hz-ips-e2411h?variant=50112172917022	KOORUI E2411H 24-inch IPS FHD 120Hz Business  Monitor	KOORUI	E2411H	true	
+https://www.koorui.net/products/koorui-27-inch-fhd-100hz-ips-e2711f?variant=50112172392734	KOORUI E2711F 27-inch IPS FHD 100Hz Business Monitor	KOORUI	E2711F	true	
+https://www.koorui.net/products/koorui-e2411k-24-fhd-1080p-100hz-va-monitor-e2411k?variant=50112168821022	KOORUI E2411K 24-inch IPS FHD 144Hz Business Monitor	KOORUI	E2411K	true	
+https://innocn.com/products/innocn-25-inch-computer-monitor-25m2s?variant=47424608370912	INNOCN | 25" WQHD 1440p 240Hz MiniLED Gaming Monitor | 25M2S	INNOCN	25M2S	true	
+https://innocn.com/products/innocn-ga27t1m-27inch-320hz-qhd-mini-led-gaming-monitor?variant=47880113979616	INNOCN | 27" 320Hz QHD Mini-LED Gaming Monitor | GA27T1M	INNOCN	GA27T1M	true	
+https://innocn.com/products/innocn-27-inch-280hz-qd-oled-gaming-monitor-ga27s1q?variant=48727150788832	INNOCN | 27" 280Hz 1440p QD-OLED Gaming Monitor | GA27S1Q	INNOCN	GA27S1Q	true	
+https://innocn.com/products/innocn-ga27m1q-27-qd-oled-500hz-1440p-gaming-monitor?variant=48100516790496	INNOCN | 27" QD-OLED 500Hz 1440p Gaming Monitor | GA27M1Q	INNOCN	GA27M1Q	true	
+https://innocn.com/products/innocn-49-ultrawide-computer-monitor-49c1g?variant=44776351236320	INNOCN | 49" Curved Ultrawide 32:9 144Hz Creator Monitor | 49C1G	INNOCN	49C1G	true	
+https://innocn.com/products/innocn-49-inch-computer-monitor-49c1s?variant=47236838260960	INNOCN | 49" Dual QHD 240Hz Ultrawide Curved Gaming Monitor | 49C1S	INNOCN	49C1S	true	
+https://innocn.com/products/innocn-40c1r-40-ultrawide-21-9-qhd-144hz-gaming-monitor?variant=44115799572704	INNOCN | 40" Ultrawide 21:9 QHD 144Hz Gaming Monitor | 40C1R	INNOCN	40C1R	true	
+https://innocn.com/products/innocn-49-ultrawide-curved-computer-monitor-49c1r?variant=44122162036960	INNOCN | 49" Curved Ultrawide 32:9 QHD 120Hz HDR Gaming Monitor | 49C1R	INNOCN	49C1R	true	
+https://innocn.com/products/innocn-49-150hz-32-9-mini-led-hdr1000-ultrawide-gaming-monitor-e49m1g?variant=53959978615008	INNOCN | 49" 144Hz 32:9 Mini-LED HDR1000 Ultrawide Gaming Monitor | E49M1G	INNOCN	E49M1G	true	
+https://innocn.com/products/innocn-34-5k2k-120hz-21-9-ultrawide-professional-monitor-34c1u?variant=53344475807968	INNOCN | 34" 5K2K 120Hz 21:9 Ultrawide Professional Monitor | 34C1U	INNOCN	34C1U	true	
+https://innocn.com/products/innocn-ultrawide-curved-gaming-monitor-49q1r?variant=46730299015392	INNOCN | 49" OLED Ultrawide 144Hz QHD Curved Professional Monitor | 49Q1R	INNOCN	49Q1R	true	
+https://innocn.com/products/innocn-45-inch-ultrawide-curved-gaming-monitor-45c1r?variant=48200546746592	INNOCN | 45" Curved Ultrawide 32:9 QHD 120Hz Monitor | 45C1R — Without Webcam	INNOCN	45C1R	true	
+https://innocn.com/products/innocn-49-5k-dqhd-165hz-mini-led-ultrawide-monitor-e49m1r?variant=54475144855776	INNOCN | 49" 5K DQHD 165Hz Mini-LED Ultrawide Monitor | E49M1R	INNOCN	E49M1R	true	
+https://innocn.com/products/innocn-27-4k-120hz-ips-hdr500-professional-monitor-cb27u1?variant=53192027668704	INNOCN | 27" 4K 120Hz IPS HDR500 Professional Monitor | CB27U1	INNOCN	CB27U1	true	
+https://innocn.com/products/innocn-34-inch-wqhd-ultrawide-monitor-34c1r?variant=51440355606752	INNOCN | 34" 180Hz WQHD IPS UltraWide Productivity & Gaming Monitor | 34C1R	INNOCN	34C1R	true	
+https://innocn.com/products/innocn-oled-curved-gaming-monitor-49q1s?variant=46730339647712	INNOCN | 49" OLED 240Hz QHD Curved Gaming Creator Monitor | 49Q1S	INNOCN	49Q1S	true	
+https://innocn.com/products/innocn-32-4k-160hz-ips-usb-c-90w-gaming-monitor-cb32u1?variant=53209666879712	INNOCN | 32" 4K 160Hz HDR400 USB-C 90W Gaming Monitor | CB32U1	INNOCN	CB32U1	true	
+https://innocn.com/products/34c1r-dual-monitor-combo?variant=51440398532832	34C1R ×2 + Monitor Arm Combo	INNOCN	34C1R	false	two-monitor combo with an arm
+https://innocn.com/products/40c1r-dual-monitor-combo?variant=51432626323680	40C1R ×2 + Monitor Arm Combo	INNOCN	40C1R	false	two-monitor combo with an arm
+https://innocn.com/products/ga27m1q-dual-monitor-combo?variant=51432626258144	GA27M1Q ×2 + Monitor Arm Combo	INNOCN	GA27M1Q	false	two-monitor combo with an arm
+https://innocn.com/products/ga27w1q-dual-monitor-combo?variant=51432626225376	GA27W1Q ×2 + Monitor Arm Combo	INNOCN	GA27W1Q	false	two-monitor combo with an arm
+https://innocn.com/products/ga27s1q-dual-monitor-combo?variant=51432626192608	GA27S1Q ×2 + Monitor Arm Combo	INNOCN	GA27S1Q	false	two-monitor combo with an arm
+https://innocn.com/products/ga27t1m-dual-monitor-combo?variant=51432626127072	GA27T1M ×2 + Monitor Arm Combo	INNOCN	GA27T1M	false	two-monitor combo with an arm
+https://innocn.com/products/innocn-25m2s-dual-monitor-combo?variant=51432388198624	25M2S ×2 + Monitor Arm Combo	INNOCN	25M2S	false	two-monitor combo with an arm
+https://innocn.com/products/innocn-ga27w1q-27-qd-oled-4k-240hz-gaming-monitor?variant=48101800837344	INNOCN | 27" QD-OLED 4K 240Hz Gaming Monitor | GA27W1Q	INNOCN	GA27W1Q	true	
+https://innocn.com/products/innocn-27g2t-27-super-fast-ips-qhd-320hz-gaming-monitor?variant=47614591041760	INNOCN | 27" Super Fast IPS QHD 320Hz Gaming Monitor | 27G2T	INNOCN	27G2T	true	
+https://innocn.com/products/innocn-32-inch-4k-miniled-gaming-monitor-32m2v-2026?variant=53213090054368	INNOCN | 32" 4K 160Hz Mini-LED Black Professional Gaming Monitor | 32M2V (2026) — Black	INNOCN	32M2V	true	
+https://innocn.com/products/innocn-40-inch-computer-monitor-40c1u?variant=47236640178400	INNOCN | 40" Ultrawide 21:9 5K 100Hz IPS Monitor | 40C1U	INNOCN	40C1U	true	
+https://innocn.com/products/innoncn-24-5-inch-gaming-monitor-25g2s?variant=47112781889760	INNOCN | 24.5" 240Hz QHD 2K Gaming Monitor | 25G2S	INNOCN	25G2S	true	
+https://innocn.com/products/innocn-27-computer-monitor-4k-27c1u-d?variant=44115604209888	INNOCN | 27" 4K IPS USB-C HDR400 Professional Monitor | 27C1U-D	INNOCN	27C1U-D	true	
+https://innocn.com/products/40c1u-dual-monitor-combo?variant=51444602110176	40C1U ×2 + Monitor Arm Combo	INNOCN	40C1U	false	two-monitor combo with an arm
+https://innocn.com/products/27c1u-d-dual-monitor-combo?variant=51432626290912	27C1U-D ×2 + Monitor Arm Combo	INNOCN	27C1U-D	false	two-monitor combo with an arm
+https://innocn.com/products/25g2s-dual-monitor-combo?variant=51432243560672	25G2S ×2 + Monitor Arm Combo	INNOCN	25G2S	false	two-monitor combo with an arm
+https://innocn.com/products/innocn-29-inch-ultrawide-screen-monitor-29c1f-d-1?variant=44747644043488	INNOCN | 29" Ultrawide 21:9 FHD 75Hz Monitor | 29C1F-D	INNOCN	29C1F-D	true	
+https://innocn.com/products/innocn-44-ultrawide-computer-monitor-44c1g?variant=44115840434400	INNOCN | 44" Ultrawide 32:9 120Hz IPS Monitor | 44C1G	INNOCN	44C1G	true	
+https://store.coolermaster.com/products/tempest-gp27u?variant=42823839842349	Tempest GP27U	Cooler Master	Tempest GP27U	true	
+https://store.coolermaster.com/products/gm27-fqs-argb?variant=42823864352813	GM27-FQS ARGB	Cooler Master	GM27-FQS	true	
+https://store.coolermaster.com/products/gm27-fqs-argb?variant=42823864352813	GM27-FQS ARGB	Cooler Master	GM27-CFX	false	sibling model
+https://store.coolermaster.com/products/gm27-cfx?variant=42822395887661	GM27-CFX	Cooler Master	GM27-FQS	false	sibling model
+https://store.coolermaster.com/products/gm27-cfx?variant=42822395887661	GM27-CFX	Cooler Master	GM27-CFX	true	
+https://store.coolermaster.com/products/gm34-cwq-argb?variant=42751985385517	GM34-CWQ ARGB	Cooler Master	GM34-CWQ	true	
+https://store.coolermaster.com/products/tempest-gp2711?variant=42738826739757	Tempest GP2711	Cooler Master	Tempest GP2711	true	
+https://store.coolermaster.com/products/tempest-gz2711?variant=42738825920557	Tempest GZ2711	Cooler Master	Tempest GZ2711	true	
+https://dough.tech/products/spectrum-black?variant=52500091961715	Spectrum Black — Gorilla® Glass DXC	Dough	Spectrum Black 27	false	no size in the title; a labeler cannot tell the 27 from the 32 from what it says
+https://dough.tech/products/spectrum-black?variant=52500091961715	Spectrum Black — Gorilla® Glass DXC	Dough	Spectrum Black 32	false	no size in the title; a labeler cannot tell the 27 from the 32 from what it says
+https://dough.tech/products/spectrum-monitor-stand?variant=52500089700723	Spectrum Stand — Stand	Dough	Spectrum One	false	an accessory
+https://www.focuscamera.com/products/dell-u3425we-k1-computers-tablets-monitors?variant=42378374545456	Dell UltraSharp 34-Inch 1440p 120 Hz Curved Monitor with Dock Pro Station Bundle	Dell	U3425WE	false	no model in the title, and a bundle
+https://www.focuscamera.com/products/dell-dell-p3225de-computers-tablets-monitors?variant=42378020159536	Dell Pro 32 Plus QHD USB-C Hub Monitor - 2560 x 1440 IPS Display, 100Hz	Dell	P3225QE	false	no model in the title; the P3225QE is the 4K one
+https://www.focuscamera.com/products/dell-u4323qe-computers-tablets-monitors?variant=43430250020912	Dell UltraSharp U4323QE 42.51 Inch 4K UHD 60 Hz IPS USB-C Hub Monitor	Dell	U4025QW	false	a different model
+https://www.focuscamera.com/products/dell-u3223qe-fcvgwfc-computers-and-tablets-monitors?variant=42689908310064	Dell UltraSharp U3223QE 31.5" 4K UHD LCD Monitor - 16:9 - Black, Silver (Used)	Dell	U3225QE	false	a sibling model (U3223QE), and used
+https://www.focuscamera.com/products/dell-dell-e2725hm-computers-tablets-monitors?variant=42875660271664	Dell E2725HM Pro 27-Inch 100 Hz Full HD IPS Monitor	Dell	SE2725HM	false	a sibling model (E2725HM)
+https://www.focuscamera.com/products/dell-dell-p2725h-computers-tablets-monitors?variant=42171570585648	Dell 27-Inch FHD IPS LED Monitor with Eye Comfort and VGA, USB, and HDMI Ports (Black and Silver)	Dell	S2725HS	false	no model in the title
+https://www.focuscamera.com/products/lg-34g630a-b-computers-tablets-monitors?variant=42955475648560	LG 34-Inch UltraGear WQHD 240Hz 1ms FreeSync Premium Curved Gaming Monitor	LG	45GS95QE	false	no model in the title, different size
+https://www.focuscamera.com/products/lg-32u990a-s-computers-tablets-monitors?variant=42955475386416	LG 32-Inch UltraFine evo 6K Nano 60Hz IPS Black Professional Monitor (Silver)	LG	32G810SA	false	no model in the title; a different line
+https://www.focuscamera.com/products/lg-37g800a-b-computers-tablets-monitors?variant=43276080840752	LG 37-Inch UltraGear 4K UHD 165Hz Curved Gaming Monitor	LG	32G810SA	false	no model in the title, different size
+https://www.focuscamera.com/products/samsung-ls37d702eanxza-computers-tablets-monitors?variant=42417513234480	Samsung 37-Inch 4K Ultra HD 60Hz 5ms VA LED Gaming Monitor (Black)	Samsung	S80UD	false	no model in the title
+https://www.focuscamera.com/products/samsung-samls32am7-computers-tablets-monitors?variant=42179050307632	Samsung LS32AM702UNXZA 31.5-Inch Smart 4K HDR VA Monitor	Samsung	S80UD	false	a different model
+https://www.focuscamera.com/products/samsung-ls32b300nwnxgo-computers-tablets-monitors?variant=42378170269744	Samsung 32-Inch Class S30B Series FHD AMD 75Hz Refresh Rate FreeSync Monitor	Samsung	S33A	false	a sibling series
+https://www.focuscamera.com/products/benq-america-benq-gw2490-computers-tablets-monitors?variant=43081734717488	BenQ 23.8-Inch 1080p FHD Eye-Care Monitor with 100Hz Refresh Rate	BenQ	GW2790	false	no model in the title, different size
+https://www.focuscamera.com/products/cooler-master-cmiga2701sus-computers-tablets-monitors?variant=42161316921392	Cooler Master GA2701S 27-Inch FHD Gaming Monitor with 100Hz IPS Panel and Slim Design (Black)	Cooler Master	GM27-FQS	false	a different model
+https://www.pixiogaming.com/products/pixio-px27u-mini-led-white-27-dual-mode-gaming-monitor?variant=51511245144196	Pixio PX27UM Mini LED White 27" Dual Mode Gaming Monitor	Pixio	PX27U Wave	false	sibling: the PX27UM is not the PX27U
+https://www.pixiogaming.com/products/px32u-wave?variant=41857353973892	PX32U Wave 32" 4K 144Hz Gaming Monitor — White	Pixio	PX27U Wave	false	sibling: 32" vs 27"
+https://innocn.com/products/innocn-27-inch-280hz-qd-oled-gaming-monitor-ga27s1q?variant=48727150788832	INNOCN | 27" 280Hz 1440p QD-OLED Gaming Monitor | GA27S1Q	INNOCN	GA27M1Q	false	sibling model
+https://innocn.com/products/innocn-34-inch-wqhd-ultrawide-monitor-34c1r?variant=51440355606752	INNOCN | 34" 180Hz WQHD IPS UltraWide Productivity & Gaming Monitor | 34C1R	INNOCN	34C1U	false	sibling model
+https://innocn.com/products/innocn-49-ultrawide-curved-computer-monitor-49c1r?variant=44122162036960	INNOCN | 49" Curved Ultrawide 32:9 QHD 120Hz HDR Gaming Monitor | 49C1R	INNOCN	49C1S	false	sibling model
+https://innocn.com/products/adjustable-dual-monitor-desk-arm-innocn?variant=51215530623200	Adjustable Dual Monitor Desk Arm | INNOCN	INNOCN	34C1R	false	an accessory
+https://www.koorui.net/products/koorui-27e6ca-27-fhd-180hz-va-curved-gaming-monitor-1500r-27e6ca?variant=50112168493342	KOORUI 27E6CA 27-inch VA FHD 180Hz Curved Gaming Monitor	KOORUI	27E6QCA	false	sibling model
+https://www.koorui.net/products/koorui-24-inch-curved-computer-monitor-full-hd-1080p-24n5ca?variant=50112173998366	KOORUI 24N5CA 24-inch VA FHD 75Hz 1500R Curved Gaming Monitor	KOORUI	27N5CA	false	sibling model, 24" vs 27"
+https://store.coolermaster.com/products/tempest-gp2711?variant=42738826739757	Tempest GP2711	Cooler Master	Tempest GZ2711	false	sibling model
