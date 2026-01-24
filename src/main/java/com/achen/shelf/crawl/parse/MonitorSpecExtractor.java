@@ -51,48 +51,55 @@ public final class MonitorSpecExtractor implements SpecExtractor {
   private static final double MIN_SIZE = 10;
   private static final double MAX_SIZE = 100;
 
-  /** Panel vocabulary, longest-first: "qd oled" must win over "oled", "fast ips" is just ips. */
-  private static final Map<String, String> PANELS =
-      Map.ofEntries(
+  /**
+   * Panel vocabulary. The longest matching phrase wins ("qd oled" over "oled", "ips black" over
+   * "ips"); between phrases of equal length the earlier entry wins, so the order below is a
+   * precedence — the keyboard extractor's equal-length ties fall to map iteration order, which is
+   * the known gap this list is written not to repeat.
+   */
+  private static final List<Map.Entry<String, String>> PANELS =
+      List.of(
           Map.entry("qd oled", "qd-oled"),
           Map.entry("qdoled", "qd-oled"),
           Map.entry("oled", "oled"),
           Map.entry("mini led", "mini-led"),
           Map.entry("miniled", "mini-led"),
-          Map.entry("ips", "ips"),
+          Map.entry("ips black", "ips"),
           Map.entry("nano ips", "ips"),
           Map.entry("fast ips", "ips"),
-          Map.entry("ips black", "ips"),
-          Map.entry("va", "va"),
           Map.entry("fast va", "va"),
+          Map.entry("ips", "ips"),
+          Map.entry("va", "va"),
           Map.entry("tn", "tn"));
 
-  private static final Map<String, String> HDR =
-      Map.ofEntries(
-          Map.entry("hdr10", "hdr10"),
-          Map.entry("hdr 10", "hdr10"),
-          Map.entry("hdr400", "hdr400"),
-          Map.entry("hdr 400", "hdr400"),
-          Map.entry("displayhdr 400", "hdr400"),
-          Map.entry("hdr500", "hdr500"),
-          Map.entry("hdr 500", "hdr500"),
-          Map.entry("hdr600", "hdr600"),
-          Map.entry("hdr 600", "hdr600"),
-          Map.entry("displayhdr 600", "hdr600"),
-          Map.entry("hdr1000", "hdr1000"),
-          Map.entry("hdr 1000", "hdr1000"),
+  /** HDR tiers; the higher tier first among equal-length spellings. */
+  private static final List<Map.Entry<String, String>> HDR =
+      List.of(
           Map.entry("displayhdr 1000", "hdr1000"),
+          Map.entry("displayhdr 600", "hdr600"),
+          Map.entry("displayhdr 400", "hdr400"),
+          Map.entry("true black 500", "true-black-500"),
+          Map.entry("true black 400", "true-black-400"),
           Map.entry("hdr1400", "hdr1400"),
           Map.entry("hdr 1400", "hdr1400"),
-          Map.entry("true black 400", "true-black-400"),
-          Map.entry("true black 500", "true-black-500"));
+          Map.entry("hdr1000", "hdr1000"),
+          Map.entry("hdr 1000", "hdr1000"),
+          Map.entry("hdr600", "hdr600"),
+          Map.entry("hdr 600", "hdr600"),
+          Map.entry("hdr500", "hdr500"),
+          Map.entry("hdr 500", "hdr500"),
+          Map.entry("hdr400", "hdr400"),
+          Map.entry("hdr 400", "hdr400"),
+          Map.entry("hdr10", "hdr10"),
+          Map.entry("hdr 10", "hdr10"));
 
-  private static final Map<String, String> ASPECT =
-      Map.ofEntries(
-          Map.entry("16 9", "16:9"),
+  /** Aspect ratios; the wider one first, so a "32:9 (2 × 16:9)" listing reads as 32:9. */
+  private static final List<Map.Entry<String, String>> ASPECT =
+      List.of(
           Map.entry("16 10", "16:10"),
+          Map.entry("32 9", "32:9"),
           Map.entry("21 9", "21:9"),
-          Map.entry("32 9", "32:9"));
+          Map.entry("16 9", "16:9"));
 
   @Override
   public Map<String, Object> extract(String title, List<String> tags, String description) {
@@ -288,10 +295,12 @@ public final class MonitorSpecExtractor implements SpecExtractor {
     return Optional.empty();
   }
 
-  private static Optional<String> longestMatch(String haystack, Map<String, String> vocabulary) {
+  /** The value of the longest matching phrase; among equal lengths, the earliest in the list. */
+  private static Optional<String> longestMatch(
+      String haystack, List<Map.Entry<String, String>> vocabulary) {
     String bestKey = null;
     String best = null;
-    for (Map.Entry<String, String> entry : vocabulary.entrySet()) {
+    for (Map.Entry<String, String> entry : vocabulary) {
       if (Normalizer.containsModel(haystack, entry.getKey())
           && (bestKey == null || entry.getKey().length() > bestKey.length())) {
         bestKey = entry.getKey();

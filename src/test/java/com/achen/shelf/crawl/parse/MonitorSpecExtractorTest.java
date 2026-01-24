@@ -198,6 +198,21 @@ class MonitorSpecExtractorTest {
   }
 
   @Test
+  void breaksEqualLengthVocabularyTiesByPrecedenceNotMapOrder() {
+    // The keyboard extractor's known gap: "alice" vs "split" fall to map iteration order. Here
+    // equal-length phrases are ordered, so a super-ultrawide described as "32:9 (2 x 16:9)"
+    // is 32:9 and a listing naming both a VA and a TN spelling is whichever comes first.
+    assertThat(
+            extractor.extract(
+                "Samsung 49\" 32:9 (2 x 16:9) Curved Gaming Monitor", List.of(), null))
+        .containsEntry("aspect_ratio", "32:9");
+    assertThat(extractor.extract("Sceptre 24\" 16:9 Monitor", List.of("Aspect Ratio: 16:9"), null))
+        .containsEntry("aspect_ratio", "16:9");
+    assertThat(extractor.extract("Monitor with HDR 400 and HDR 600 modes", List.of(), null))
+        .containsEntry("hdr", "hdr600");
+  }
+
+  @Test
   void staysSilentWhenCurvedAndFlatBothAppear() {
     assertThat(extractor.extract("Pixio 27\" Gaming Monitor", List.of("Curved", "Flat"), null))
         .doesNotContainKey("curved");
