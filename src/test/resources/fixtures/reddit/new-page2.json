@@ -1,0 +1,39 @@
+{
+  "kind": "Listing",
+  "data": {
+    "after": null,
+    "dist": 2,
+    "children": [
+      {
+        "kind": "t3",
+        "data": {
+          "id": "ghi789",
+          "name": "t3_ghi789",
+          "subreddit": "MechanicalKeyboards",
+          "title": "Q6 HE on sale — worth it over the Q6?",
+          "selftext": "",
+          "author": "fixture_user_two",
+          "created_utc": 1769592600,
+          "permalink": "/r/MechanicalKeyboards/comments/ghi789/q6_he_on_sale/",
+          "num_comments": 1,
+          "is_self": true
+        }
+      },
+      {
+        "kind": "t3",
+        "data": {
+          "id": "old001",
+          "name": "t3_old001",
+          "subreddit": "MechanicalKeyboards",
+          "title": "An old post from before the window",
+          "selftext": "Should never be ingested with a 30-day window ending 2026-01-31.",
+          "author": "fixture_user_three",
+          "created_utc": 1765800000,
+          "permalink": "/r/MechanicalKeyboards/comments/old001/an_old_post/",
+          "num_comments": 0,
+          "is_self": true
+        }
+      }
+    ]
+  }
+}

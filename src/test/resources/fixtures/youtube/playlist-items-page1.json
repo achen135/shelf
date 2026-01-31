@@ -1,0 +1,39 @@
+{
+  "kind": "youtube#playlistItemListResponse",
+  "nextPageToken": "FIXTUREPAGE2",
+  "pageInfo": {"totalResults": 4, "resultsPerPage": 50},
+  "items": [
+    {
+      "kind": "youtube#playlistItem",
+      "id": "pli-001",
+      "snippet": {
+        "publishedAt": "2026-01-30T15:00:00Z",
+        "channelId": "UCfixturechannel000000001",
+        "title": "Keychron Q1 Pro review: still the one to beat in 2026?",
+        "description": "A year with the Q1 Pro. Chapters: sound, software, the GMMK Pro comparison.",
+        "channelTitle": "Fixture Keys",
+        "playlistId": "UUfixturechannel000000001",
+        "position": 0,
+        "resourceId": {"kind": "youtube#video", "videoId": "vid-001"},
+        "videoOwnerChannelId": "UCfixturechannel000000001"
+      },
+      "contentDetails": {"videoId": "vid-001", "videoPublishedAt": "2026-01-30T15:00:00Z"}
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "id": "pli-002",
+      "snippet": {
+        "publishedAt": "2026-01-28T09:30:00Z",
+        "channelId": "UCfixturechannel000000001",
+        "title": "Top 5 budget keyboards right now",
+        "description": "5. Keychron K2 Ultra 4. Epomaker TH80 3. ... (comments are off on this one)",
+        "channelTitle": "Fixture Keys",
+        "playlistId": "UUfixturechannel000000001",
+        "position": 1,
+        "resourceId": {"kind": "youtube#video", "videoId": "vid-002"},
+        "videoOwnerChannelId": "UCfixturechannel000000001"
+      },
+      "contentDetails": {"videoId": "vid-002", "videoPublishedAt": "2026-01-28T09:30:00Z"}
+    }
+  ]
+}

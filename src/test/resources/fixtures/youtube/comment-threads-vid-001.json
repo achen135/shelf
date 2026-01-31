@@ -1,0 +1,54 @@
+{
+  "kind": "youtube#commentThreadListResponse",
+  "pageInfo": {"totalResults": 2, "resultsPerPage": 100},
+  "items": [
+    {
+      "kind": "youtube#commentThread",
+      "id": "cmt-0001",
+      "snippet": {
+        "videoId": "vid-001",
+        "topLevelComment": {
+          "kind": "youtube#comment",
+          "id": "cmt-0001",
+          "snippet": {
+            "videoId": "vid-001",
+            "textDisplay": "Bought the Q1 Pro after this. No regrets.",
+            "textOriginal": "Bought the Q1 Pro after this. No regrets.",
+            "authorDisplayName": "fixture viewer a",
+            "authorChannelId": {"value": "UCfixtureviewer0000000000a"},
+            "likeCount": 12,
+            "publishedAt": "2026-01-30T18:00:00Z",
+            "updatedAt": "2026-01-30T18:00:00Z"
+          }
+        },
+        "canReply": true,
+        "totalReplyCount": 1,
+        "isPublic": true
+      }
+    },
+    {
+      "kind": "youtube#commentThread",
+      "id": "cmt-0002",
+      "snippet": {
+        "videoId": "vid-001",
+        "topLevelComment": {
+          "kind": "youtube#comment",
+          "id": "cmt-0002",
+          "snippet": {
+            "videoId": "vid-001",
+            "textDisplay": "GMMK Pro still wins on software for me",
+            "textOriginal": "GMMK Pro still wins on software for me",
+            "authorDisplayName": "fixture viewer b",
+            "authorChannelId": {"value": "UCfixtureviewer0000000000b"},
+            "likeCount": 3,
+            "publishedAt": "2026-01-31T01:15:00Z",
+            "updatedAt": "2026-01-31T01:15:00Z"
+          }
+        },
+        "canReply": true,
+        "totalReplyCount": 0,
+        "isPublic": true
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 # Everything here works from a fresh clone with only a JDK 21 and Docker installed; Gradle
 # arrives via the committed wrapper.
 
-.PHONY: up down migrate test lint fmt crawl cluster bench psql clean wrapper
+.PHONY: up down migrate test lint fmt crawl ingest cluster bench psql clean wrapper
 
 ## bring up local infra (postgres on :5432)
 up:
@@ -35,6 +35,10 @@ fmt:
 ## one crawl cycle over the keyboards seed set, single process (M1)
 crawl:
 	./gradlew run --args="crawl --category keyboards --once"
+
+## community ingestion (M8): needs YOUTUBE_API_KEY (and, once approved, REDDIT_CLIENT_ID/SECRET) in the env
+ingest:
+	./gradlew run --args="ingest --category keyboards"
 
 ## the distributed crawler in compose: postgres + migrate + 2 coordinators + N workers (M2)
 cluster:

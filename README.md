@@ -5,11 +5,23 @@ spec filters, get a ranked shortlist and a **buy-now / wait** signal grounded in
 history.
 
 A *category* is a config file — its spec schema, its retailers and how to fetch each, its seed
-products — so onboarding one is configuration plus parsers, not new pipeline code. M7 proved it
-with monitors. The crawler never touches the open web: it visits the paths a category file
+products, and (v2) the communities that talk about them — so onboarding one is configuration
+plus parsers, not new pipeline code. M7 proved it with monitors. The crawler never touches the open web: it visits the paths a category file
 names, and nothing else.
 
-> **Status: M7 complete — the second category.** `categories/monitors.yaml` onboarded
+> **Status: M8 complete — v2 begins with community ingestion.** A category file now carries a
+> **`communities:` block** — subreddits and YouTube channels, the same idiom as `retailers:` —
+> and `shelf ingest --category keyboards` reads them through the platforms' **official APIs**
+> into a `raw_mentions` staging table, idempotent on `(source, source_id)` and proven so by a
+> repeat run in a real Postgres (10 rows in, 0 new the second time). The live check of both
+> platforms' terms set the scope: **Reddit** now requires manual approval before any API use,
+> so the ingester is built to the documented shape and the subreddits ship disabled until a
+> client is approved; **YouTube** transcripts are owner-only through the official API and the
+> undocumented route is against its policies, so ingestion is titles + descriptions + top-level
+> comments, and stored rows are pruned after the 30 days the policies allow. Nothing downstream
+> yet — no matching, no sentiment: that is M9. v1 stands as it was (below).
+>
+> **M7 — the second category.** `categories/monitors.yaml` onboarded
 > **monitors** — six Shopify storefronts (Focus Camera, Pixio, Dough, KOORUI, INNOCN, Cooler
 > Master), a nine-field spec schema (panel, resolution, refresh, size, HDR, ports…), 127 seed
 > products — with **one new class** (`MonitorSpecExtractor`, 312 lines) and one line in the
@@ -186,6 +198,24 @@ its reason codes and a `stale` flag if it was made on an older rollup than the p
 it. Bad input is a 400 that names the problem, using the category schema's own validator.
 `data/benchmarks/m6/` holds the k6 sweep, the pinned run and the pool experiment.
 
+### Community ingestion (v2, M8)
+
+```
+export YOUTUBE_API_KEY=...                         # a Google Cloud API key with YouTube Data API v3 enabled; no billing needed
+shelf ingest --category keyboards                  # every enabled community → raw_mentions; a per-community count table
+shelf ingest --category monitors
+psql shelf -c "select source, community, count(*) from raw_mentions group by 1, 2 order by 1, 2"
+```
+
+Reads what people say — Reddit posts and comments, YouTube uploads (title + description) and
+their top-level comments — verbatim into `raw_mentions`, and stops there. Credentials are
+environment variables the config names (`REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET`,
+`YOUTUBE_API_KEY`); a community whose variables are unset is skipped and says so. The
+subreddits ship `enabled: false`: Reddit's Responsible Builder Policy (2025-11) requires an
+approved client first, and the `notes` field in the config says how to get one. Re-run
+whenever — a repeat is an upsert — but within 30 days, which is how long YouTube's terms let
+API data sit before it is refreshed or deleted (the run prunes what has gone stale).
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -199,17 +229,18 @@ Environment variables, with the defaults matching `docker-compose.yml`:
 | `SHELF_RAW_DIR` | `data/raw` | stored response bodies |
 | `SHELF_CRAWLER_CONTACT` | the project's GitHub URL | the crawler's `User-Agent` |
 
-No credentials are ever read from a config file — a retailer that needs an API key names the
-environment variable that holds it.
+No credentials are ever read from a config file — a retailer or a community that needs an API
+key names the environment variable that holds it (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`,
+`YOUTUBE_API_KEY` for the shipped communities).
 
 ## Layout
 
 ```
-categories/           per-category config (spec schema, retailers, seed products): keyboards.yaml, monitors.yaml
+categories/           per-category config (spec schema, retailers, seed products, communities): keyboards.yaml, monitors.yaml
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
 scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans; k6/ — the API load test
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api, ingest
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
@@ -219,8 +250,9 @@ src/main/java/com/achen/shelf/
   backfill/           the labeled synthetic history (M4)
   signal/             the buy/wait/neutral rule, the per-cycle signal pass, the backtest (M5)
   api/                the Javalin query API; the demo page is src/main/resources/public/index.html (M6)
+  ingest/             community ingestion: Reddit + YouTube through their official APIs into raw_mentions (M8, v2)
 src/main/resources/db/migration/   Flyway SQL migrations
-src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures
+src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures (the reddit/ and youtube/ ones are hand-built to the documented shapes — their READMEs say so)
 data/labels/          hand-labeled resolution pairs + the committed eval reports (keyboards, monitors)
 data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
 data/benchmarks/m5/   the committed backtest report
