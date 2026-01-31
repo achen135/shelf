@@ -167,6 +167,51 @@ retailers:
       product_type "Accessories" and no tags. Kept because Focus Camera stocks the same brand,
       which makes it the category's one direct cross-retailer pair.
 
+# --- communities -----------------------------------------------------------------
+# Where people talk about monitors (M8). Same rules and the same live-checked platform findings as
+# the keyboards file: Reddit entries wait on an approved Data API client; YouTube entries read
+# uploads + top-level comments with a plain API key, no transcripts, 30-day retention.
+communities:
+  - name: r_monitors
+    source: reddit
+    id: Monitors
+    enabled: false
+    ingest:
+      window_days: 30
+      max_items: 200
+      comments_per_item: 50
+      max_rps: 1.0
+      auth:
+        mode: oauth2_client_credentials
+        env_vars: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"]
+    notes: TODO(M8+) — waits on Reddit's Responsible Builder Policy approval; see keyboards.yaml.
+
+  - name: yt_monitors_unboxed
+    source: youtube
+    id: "@MonitorsUnboxed"
+    ingest:
+      window_days: 90
+      max_items: 50
+      comments_per_item: 100
+      max_rps: 1.0
+      auth:
+        mode: api_key
+        env_vars: ["YOUTUBE_API_KEY"]
+    notes: Monitors Unboxed (Hardware Unboxed's monitor channel); handle checked 2026-09-17.
+
+  - name: yt_rtings
+    source: youtube
+    id: "@RtingsDotCom"
+    ingest:
+      window_days: 90
+      max_items: 50
+      comments_per_item: 100
+      max_rps: 1.0
+      auth:
+        mode: api_key
+        env_vars: ["YOUTUBE_API_KEY"]
+    notes: RTINGS — monitor (and other) reviews; handle checked 2026-09-17.
+
 # --- seed products ---------------------------------------------------------------
 # Every entry was taken from a live listing at the retailers above on 2026-09-16, not from
 # memory. Models are the retailer's own designation: Dell, BenQ, LG, Samsung, KOORUI and INNOCN

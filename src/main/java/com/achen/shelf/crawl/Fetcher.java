@@ -9,6 +9,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -56,20 +57,46 @@ public final class Fetcher {
 
   /** Fetches a URL, retrying per the policy above. Never throws for an HTTP-level failure. */
   public FetchResult fetch(String url) {
+    return send(url, Map.of(), null);
+  }
+
+  /**
+   * As above, with extra request headers — how the ingesters (M8) carry a bearer token or an API
+   * key, neither of which belongs in a URL where a retry log line would print it.
+   */
+  public FetchResult fetch(String url, Map<String, String> headers) {
+    return send(url, headers, null);
+  }
+
+  /**
+   * POSTs an already-encoded {@code application/x-www-form-urlencoded} body, with the same retry
+   * policy. Used for OAuth token requests, which are idempotent, so retrying one is safe.
+   */
+  public FetchResult postForm(String url, String form, Map<String, String> headers) {
+    return send(url, headers, form);
+  }
+
+  private FetchResult send(String url, Map<String, String> headers, String form) {
     Integer lastStatus = null;
     String lastFailure = "no attempt was made";
 
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        HttpRequest request =
+        HttpRequest.Builder builder =
             HttpRequest.newBuilder(URI.create(url))
                 .header("User-Agent", userAgent)
                 .header("Accept-Encoding", "gzip")
-                .timeout(requestTimeout)
-                .GET()
-                .build();
+                .timeout(requestTimeout);
+        headers.forEach(builder::header);
+        if (form == null) {
+          builder.GET();
+        } else {
+          builder
+              .header("Content-Type", "application/x-www-form-urlencoded")
+              .POST(HttpRequest.BodyPublishers.ofString(form));
+        }
         HttpResponse<byte[]> response =
-            client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            client.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
         lastStatus = response.statusCode();
 
         if (response.statusCode() >= 200 && response.statusCode() < 300) {

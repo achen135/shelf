@@ -1,0 +1,38 @@
+{
+  "kind": "youtube#playlistItemListResponse",
+  "pageInfo": {"totalResults": 4, "resultsPerPage": 50},
+  "items": [
+    {
+      "kind": "youtube#playlistItem",
+      "id": "pli-003",
+      "snippet": {
+        "publishedAt": "2026-01-20T12:00:00Z",
+        "channelId": "UCfixturechannel000000001",
+        "title": "GMMK 3 HE: the rapid trigger question",
+        "description": "Is the HE version worth the premium over the GMMK 3?",
+        "channelTitle": "Fixture Keys",
+        "playlistId": "UUfixturechannel000000001",
+        "position": 2,
+        "resourceId": {"kind": "youtube#video", "videoId": "vid-003"},
+        "videoOwnerChannelId": "UCfixturechannel000000001"
+      },
+      "contentDetails": {"videoId": "vid-003", "videoPublishedAt": "2026-01-20T12:00:00Z"}
+    },
+    {
+      "kind": "youtube#playlistItem",
+      "id": "pli-004",
+      "snippet": {
+        "publishedAt": "2025-12-15T12:00:00Z",
+        "channelId": "UCfixturechannel000000001",
+        "title": "An upload from before the window",
+        "description": "Should never be ingested with a 30-day window ending 2026-01-31.",
+        "channelTitle": "Fixture Keys",
+        "playlistId": "UUfixturechannel000000001",
+        "position": 3,
+        "resourceId": {"kind": "youtube#video", "videoId": "vid-old"},
+        "videoOwnerChannelId": "UCfixturechannel000000001"
+      },
+      "contentDetails": {"videoId": "vid-old", "videoPublishedAt": "2025-12-15T12:00:00Z"}
+    }
+  ]
+}

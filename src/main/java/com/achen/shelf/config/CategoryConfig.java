@@ -18,19 +18,23 @@ import java.util.Optional;
  * @param retailers where to look, and how
  * @param seedProducts catalog bootstrap
  * @param resolution what entity resolution should know about this category; optional
+ * @param communities where people talk about these products (M8); optional, empty means the
+ *     category has no community track
  */
 public record CategoryConfig(
     String name,
     Map<String, SpecField> specSchema,
     List<Retailer> retailers,
     List<SeedProduct> seedProducts,
-    ResolutionConfig resolution) {
+    ResolutionConfig resolution,
+    List<Community> communities) {
 
   public CategoryConfig {
     specSchema = specSchema == null ? Map.of() : Map.copyOf(specSchema);
     retailers = retailers == null ? List.of() : List.copyOf(retailers);
     seedProducts = seedProducts == null ? List.of() : List.copyOf(seedProducts);
     resolution = resolution == null ? ResolutionConfig.NONE : resolution;
+    communities = communities == null ? List.of() : List.copyOf(communities);
   }
 
   /** The retailers a crawl should actually visit, in config order. */
@@ -43,13 +47,19 @@ public record CategoryConfig(
     return retailers.stream().filter(r -> r.name().equals(retailerName)).findFirst();
   }
 
+  /** The communities an ingest should actually read, in config order. */
+  public List<Community> enabledCommunities() {
+    return communities.stream().filter(Community::enabled).toList();
+  }
+
   @JsonCreator
   static CategoryConfig fromYaml(
       @JsonProperty("name") String name,
       @JsonProperty("spec_schema") Map<String, SpecField> specSchema,
       @JsonProperty("retailers") List<Retailer> retailers,
       @JsonProperty("seed_products") List<SeedProduct> seedProducts,
-      @JsonProperty("resolution") ResolutionConfig resolution) {
-    return new CategoryConfig(name, specSchema, retailers, seedProducts, resolution);
+      @JsonProperty("resolution") ResolutionConfig resolution,
+      @JsonProperty("communities") List<Community> communities) {
+    return new CategoryConfig(name, specSchema, retailers, seedProducts, resolution, communities);
   }
 }

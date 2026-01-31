@@ -175,6 +175,92 @@ retailers:
       keyboard category_id confirmed. Used-condition listings would also need a condition
       filter before the prices are comparable with the new-only retailers above.
 
+# --- communities -----------------------------------------------------------------
+# Where people talk about these products (M8, the first v2 section). Same idiom as a retailer: a
+# stable name, the platform id, an `ingest` block with credentials by env var NAME, and notes.
+# `shelf ingest --category keyboards` reads every enabled entry into raw_mentions and stops there;
+# matching mentions to products is M9. A community whose env vars are unset is skipped with a
+# warning, so a clone with one platform's credentials ingests what it can.
+#
+# Both platforms' terms were checked live on 2026-09-17 (docs/Sessions.md, M8), not remembered:
+#   Reddit — since 2025-11-11 every Data API client, non-commercial and read-only included, needs
+#   a manual access request approved first (100 requests/min per client once approved, no charge).
+#   No client is approved yet, so the subreddits are present and disabled, like bestbuy above.
+#   YouTube — a plain Data API key reads a channel's uploads (title + description) and top-level
+#   comments within a free 10,000-unit daily quota; transcripts are owner-only through the official
+#   API and the undocumented route is against the Developer Policies, so they are not read.
+#   Stored YouTube data must be refreshed or deleted within 30 days: re-run the ingest inside that.
+communities:
+  - name: r_mechanicalkeyboards
+    source: reddit
+    id: MechanicalKeyboards
+    enabled: false
+    ingest:
+      window_days: 30
+      max_items: 200
+      comments_per_item: 50
+      max_rps: 1.0                # Reddit's free tier is 100/min per client; stay under it
+      auth:
+        mode: oauth2_client_credentials
+        env_vars: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"]   # in this order: id, then secret
+    notes: >
+      TODO(M8+): needs a Reddit Data API client approved under the Responsible Builder Policy
+      (developers.reddit.com, "request access"; non-commercial research use). The ingester is
+      written to the documented API shape and its fixtures are labeled as unrecorded until then.
+
+  - name: r_keyboards
+    source: reddit
+    id: keyboards
+    enabled: false
+    ingest:
+      window_days: 30
+      max_items: 100
+      comments_per_item: 50
+      max_rps: 1.0
+      auth:
+        mode: oauth2_client_credentials
+        env_vars: ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"]
+    notes: The general-audience subreddit; waits on the same Responsible Builder Policy approval.
+
+  - name: yt_hipyo
+    source: youtube
+    id: "@Hipyo"                  # a handle; the ingester resolves it through channels.list
+    ingest:
+      window_days: 90
+      max_items: 50
+      comments_per_item: 100
+      max_rps: 1.0
+      auth:
+        mode: api_key
+        env_vars: ["YOUTUBE_API_KEY"]
+    notes: Hipyo Tech — keyboard reviews and rankings; handle checked 2026-09-17.
+
+  - name: yt_alexotos
+    source: youtube
+    id: "@Alexotos"
+    ingest:
+      window_days: 90
+      max_items: 50
+      comments_per_item: 100
+      max_rps: 1.0
+      auth:
+        mode: api_key
+        env_vars: ["YOUTUBE_API_KEY"]
+    notes: Keyboard reviews; handle checked 2026-09-17.
+
+  - name: yt_keybored
+    source: youtube
+    id: "@Keybored"
+    ingest:
+      window_days: 90
+      max_items: 50
+      comments_per_item: 100
+      max_rps: 1.0
+      auth:
+        mode: api_key
+        env_vars: ["YOUTUBE_API_KEY"]
+    notes: Keyboard reviews; handle checked 2026-09-17.
+
 # --- seed products ---------------------------------------------------------------
 # Bootstraps the catalog and gives entity resolution something to match against. Every entry
 # below was taken from a live listing during the M0 retailer survey, not from memory.

@@ -1,0 +1,23 @@
+[
+  {"kind": "Listing", "data": {"children": [{"kind": "t3", "data": {"id": "ghi789", "name": "t3_ghi789"}}]}},
+  {
+    "kind": "Listing",
+    "data": {
+      "children": [
+        {
+          "kind": "t1",
+          "data": {
+            "id": "c00010",
+            "name": "t1_c00010",
+            "body": "The HE switches are only worth it if you actually use rapid trigger.",
+            "author": "fixture_commenter_c",
+            "created_utc": 1769684400,
+            "permalink": "/r/MechanicalKeyboards/comments/ghi789/q6_he_on_sale/c00010/",
+            "parent_id": "t3_ghi789",
+            "depth": 0
+          }
+        }
+      ]
+    }
+  }
+]

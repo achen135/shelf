@@ -3,6 +3,8 @@ package com.achen.shelf.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.achen.shelf.testing.FixtureServer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +41,68 @@ class CategoryConfigLoaderTest {
 
     // No resolution section: both knobs default to off.
     assertThat(cfg.resolution()).isEqualTo(ResolutionConfig.NONE);
+    // No communities section (M8): the category simply has no community track.
+    assertThat(cfg.communities()).isEmpty();
+    assertThat(cfg.enabledCommunities()).isEmpty();
+  }
+
+  @Test
+  void loadsTheCommunitiesSection() {
+    CategoryConfig cfg = loader.load(FIXTURES.resolve("good-communities.yaml"));
+
+    assertThat(cfg.communities()).hasSize(2);
+    Community reddit = cfg.communities().get(0);
+    assertThat(reddit.name()).isEqualTo("r_widgets");
+    assertThat(reddit.source()).isEqualTo(CommunitySource.REDDIT);
+    assertThat(reddit.id()).isEqualTo("widgets");
+    assertThat(reddit.enabled()).isFalse();
+    assertThat(reddit.ingest().windowDays()).isEqualTo(14);
+    assertThat(reddit.ingest().maxItems()).isEqualTo(50);
+    assertThat(reddit.ingest().commentsPerItem()).isEqualTo(20);
+    assertThat(reddit.ingest().maxRps()).isEqualTo(0.5);
+    assertThat(reddit.ingest().auth().mode()).isEqualTo(AuthSpec.Mode.OAUTH2_CLIENT_CREDENTIALS);
+    assertThat(reddit.ingest().auth().envVars()).containsExactly("W_REDDIT_ID", "W_REDDIT_SECRET");
+    assertThat(reddit.notes()).isEqualTo("waiting on approval");
+
+    // Defaults: enabled, 30 days, 100 items, 100 comments each, 1 rps.
+    Community youtube = cfg.communities().get(1);
+    assertThat(youtube.source()).isEqualTo(CommunitySource.YOUTUBE);
+    assertThat(youtube.id()).isEqualTo("@WidgetReviews");
+    assertThat(youtube.enabled()).isTrue();
+    assertThat(youtube.ingest().windowDays()).isEqualTo(30);
+    assertThat(youtube.ingest().maxItems()).isEqualTo(100);
+    assertThat(youtube.ingest().commentsPerItem()).isEqualTo(100);
+    assertThat(youtube.ingest().maxRps()).isEqualTo(1.0);
+    assertThat(youtube.ingest().auth().envVars()).containsExactly("W_YOUTUBE_KEY");
+
+    assertThat(cfg.enabledCommunities()).extracting(Community::name).containsExactly("yt_widgets");
+  }
+
+  @Test
+  void rejectsABadCommunitiesSectionNamingEveryProblem() {
+    assertThatThrownBy(() -> loader.load(FIXTURES.resolve("bad-communities.yaml")))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("communities.r_widgets: `id` is the bare subreddit name")
+        .hasMessageContaining("communities.r_widgets.ingest: `max_rps` must be > 0 and <= 2.0")
+        .hasMessageContaining("communities.r_widgets.ingest.auth: `env_vars` must name exactly two")
+        .hasMessageContaining("communities.r_widgets: duplicate community name")
+        .hasMessageContaining("communities.r_widgets.ingest: `window_days` must be > 0")
+        .hasMessageContaining("communities.r_widgets.ingest.auth: `env_vars` must name exactly one")
+        .hasMessageContaining("communities.no_source: `source` is required");
+  }
+
+  @Test
+  void rejectsAnUnknownCommunitySource() {
+    String yaml =
+        FixtureServer.Fixtures.read("categories/good-communities.yaml")
+            .replace("source: youtube", "source: tiktok");
+    assertThatThrownBy(
+            () ->
+                loader.load(
+                    new java.io.ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)),
+                    "inline"))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("unknown community source 'tiktok'");
   }
 
   @Test
@@ -79,6 +143,26 @@ class CategoryConfigLoaderTest {
     assertThat(cfg.retailer("bestbuy")).isPresent();
     assertThat(cfg.retailer("bestbuy").orElseThrow().enabled()).isFalse();
     assertThat(cfg.retailer("bestbuy").orElseThrow().notes()).contains("BESTBUY_API_KEY");
+    // Communities (M8): the subreddits wait on Reddit's approval, disabled with the reason;
+    // the channels are enabled and read with a key the environment supplies.
+    assertThat(cfg.communities()).isNotEmpty();
+    assertThat(cfg.communities())
+        .filteredOn(c -> c.source() == CommunitySource.REDDIT)
+        .isNotEmpty()
+        .allSatisfy(
+            c -> {
+              assertThat(c.enabled()).isFalse();
+              assertThat(c.notes()).contains("Responsible Builder Policy");
+            });
+    assertThat(cfg.enabledCommunities())
+        .isNotEmpty()
+        .allSatisfy(
+            c -> {
+              assertThat(c.source()).isEqualTo(CommunitySource.YOUTUBE);
+              assertThat(c.ingest().auth().envVars()).containsExactly("YOUTUBE_API_KEY");
+              assertThat(c.ingest().maxRps())
+                  .isLessThanOrEqualTo(CategoryConfigLoader.MAX_ALLOWED_RPS);
+            });
   }
 
   @Test

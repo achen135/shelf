@@ -63,6 +63,7 @@ public final class FixtureServer implements AutoCloseable {
   private final Map<String, AtomicInteger> hits = new ConcurrentHashMap<>();
   private final List<String> userAgents = java.util.Collections.synchronizedList(new ArrayList<>());
   private final Map<String, List<Instant>> requestTimes = new ConcurrentHashMap<>();
+  private final Map<String, List<Map<String, String>>> requestHeaders = new ConcurrentHashMap<>();
 
   private FixtureServer(HttpServer server) {
     this.server = server;
@@ -140,6 +141,21 @@ public final class FixtureServer implements AutoCloseable {
     }
   }
 
+  /**
+   * The request headers of every request for {@code path} (registered path or path+query, as with
+   * {@link #hits}), one map per request in arrival order, header names lower-cased — for asserting
+   * that a credential travelled in a header and not in the URL.
+   */
+  public List<Map<String, String>> headers(String path) {
+    List<Map<String, String>> seen = requestHeaders.get(path);
+    if (seen == null) {
+      return List.of();
+    }
+    synchronized (seen) {
+      return List.copyOf(seen);
+    }
+  }
+
   /** Every User-Agent header seen, in arrival order. */
   public List<String> userAgents() {
     synchronized (userAgents) {
@@ -168,6 +184,14 @@ public final class FixtureServer implements AutoCloseable {
     requestTimes
         .computeIfAbsent(key, k -> java.util.Collections.synchronizedList(new ArrayList<>()))
         .add(Instant.now());
+    Map<String, String> headers = new java.util.HashMap<>();
+    exchange
+        .getRequestHeaders()
+        .forEach(
+            (name, values) -> headers.put(name.toLowerCase(java.util.Locale.ROOT), values.get(0)));
+    requestHeaders
+        .computeIfAbsent(key, k -> java.util.Collections.synchronizedList(new ArrayList<>()))
+        .add(Map.copyOf(headers));
 
     Response response =
         responses == null

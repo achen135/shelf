@@ -19,6 +19,8 @@ which is what makes a failure here mean "the retailer changed" or "we broke the 
 | `robots/*.txt` | — | — | hand-written. `shopify-style.txt` is a faithful subset of the rules the surveyed storefronts serve |
 | `categories/*.yaml` | — | — | hand-written config cases for the loader tests |
 | `labels/*.tsv` | — | — | hand-written entity-resolution label sets over the fixture category, for the eval tests (M3); `__PORT__` is substituted like the category template |
+| `reddit/*.json` | — | — | **not recorded**: hand-built to the Reddit Data API's documented `Listing` / `t3` / `t1` shapes, because no client is approved under the Responsible Builder Policy yet; `reddit/README.md` names each file's request and how to replace it with a scrubbed recording (M8) |
+| `youtube/*.json` | — | — | **not recorded**: hand-built to the YouTube Data API v3 `channels` / `playlistItems` / `commentThreads` resource docs, because no key existed; ids are visibly invented; `youtube/README.md` says how to record (M8) |
 
 ## Refreshing a captured fixture
 
