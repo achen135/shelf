@@ -224,7 +224,7 @@ communities:
 
   - name: yt_hipyo
     source: youtube
-    id: "@Hipyo"                  # a handle; the ingester resolves it through channels.list
+    id: "UCXlDgfWY2JbsYEam2m68Hyw"  # Hipyo Tech's channel id, not the @Hipyo handle — see notes
     ingest:
       window_days: 90
       max_items: 50
@@ -233,7 +233,15 @@ communities:
       auth:
         mode: api_key
         env_vars: ["YOUTUBE_API_KEY"]
-    notes: Hipyo Tech — keyboard reviews and rankings; handle checked 2026-09-17.
+    notes: >
+      Hipyo Tech — keyboard reviews and rankings. Was "@Hipyo" until 2026-09-17's first real
+      ingest returned 2013 DJ-competition videos: the handle now belongs to an unrelated
+      channel. M8's "handle checked 2026-09-17" only confirmed the handle resolved to *a*
+      channel (an HTTP 200 on the profile page), never that it was the right one — a live
+      check that wasn't actually a check. Pinned to the channel id instead, which a handle
+      reassignment cannot change; confirmed via channels.list (title "Hipyo Tech", description
+      names keyboards). yt_alexotos / yt_keybored's handles pulled correct, on-topic content on
+      the same run and are left as handles.
 
   - name: yt_alexotos
     source: youtube
