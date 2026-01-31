@@ -1,0 +1,32 @@
+name: widgets
+spec_schema:
+  finish: { type: string, enum: [matte, gloss] }
+retailers:
+  - name: shop_one
+    base_url: "https://shop-one.test"
+    brand_source: fixed
+    brand: ShopOne
+    fetch:
+      mode: api
+      list_paths: ["/collections/widgets/products.json?limit={limit}&page={page}"]
+      auth: { mode: none }
+    parser: shopify_products_json
+seed_products:
+  - { brand: "ShopOne", model: "W1", canonical_name: "ShopOne W1" }
+communities:
+  - name: r_widgets
+    source: reddit
+    id: r/widgets
+    ingest:
+      max_rps: 5
+      auth: { mode: oauth2_client_credentials, env_vars: ["ONLY_ONE"] }
+  - name: r_widgets
+    source: youtube
+    id: "@Dup"
+    ingest:
+      window_days: 0
+      auth: { mode: api_key, env_vars: ["A", "B"] }
+  - name: no_source
+    id: "x"
+    ingest:
+      auth: { mode: none }

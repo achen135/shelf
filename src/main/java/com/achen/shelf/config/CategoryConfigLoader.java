@@ -110,6 +110,7 @@ public final class CategoryConfigLoader {
     validateRetailers(cfg, errors);
     validateSeeds(cfg, errors);
     validateResolution(cfg, errors);
+    validateCommunities(cfg, errors);
 
     if (!errors.isEmpty()) {
       StringBuilder sb = new StringBuilder(source + " is not a valid category config:");
@@ -268,6 +269,74 @@ public final class CategoryConfigLoader {
     }
     if (cfg.resolution().nonProductPhrases().stream().anyMatch(CategoryConfigLoader::isBlank)) {
       errors.add("resolution.non_product_phrases: contains a blank phrase");
+    }
+  }
+
+  private void validateCommunities(CategoryConfig cfg, List<String> errors) {
+    Set<String> seen = new HashSet<>();
+    for (int i = 0; i < cfg.communities().size(); i++) {
+      Community c = cfg.communities().get(i);
+      String path = "communities[" + i + "]";
+      if (isBlank(c.name())) {
+        errors.add(path + ": `name` is required");
+      } else {
+        path = "communities." + c.name();
+        if (!seen.add(c.name())) {
+          errors.add(path + ": duplicate community name");
+        }
+      }
+      if (c.source() == null) {
+        errors.add(path + ": `source` is required (`reddit` or `youtube`)");
+      }
+      if (isBlank(c.id())) {
+        errors.add(path + ": `id` is required (a subreddit name, a channel id or an @handle)");
+      } else if (c.source() == CommunitySource.REDDIT && c.id().startsWith("r/")) {
+        errors.add(path + ": `id` is the bare subreddit name, without `r/` (got '" + c.id() + "')");
+      }
+      validateIngest(c, path, errors);
+    }
+  }
+
+  private void validateIngest(Community c, String path, List<String> errors) {
+    IngestSpec s = c.ingest();
+    if (s == null) {
+      errors.add(path + ": `ingest` is required");
+      return;
+    }
+    if (s.windowDays() <= 0) {
+      errors.add(path + ".ingest: `window_days` must be > 0 (got " + s.windowDays() + ")");
+    }
+    if (s.maxItems() <= 0) {
+      errors.add(path + ".ingest: `max_items` must be > 0 (got " + s.maxItems() + ")");
+    }
+    if (s.commentsPerItem() < 0) {
+      errors.add(
+          path + ".ingest: `comments_per_item` must be >= 0 (got " + s.commentsPerItem() + ")");
+    }
+    if (s.maxRps() <= 0 || s.maxRps() > MAX_ALLOWED_RPS) {
+      errors.add(
+          path
+              + ".ingest: `max_rps` must be > 0 and <= "
+              + MAX_ALLOWED_RPS
+              + " (got "
+              + s.maxRps()
+              + ")");
+    }
+    // The ingesters read credentials by position, so the count is part of the contract: Reddit's
+    // application-only OAuth takes a client id and a secret, YouTube's Data API one key.
+    int want = c.source() == CommunitySource.REDDIT ? 2 : 1;
+    if (c.source() != null && s.auth().envVars().size() != want) {
+      errors.add(
+          path
+              + ".ingest.auth: `env_vars` must name exactly "
+              + (want == 2
+                  ? "two variables (client id, client secret)"
+                  : "one variable (the API key)")
+              + " for a "
+              + lower(c.source())
+              + " community (got "
+              + s.auth().envVars().size()
+              + ")");
     }
   }
 
