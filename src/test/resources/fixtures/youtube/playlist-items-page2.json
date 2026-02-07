@@ -1,38 +1,55 @@
 {
   "kind": "youtube#playlistItemListResponse",
-  "pageInfo": {"totalResults": 4, "resultsPerPage": 50},
   "items": [
     {
       "kind": "youtube#playlistItem",
-      "id": "pli-003",
+      "id": "VVV6cW1UdFJxakJnUV9jeWJla0tWR0hBLmZSaDlJRmhVQ01R",
       "snippet": {
-        "publishedAt": "2026-01-20T12:00:00Z",
-        "channelId": "UCfixturechannel000000001",
-        "title": "GMMK 3 HE: the rapid trigger question",
-        "description": "Is the HE version worth the premium over the GMMK 3?",
-        "channelTitle": "Fixture Keys",
-        "playlistId": "UUfixturechannel000000001",
-        "position": 2,
-        "resourceId": {"kind": "youtube#video", "videoId": "vid-003"},
-        "videoOwnerChannelId": "UCfixturechannel000000001"
+        "publishedAt": "2024-10-20T14:00:39Z",
+        "channelId": "UCzqmTtRqjBgQ_cybekKVGHA",
+        "title": "TESS65 is Divinikey's $65 Keyboard for Everyone",
+        "description": "#keybored TESS65 is Divinikey's $65 Keyboard for Everyone\nThis video is sponsored by FISHFISH!\n\nSo... mechanical keyboards have come down in price quite a bit these days... so great keyboards are becoming more and more attainable to everyone, at pretty much price points that were unthinkable even ju…",
+        "channelTitle": "Keybored",
+        "playlistId": "UUzqmTtRqjBgQ_cybekKVGHA",
+        "position": 50,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "fRh9IFhUCMQ"
+        },
+        "videoOwnerChannelTitle": "Keybored",
+        "videoOwnerChannelId": "UCzqmTtRqjBgQ_cybekKVGHA"
       },
-      "contentDetails": {"videoId": "vid-003", "videoPublishedAt": "2026-01-20T12:00:00Z"}
+      "contentDetails": {
+        "videoId": "fRh9IFhUCMQ",
+        "videoPublishedAt": "2024-10-20T14:00:39Z"
+      }
     },
     {
       "kind": "youtube#playlistItem",
-      "id": "pli-004",
+      "id": "VVV6cW1UdFJxakJnUV9jeWJla0tWR0hBLlhTSGFUcmM1TGNz",
       "snippet": {
-        "publishedAt": "2025-12-15T12:00:00Z",
-        "channelId": "UCfixturechannel000000001",
-        "title": "An upload from before the window",
-        "description": "Should never be ingested with a 30-day window ending 2026-01-31.",
-        "channelTitle": "Fixture Keys",
-        "playlistId": "UUfixturechannel000000001",
-        "position": 3,
-        "resourceId": {"kind": "youtube#video", "videoId": "vid-old"},
-        "videoOwnerChannelId": "UCfixturechannel000000001"
+        "publishedAt": "2024-10-12T14:00:24Z",
+        "channelId": "UCzqmTtRqjBgQ_cybekKVGHA",
+        "title": "Reason Why People Hate Mechanical Keyboards - Anti Quiet Class 1800",
+        "description": "#keybored Reason Why People Hate Mechanical Keyboards - Anti Quiet Class 1800\n\nSo... you work in the office.  You have a fancy new mechanical keyboard with the perfect acoustics... but... everyone is complaining.  Do you just succumb to the pressure and relegate to a quiet membrane keyboard?  OR do …",
+        "channelTitle": "Keybored",
+        "playlistId": "UUzqmTtRqjBgQ_cybekKVGHA",
+        "position": 51,
+        "resourceId": {
+          "kind": "youtube#video",
+          "videoId": "XSHaTrc5Lcs"
+        },
+        "videoOwnerChannelTitle": "Keybored",
+        "videoOwnerChannelId": "UCzqmTtRqjBgQ_cybekKVGHA"
       },
-      "contentDetails": {"videoId": "vid-old", "videoPublishedAt": "2025-12-15T12:00:00Z"}
+      "contentDetails": {
+        "videoId": "XSHaTrc5Lcs",
+        "videoPublishedAt": "2024-10-12T14:00:24Z"
+      }
     }
-  ]
+  ],
+  "pageInfo": {
+    "totalResults": 231,
+    "resultsPerPage": 2
+  }
 }

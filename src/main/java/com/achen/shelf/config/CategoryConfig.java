@@ -20,6 +20,7 @@ import java.util.Optional;
  * @param resolution what entity resolution should know about this category; optional
  * @param communities where people talk about these products (M8); optional, empty means the
  *     category has no community track
+ * @param sentiment the category's own words of praise and complaint (M9); optional
  */
 public record CategoryConfig(
     String name,
@@ -27,7 +28,8 @@ public record CategoryConfig(
     List<Retailer> retailers,
     List<SeedProduct> seedProducts,
     ResolutionConfig resolution,
-    List<Community> communities) {
+    List<Community> communities,
+    SentimentConfig sentiment) {
 
   public CategoryConfig {
     specSchema = specSchema == null ? Map.of() : Map.copyOf(specSchema);
@@ -35,6 +37,18 @@ public record CategoryConfig(
     seedProducts = seedProducts == null ? List.of() : List.copyOf(seedProducts);
     resolution = resolution == null ? ResolutionConfig.NONE : resolution;
     communities = communities == null ? List.of() : List.copyOf(communities);
+    sentiment = sentiment == null ? SentimentConfig.NONE : sentiment;
+  }
+
+  /** The v1 + M8 shape, for callers that build a config by hand. */
+  public CategoryConfig(
+      String name,
+      Map<String, SpecField> specSchema,
+      List<Retailer> retailers,
+      List<SeedProduct> seedProducts,
+      ResolutionConfig resolution,
+      List<Community> communities) {
+    this(name, specSchema, retailers, seedProducts, resolution, communities, null);
   }
 
   /** The retailers a crawl should actually visit, in config order. */
@@ -59,7 +73,9 @@ public record CategoryConfig(
       @JsonProperty("retailers") List<Retailer> retailers,
       @JsonProperty("seed_products") List<SeedProduct> seedProducts,
       @JsonProperty("resolution") ResolutionConfig resolution,
-      @JsonProperty("communities") List<Community> communities) {
-    return new CategoryConfig(name, specSchema, retailers, seedProducts, resolution, communities);
+      @JsonProperty("communities") List<Community> communities,
+      @JsonProperty("sentiment") SentimentConfig sentiment) {
+    return new CategoryConfig(
+        name, specSchema, retailers, seedProducts, resolution, communities, sentiment);
   }
 }

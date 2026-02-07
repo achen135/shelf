@@ -53,6 +53,22 @@ class ScorerTest {
   }
 
   @Test
+  void aOneTokenModelWrittenApartCounts() {
+    // M9: "Hack 70" for the HACK70 — and the span covers both written tokens.
+    Scorer.Score s =
+        scorer.score(listing("Epomaker Hack 70 Ortholinear Keyboard"), product("HACK70"), Set.of());
+    assertThat(s.value()).isEqualTo(1.0);
+    assertThat(s.reasons()).containsExactly("model appears written apart (hack 70)");
+    assertThat(s.start()).isEqualTo(1);
+    assertThat(s.end()).isEqualTo(2);
+    assertThat(Scorer.splitLettersFromDigits("hack70")).containsExactly("hack", "70");
+    assertThat(Scorer.splitLettersFromDigits("60he")).containsExactly("60", "he");
+    assertThat(Scorer.splitLettersFromDigits("kbd67")).containsExactly("kbd", "67");
+    assertThat(Scorer.splitLettersFromDigits("studio")).containsExactly("studio");
+    assertThat(Scorer.splitLettersFromDigits("75")).containsExactly("75");
+  }
+
+  @Test
   void aModelWrittenAsOneTokenCounts() {
     Scorer.Score s = scorer.score(listing("Keychron Q1Pro Keyboard"), product("Q1 Pro"), Set.of());
     assertThat(s.value()).isEqualTo(1.0);

@@ -1,0 +1,111 @@
+# Shelf — mention-resolution labels for the keyboards category (M9).
+#
+# One line per (raw mention, seed product) pair: does this text refer to that catalog product?
+# Written by hand from the text alone — before any mention matcher existed or scored anything —
+# over the real corpus `shelf ingest` read on 2026-09-17: 3,206 YouTube rows (96 uploads, 3,110
+# top-level comments) from three keyboard channels (Hipyo Tech, Alexotos, Keybored), against the
+# 50 keyboard seed products. Candidate rows were pulled by a plain token scan for any catalog brand
+# or model-family word (a substring grep, not a scorer); every pair below was then read and judged.
+#
+# Policy. A pair matches when the text names that product specifically — owned, wanted, asked
+# about, reviewed, recommended, linked in a description, in any colourway or layout — including
+# shorthand a reader would resolve without doubt ("gmmk pro", "rainy 75 pro", "Hack 70" for the
+# HACK70, a typo like "duck one x mini"). It does not match when the text names a sibling in the
+# same line (Q3 HE is not the Q6 HE; 80HE is not the 60HE+; K2 HE / K2 Max are not the K2 Ultra;
+# a bare "HE75 V2" is not the HE75 V2 TMR — the catalog product is the TMR variant and one
+# comment says "no TMR" outright), a same-named product from another maker (Yunzii's RT75 Pro is
+# not Epomaker's RT75), a family or brand without a model ("that HHKB", "the full sized tofu",
+# "what's wrong with Keychron"), an English word that happens to be a model ("my studio", "dry
+# studio" for the HHKB Studio), or a different product whose name shares a token.
+#
+# Frozen 2026-09-17 before the first score. What is tuned after measuring is the matcher and the
+# category config (aliases), and docs/benchmarks/m9-mention-resolution.md says which.
+#
+# source	source_id	excerpt	brand	model	match	note
+youtube_comment	Ugw9Fosms10MSbnha6h4AaABAg	Day 1 of asking Hipyo to review the Ducky One X Mini Wireless	Ducky	One X Mini	true	named in full
+youtube_comment	UgwpVBqw24o5PV9dNcR4AaABAg	day 2 ofasking hipyo to review the duck one x mini wireless	Ducky	One X Mini	true	brand typo, model whole
+youtube_video	KGKtbvOczTg	I Tried the Strangest keyboard on Amazon... | I tried the Epomaker Hack 70 keyboard	Epomaker	HACK70	true	written as two tokens; the description also links epomaker-hack70
+youtube_comment	Ugwd93eaHZ6djEwAyJl4AaABAg	this epomaker hack 70 has the same silhouette as my cidoo qk61	Epomaker	HACK70	true	two tokens
+youtube_video	O-QJvTKotAM	Don't Buy A Hall Effect keyboard... | I look at the Epomaker HE75 V2 TMR	Epomaker	HE75 V2 TMR	true	named in full
+youtube_comment	UgxIbZJFvCFIida5gD94AaABAg	I got my start in the hobby with a keychron and unfortunately a gmmk pro	Glorious	GMMK Pro	true	brand unstated, model distinctive
+youtube_comment	UgzSGXWcWunIvy_X-iJ4AaABAg	my orange Athena 75 just showed up	KBDfans	Athena 75	true	brand unstated
+youtube_video	DKpH1QdcOHc	Athena 75 w/ Keygeek SU Color V2	KBDfans	Athena 75	true	title
+youtube_comment	Ugx_MMLui1DOeA4PV7d4AaABAg	i have the keychron Q15 Max ... and i absolutely love it!	Keychron	Q15 Max	true	named in full
+youtube_comment	UgzdF-1lOzwBbfrM8Q14AaABAg	I was eyeing the Rainy 75 pro black with DE-ISO for 135€	WOBKEY	Rainy 75 Pro	true	brand unstated, colourway
+youtube_comment	Ugxc7JQT3XYYt8ztbDF4AaABAg	I got rainy 75 pro with 74 dollars is 100 %new is it worth it	WOBKEY	Rainy 75 Pro	true	brand unstated
+youtube_comment	UgySOr0zkP-a_BNiS_94AaABAg	Day 1 of asking for a wooting 60he v2	Wooting	60HE V2	true	named in full
+youtube_comment	Ugyt66kd39RSHzxpGEx4AaABAg	5 hundo likes and HE buys me a WOOTING 60HE V2	Wooting	60HE V2	true	named in full
+youtube_comment	UgySOr0zkP-a_BNiS_94AaABAg	Day 1 of asking for a wooting 60he v2	Wooting	60HE+	false	the V2 is a sibling; '60he' is inside '60he v2'
+youtube_comment	Ugyt66kd39RSHzxpGEx4AaABAg	5 hundo likes and HE buys me a WOOTING 60HE V2	Wooting	60HE+	false	sibling
+youtube_comment	Ugzm4YYlDGMkGI_PmYZ4AaABAg	hey hipyo i got the HE75 v2 (no TMR)	Epomaker	HE75 V2 TMR	false	says no TMR
+youtube_comment	UgyI3XnYc-dLNVsVB3V4AaABAg	I returned my HE75 v2 so fast and bought this one	Epomaker	HE75 V2 TMR	false	bare HE75 V2
+youtube_comment	Ugww5kj-HAy6-g1I1Wt4AaABAg	Please review the Epomaker HE75 V2 magnetic keyboard ... And it's hall effect	Epomaker	HE75 V2 TMR	false	the hall-effect sibling
+youtube_comment	Ugy_IE3W_O5DysE5LjN4AaABAg	im planing on geting the epomaker 75he v2 should i get it???	Epomaker	HE75 V2 TMR	false	75he v2, not the TMR
+youtube_comment	UgzodytelDUO53WWmLl4AaABAg	on the "EPOMAKER HE75 V2 Hall Effect Gaming Keyboard, 8K Polling	Epomaker	HE75 V2 TMR	false	the hall-effect sibling, quoted from a listing
+youtube_comment	Ugy-YNkShtPCJNxLucB4AaABAg	can you pleaaassee do a review on the keychron k2 max QMK	Keychron	K2 Ultra	false	K2 Max is a sibling
+youtube_comment	UgxDiueWHeI_sUWfPAd4AaABAg	I'm happy with my stock Keychron K2 HE SE (sounds better than my heavily modified old mechanical K2 v2)	Keychron	K2 Ultra	false	K2 HE and K2 v2 are siblings
+youtube_comment	UgzmONLhTdNm4fXNLUl4AaABAg	Is it true keychron actually uses tmr switches for example in the k2 he?	Keychron	K2 Ultra	false	sibling
+youtube_comment	UgwZu8mjyFoct_To9il4AaABAg	try keychron q3 he 8k tkl its so creamy	Keychron	Q6 HE	false	Q3 HE is a sibling
+youtube_comment	UgxjQS9c9ESqGMoO3zJ4AaABAg	can you pls review the keychron q3 HE tkl 8k	Keychron	Q6 HE	false	sibling
+youtube_comment	UgxHa0XB2pypZKZDRoN4AaABAg	do you think the keychron q3 tkl (blue) would be a good option ?	Keychron	Q6 HE	false	sibling
+youtube_comment	UgwkQcr2fegjdr_KEhl4AaABAg	i would pick this up over the Keychron q13 ultra ive been eyeballing	Keychron	K10 Ultra	false	Q13 Ultra is a sibling
+youtube_comment	UgwkQcr2fegjdr_KEhl4AaABAg	i would pick this up over the Keychron q13 ultra ive been eyeballing	Keychron	Q15 Max	false	sibling
+youtube_comment	UgxMpH8bW5CH5n1Jm6B4AaABAg	wait, my keychron v1 max doesnt have the end key	Keychron	Q1 Pro	false	V1 Max is a different line
+youtube_comment	UgwpXw-KyTBDMxsOg8l4AaABAg	could you review the keychron k10 he pls	Keychron	K10 Ultra	false	K10 HE is a sibling
+youtube_comment	Ugy00NVlOdRfRP9E6qF4AaABAg	could you try the Keychron J8 HE	Keychron	K8 Ultra	false	different line
+youtube_comment	UgzmwmlyVKjpOoS3VYJ4AaABAg	Compare against the Keychron H8 HE. What would you say?	Keychron	K8 Ultra	false	different line
+youtube_comment	UgzRY4WjZizb8BeBeMZ4AaABAg	Try the keychron j4	Keychron	Q4	false	different line
+youtube_comment	UgySwonIDhG0oFXqkJF4AaABAg	you should get the keychron c3 pro	Keychron	Q1 Pro	false	different line; 'pro' shared
+youtube_comment	Ugw0lJPouSr4AoWNJiN4AaABAg	YO HIPYO TRY THE KEYCHRON K HE	Keychron	K6 HE	false	no model number
+youtube_comment	Ugwm9OgM5nJ8S_-5ymx4AaABAg	I'm still more excited about the Neo75 Cu ... And yes, please kill Keychron. xD	Keychron	Q1 Pro	false	brand only
+youtube_comment	Ugwx54UC6kVQscoc30Z4AaABAg	Haven't really kept up with Keyboards in a long time, what's wrong with Keychron?	Keychron	Q2	false	brand only
+youtube_comment	UgzpXtfG5Rmg4vwawd14AaABAg	just get a wooting 80HE at this point	Wooting	60HE+	false	80HE is a sibling
+youtube_comment	UgzpXtfG5Rmg4vwawd14AaABAg	just get a wooting 80HE at this point	Wooting	60HE V2	false	sibling
+youtube_comment	UgxGaBvEYsywd1_dckR4AaABAg	Wooting 80he just sitting in the bg	Wooting	60HE+	false	sibling
+youtube_comment	UgyMlsdsHrMwPOjYJ3h4AaABAg	i just got the wooting 80he. it sounds so good	Wooting	60HE V2	false	sibling
+youtube_comment	UgwMW1W6iqP6xte8l994AaABAg	are you going to review the wooting 80he+ once it comes out?	Wooting	60HE+	false	sibling; '+' is folded away by normalization
+youtube_comment	Ugz50fUOJX66MEO3UfB4AaABAg	It's like a wooting 80 HE but its like 60 $	Wooting	60HE+	false	'80 he' written apart; sibling
+youtube_comment	Ugz8y3IwkWq9poAfgbd4AaABAg	1000 likes and he buys me a wooting 80he	Wooting	60HE V2	false	sibling
+youtube_comment	UgwcsmN60DdNe9vavZ14AaABAg	If this comment gets 175 likes he has to buy me a wooting 80he	Wooting	60HE+	false	sibling
+youtube_comment	Ugw9P4RoHoE-bI_Jmxh4AaABAg	Better sound that wooting actually	Wooting	60HE+	false	brand only
+youtube_comment	UgxAlj6p_S7noP8VYnh4AaABAg	Do a video on the wooting keyboards	Wooting	60HE V2	false	brand only
+youtube_comment	Ugy64Xdma6U5OUEUvoB4AaABAg	How about the Aula win60HE?	Wooting	60HE+	false	'win60he' is one token of another maker's model
+youtube_comment	UgxNKXH9DMr01VsZ2F94AaABAg	Yo Hipyo, can you review the Yunzii RT75 Pro?	Epomaker	RT75	false	Yunzii's RT75 Pro, not Epomaker's RT75
+youtube_comment	Ugz2ijXS0HjkMFcqCuF4AaABAg	Yunzii rt75 pro. Wireless 8k. ... Sound really nice.	Epomaker	RT75	false	another maker
+youtube_comment	Ugy2IM92GU_whJusD4d4AaABAg	you should try the yunzii rt75 pro. it's my main keyboard and it's great.	Epomaker	RT75	false	another maker
+youtube_comment	Ugzdgbj0oqeRR8swH114AaABAg	Please try the yunzii rt75 pro or the x68 he	Epomaker	RT75	false	another maker
+youtube_comment	UgzUenzm6TFobJjU4D14AaABAg	I love dry studio/angry miao ... I thought of dry studio immediately	HHKB	Studio	false	Dry Studio is a maker
+youtube_comment	Ugz3nTpUFS5dv7VG9H94AaABAg	did you get a new studio? Digging it either way.	HHKB	Studio	false	the room
+youtube_comment	UgxmAPxuc0lRAwhharJ4AaABAg	that's absolutely ridiculous. i need one for my studio	HHKB	Studio	false	the room
+youtube_comment	UgyOiI7_i2gIN6Dsx8B4AaABAg	man I always wanted a cup holder on my keyboard thanks lemiao studio.	HHKB	Studio	false	a maker's name
+youtube_comment	Ugxh1uzFaaPcGPDMXGt4AaABAg	This just means Angry Meow and Ry Studio took all the kickstarter money	HHKB	Studio	false	a maker's name
+youtube_comment	UgzZjRhWAyk9r942J154AaABAg	even with tariffs the dry studio version is still cheaper	HHKB	Studio	false	a maker's name
+youtube_comment	UgyeaSIcBbufZn3DGhB4AaABAg	That smile when you were typing on that HHKB!	HHKB	Studio	false	family only
+youtube_comment	UgyeaSIcBbufZn3DGhB4AaABAg	That smile when you were typing on that HHKB!	HHKB	Hybrid Type-S	false	family only
+youtube_comment	UgwW2IHiYdV_FF8NEzR4AaABAg	after I got my first Pro 2 Type S and now EC is becoming more widespread beyond Realforce / Leopold / HHKB	HHKB	Classic Type-S	false	Pro 2 Type-S is the prior generation
+youtube_comment	UgwW2IHiYdV_FF8NEzR4AaABAg	after I got my first Pro 2 Type S and now EC is becoming more widespread beyond Realforce / Leopold / HHKB	Leopold	FC660M	false	brand only
+youtube_comment	UgyAW8rjfArtxL4a0PJ4AaABAg	Hey, What is the name of the HHKB you use at the beginning of the video?	HHKB	Studio	false	family only
+youtube_comment	Ugxmhinwqy3EVh1PWnF4AaABAg	I did the same to mine hhkb and the sound is now so much better	HHKB	Hybrid Type-S	false	family only
+youtube_comment	UgyPgce3m7AjHjz_5-h4AaABAg	Delian HHKB already sold out?	HHKB	Studio	false	family only
+youtube_comment	UgwMIf8gVwb8kozHpB54AaABAg	Can you review the full sized tofu when it comes out please	KBDfans	Tofu60 Redux	false	family only
+youtube_comment	Ugyqs4ARbSTW0tcnYFR4AaABAg	a basic metal case mech board would've cost us 300-400$ (tofu)	KBDfans	Tofu60 Redux	false	family only
+youtube_comment	UgyPlEUA5SXGGG89xJh4AaABAg	Now I wait for Tofu 1800.	KBDfans	Tofu60 Redux	false	a sibling
+youtube_video	ndEd8FmC948	The TOFULL — A Full Size Tofu ... About Time.	KBDfans	Tofu60 Redux	false	a sibling; kbdfans is in every description's affiliate links
+youtube_comment	UgyBFivQsj6grcoKePF4AaABAg	This is not the Lofree Flow, this is the Lofree Flow Lite.	Lofree	Flow 2 68	false	Flow and Flow Lite are siblings
+youtube_comment	UgyooGxdc1nULWBAG6B4AaABAg	of course my lofree flow lite goes on sale not 2 weeks after I ordered one lol	Lofree	Flow 2 68	false	sibling
+youtube_comment	UgwHMNZIzfE8K7l0kqB4AaABAg	That's the flow lite you sily	Lofree	Flow 2 68	false	sibling
+youtube_comment	UgysLiGULTP27hHanBB4AaABAg	Sees the word flow, hears the work creamy	Lofree	Flow 2 68	false	the word
+youtube_comment	UgwFtGMqLo3_Q3i-4zJ4AaABAg	Hipyo what do you think about the ducky one 3 mini	Ducky	One 2 Mini Pro	false	One 3 is the next generation
+youtube_comment	UgwFtGMqLo3_Q3i-4zJ4AaABAg	Hipyo what do you think about the ducky one 3 mini	Ducky	One X Mini	false	sibling
+youtube_comment	UgwJFVd_YH2CNppcRil4AaABAg	hipyo can you make a review on the ducky ok-m keyboards pleaseeeeeee	Ducky	OK-M 65	false	the line, not the 65
+youtube_video	Gr_IwNnSrXA	The Ducky Cushion 98	Ducky	One X Mini	false	a different product
+youtube_comment	UgxeNU7iVW9ZvhbJH5h4AaABAg	You should review the glorious gmmk 2 it's sounds good	Glorious	GMMK 3	false	GMMK 2 is a sibling
+youtube_comment	UgxeNU7iVW9ZvhbJH5h4AaABAg	You should review the glorious gmmk 2 it's sounds good	Glorious	GMMK Pro	false	sibling
+youtube_comment	UgwrKnH2xBL1Wm-4VMR4AaABAg	I think it might still look ok on my Akko MU02?	Akko	MU01	false	MU02 is a sibling
+youtube_comment	UgzMkbrnHGDHahO3MV94AaABAg	The Epomaker TH80 is on sale, though only 20% off.	Epomaker	TH65	false	TH80 is a sibling
+youtube_comment	UgzVGib58LcYRpyEbPF4AaABAg	I picked up an Epomaker TH80 Pro V2 on Prime Day.	Epomaker	TH65	false	sibling
+youtube_comment	Ugz32HLzVhxd2bXatV14AaABAg	What do you think about Epomaker TH87?	Epomaker	TH65	false	sibling
+youtube_comment	UgzfnxQdj1w-GIXJLaN4AaABAg	Just bought epomaker he108.  Glad with it :)	Epomaker	HE75 V2 TMR	false	a different line
+youtube_comment	UgwN80EZS5W9KUSCvnZ4AaABAg	try the epomaker g84 HE, a magnetic switch keyboard	KBDfans	+84 Classic TKL	false	'84' shared with another maker's model
+youtube_comment	UgyjBuqzpFWQywy6jth4AaABAg	I want one in a sword	Varmilo	Sword68	false	the word
+youtube_video	k-2UfjwdDaE	Neo75 Prebuilt Is More Than Great at $169.00	KBDfans	Odin 75	false	a different maker's 75; kbdfans only in the affiliate links

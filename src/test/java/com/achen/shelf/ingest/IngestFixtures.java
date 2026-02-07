@@ -14,15 +14,20 @@ import java.util.Map;
 
 /**
  * The two platforms, as served by a {@link FixtureServer}: the requests the ingesters make, in the
- * exact query-string form they make them, mapped to the fixture files (whose READMEs say they are
- * hand-built to the documented shapes, not recorded).
+ * exact query-string form they make them, mapped to the fixture files (the YouTube ones recorded
+ * from a real channel and scrubbed, the Reddit ones hand-built to the documented shape — each
+ * directory's README says which and why).
  */
 final class IngestFixtures {
 
   private IngestFixtures() {}
 
-  /** The run instant every ingest test uses; the fixtures' dates are relative to it. */
-  static final Instant NOW = Instant.parse("2026-01-31T12:00:00Z");
+  /**
+   * The run instant every ingest test uses. The YouTube fixtures were recorded on 2026-09-18 and
+   * the Reddit ones hand-built around 2026-01-31, so the windows below are sized from this instant
+   * to put the same items inside and outside.
+   */
+  static final Instant NOW = Instant.parse("2026-09-18T00:00:00Z");
 
   static final Map<String, String> REDDIT_CREDENTIALS =
       Map.of("T_REDDIT_ID", "fixture-client-id", "T_REDDIT_SECRET", "fixture-client-secret");
@@ -36,7 +41,7 @@ final class IngestFixtures {
         "MechanicalKeyboards",
         true,
         new IngestSpec(
-            30,
+            260, // 2026-01-01 cutoff: the January posts inside, the 2025-12-15 one outside
             maxItems,
             commentsPerItem,
             2.0,
@@ -50,10 +55,10 @@ final class IngestFixtures {
     return new Community(
         "yt_fixture",
         CommunitySource.YOUTUBE,
-        "@FixtureKeys",
+        "@Keybored",
         true,
         new IngestSpec(
-            30,
+            120, // 2026-05-21 cutoff: page 1's three uploads inside, page 2's first outside
             maxItems,
             commentsPerItem,
             2.0,
@@ -89,23 +94,23 @@ final class IngestFixtures {
 
   static FixtureServer serveYoutube(FixtureServer server) {
     server.serveFixture(
-        "/channels?part=contentDetails&forHandle=@FixtureKeys", // the server sees the decoded query
+        "/channels?part=contentDetails&forHandle=@Keybored", // the server sees the decoded query
         "youtube/channels-forhandle.json",
         "application/json");
     server.serveFixture(
-        "/playlistItems?part=snippet,contentDetails&playlistId=UUfixturechannel000000001&maxResults=50",
+        "/playlistItems?part=snippet,contentDetails&playlistId=UUzqmTtRqjBgQ_cybekKVGHA&maxResults=50",
         "youtube/playlist-items-page1.json",
         "application/json");
     server.serveFixture(
-        "/playlistItems?part=snippet,contentDetails&playlistId=UUfixturechannel000000001&maxResults=48&pageToken=FIXTUREPAGE2",
+        "/playlistItems?part=snippet,contentDetails&playlistId=UUzqmTtRqjBgQ_cybekKVGHA&maxResults=47&pageToken=EAAaHlBUOkNESWlFRVpCUlVFd1JFUkVRamxGUWpBNU16Yw",
         "youtube/playlist-items-page2.json",
         "application/json");
     server.serveFixture(
-        "/commentThreads?part=snippet&videoId=vid-001&maxResults=100&order=relevance&textFormat=plainText",
-        "youtube/comment-threads-vid-001.json",
+        "/commentThreads?part=snippet&videoId=4APvQf436YM&maxResults=100&order=relevance&textFormat=plainText",
+        "youtube/comment-threads-4APvQf436YM.json",
         "application/json");
     server.serveSequence(
-        "/commentThreads?part=snippet&videoId=vid-002&maxResults=100&order=relevance&textFormat=plainText",
+        "/commentThreads?part=snippet&videoId=aRouyD0wdWI&maxResults=100&order=relevance&textFormat=plainText",
         List.of(
             new FixtureServer.Response(
                 403,
@@ -114,8 +119,8 @@ final class IngestFixtures {
                 Duration.ZERO,
                 false)));
     server.serveFixture(
-        "/commentThreads?part=snippet&videoId=vid-003&maxResults=100&order=relevance&textFormat=plainText",
-        "youtube/comment-threads-vid-003.json",
+        "/commentThreads?part=snippet&videoId=75-H8kz5QbY&maxResults=100&order=relevance&textFormat=plainText",
+        "youtube/comment-threads-75-H8kz5QbY.json",
         "application/json");
     return server;
   }

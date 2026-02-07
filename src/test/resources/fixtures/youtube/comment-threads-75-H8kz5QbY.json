@@ -1,0 +1,37 @@
+{
+  "kind": "youtube#commentThreadListResponse",
+  "pageInfo": {
+    "totalResults": 25,
+    "resultsPerPage": 1
+  },
+  "items": [
+    {
+      "kind": "youtube#commentThread",
+      "id": "UgyS94MKXxoAubBkrz54AaABAg",
+      "snippet": {
+        "channelId": "UCzqmTtRqjBgQ_cybekKVGHA",
+        "videoId": "75-H8kz5QbY",
+        "topLevelComment": {
+          "kind": "youtube#comment",
+          "id": "UgyS94MKXxoAubBkrz54AaABAg",
+          "snippet": {
+            "channelId": "UCzqmTtRqjBgQ_cybekKVGHA",
+            "videoId": "75-H8kz5QbY",
+            "textDisplay": "Just to clarify, the 24k gold plating is done on the commemorative plate only! Sorry for confusion",
+            "textOriginal": "Just to clarify, the 24k gold plating is done on the commemorative plate only! Sorry for confusion",
+            "authorDisplayName": "viewer 3",
+            "authorChannelId": {
+              "value": "UCscrubbedviewer000000000003"
+            },
+            "likeCount": 1,
+            "publishedAt": "2026-06-23T17:01:47Z",
+            "updatedAt": "2026-06-23T17:01:47Z"
+          }
+        },
+        "canReply": true,
+        "totalReplyCount": 0,
+        "isPublic": true
+      }
+    }
+  ]
+}

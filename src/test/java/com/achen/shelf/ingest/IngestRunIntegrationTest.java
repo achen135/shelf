@@ -90,7 +90,7 @@ class IngestRunIntegrationTest extends PostgresTestBase {
     assertThat(count("select count(*) from raw_mentions")).isEqualTo(10);
     assertThat(count("select count(distinct (source, source_id)) from raw_mentions")).isEqualTo(10);
     // The re-sighting moved every row's fetched_at to the second run's instant.
-    assertThat(count("select count(*) from raw_mentions where fetched_at = '2026-01-31T18:00:00Z'"))
+    assertThat(count("select count(*) from raw_mentions where fetched_at = '2026-09-18T06:00:00Z'"))
         .isEqualTo(10);
   }
 
@@ -116,9 +116,9 @@ class IngestRunIntegrationTest extends PostgresTestBase {
     assertThat(
             count(
                 "select count(*) from raw_mentions where source = 'youtube_video'"
-                    + " and source_id = 'vid-001' and title like 'Keychron Q1 Pro review%'"
-                    + " and posted_at = '2026-01-30T15:00:00Z'"
-                    + " and permalink = 'https://www.youtube.com/watch?v=vid-001'"))
+                    + " and source_id = '4APvQf436YM' and title = 'Most OP Keyboard? Lofree Hyzen'"
+                    + " and posted_at = '2026-08-15T15:12:19Z'"
+                    + " and permalink = 'https://www.youtube.com/watch?v=4APvQf436YM'"))
         .isEqualTo(1);
     assertThat(count("select count(*) from raw_mentions where text in ('[deleted]', '[removed]')"))
         .isZero();
@@ -147,18 +147,21 @@ class IngestRunIntegrationTest extends PostgresTestBase {
     runner(Clock.fixed(IngestFixtures.NOW, ZoneOffset.UTC), bothCredentials()).run(category);
     // Age one video and its comments past the retention window, and one Reddit row further still.
     execute(
-        "update raw_mentions set fetched_at = '2025-12-01T00:00:00Z'"
-            + " where source_id in ('vid-003', 'cmt-0030', 't3_ghi789')");
+        "update raw_mentions set fetched_at = '2026-07-01T00:00:00Z'"
+            + " where source_id in ('75-H8kz5QbY', 'UgyS94MKXxoAubBkrz54AaABAg', 't3_ghi789')");
 
-    // A run 29 days on: the rows fetched on the first run are inside the 30 days and stay, the
-    // aged YouTube rows are not and go, whether or not the window re-sights them (it does not —
-    // by now only the newest fixture upload is inside it).
-    Clock later = Clock.fixed(IngestFixtures.NOW.plus(Duration.ofDays(29)), ZoneOffset.UTC);
+    // A run 29¾ days on: the rows fetched on the first run are inside the 30 days and stay; the
+    // aged June upload and its comment have fallen out of the 120-day window by a few hours, so
+    // nothing re-sights them, and they are older than 30 days — they go.
+    Clock later =
+        Clock.fixed(IngestFixtures.NOW.plus(Duration.ofDays(29).plusHours(18)), ZoneOffset.UTC);
     IngestSummary s = runner(later, bothCredentials()).run(category);
 
     assertThat(s.pruned()).isEqualTo(2);
     assertThat(
-            count("select count(*) from raw_mentions where source_id in ('vid-003', 'cmt-0030')"))
+            count(
+                "select count(*) from raw_mentions where source_id in"
+                    + " ('75-H8kz5QbY', 'UgyS94MKXxoAubBkrz54AaABAg')"))
         .isZero();
     // Reddit rows are not under the 30-day rule and are left alone.
     assertThat(count("select count(*) from raw_mentions where source_id = 't3_ghi789'"))

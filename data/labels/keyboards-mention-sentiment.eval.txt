@@ -1,0 +1,20 @@
+mention sentiment — keyboards
+63 labeled phrases, 0 skipped (text not in the database); accuracy 0.841 (53 right)
+confusion (rows = labeled, columns = read): positive negative neutral
+  positive        22        0        6
+  negative         1       11        1
+  neutral          2        0       20
+  positive  precision 0.880  recall 0.786
+  negative  precision 1.000  recall 0.846
+  neutral   precision 0.741  recall 0.909
+misses (labeled → read):
+  positive → neutral  'yunzii rt75 pro'  | label: sound really nice  | rule: nothing in the lexicon
+  positive → neutral  'epomaker hack 70'  | label: looks cool tho  | rule: nothing in the lexicon
+  positive → neutral  'melgeek'  | label: luxurious, highly recommend  | rule: nothing in the lexicon
+  positive → neutral  'th98'  | label: it's nice  | rule: a question
+  positive → neutral  'aula 80 he'  | label: super cheap compared to  | rule: a question
+  positive → neutral  'epomaker qk81'  | label: on sale for $36, has QMK/VIA  | rule: nothing in the lexicon
+  negative → positive  'gmmk pro'  | label: they both sucked  | rule: recommended
+  negative → neutral  'turtle beach command kb7'  | label: one of the WORST  | rule: worst, not scamming
+  neutral → positive  'rainy 75 pro'  | label: is it worth it  | rule: worth
+  neutral → positive  'akko tac75 he'  | label: is it really that good — a question  | rule: good, good

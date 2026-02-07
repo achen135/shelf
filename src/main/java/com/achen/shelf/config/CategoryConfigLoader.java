@@ -111,6 +111,7 @@ public final class CategoryConfigLoader {
     validateSeeds(cfg, errors);
     validateResolution(cfg, errors);
     validateCommunities(cfg, errors);
+    validateSentiment(cfg, errors);
 
     if (!errors.isEmpty()) {
       StringBuilder sb = new StringBuilder(source + " is not a valid category config:");
@@ -258,6 +259,14 @@ public final class CategoryConfigLoader {
       for (String problem : specValidator.validate(s.spec()).warnings()) {
         errors.add(path + ".spec: " + problem);
       }
+      Set<String> aliasesSeen = new HashSet<>();
+      for (String alias : s.aliases()) {
+        if (isBlank(alias)) {
+          errors.add(path + ".aliases: contains a blank alias");
+        } else if (!aliasesSeen.add(alias.strip().toLowerCase(Locale.ROOT))) {
+          errors.add(path + ".aliases: '" + alias + "' is listed twice");
+        }
+      }
     }
   }
 
@@ -337,6 +346,20 @@ public final class CategoryConfigLoader {
               + " community (got "
               + s.auth().envVars().size()
               + ")");
+    }
+  }
+
+  private void validateSentiment(CategoryConfig cfg, List<String> errors) {
+    if (cfg.sentiment().positive().stream().anyMatch(CategoryConfigLoader::isBlank)) {
+      errors.add("sentiment.positive: contains a blank phrase");
+    }
+    if (cfg.sentiment().negative().stream().anyMatch(CategoryConfigLoader::isBlank)) {
+      errors.add("sentiment.negative: contains a blank phrase");
+    }
+    Set<String> both = new HashSet<>(cfg.sentiment().positive());
+    both.retainAll(cfg.sentiment().negative());
+    if (!both.isEmpty()) {
+      errors.add("sentiment: " + both + " listed as both positive and negative");
     }
   }
 

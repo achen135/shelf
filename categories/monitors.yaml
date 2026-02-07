@@ -167,6 +167,12 @@ retailers:
       product_type "Accessories" and no tags. Kept because Focus Camera stocks the same brand,
       which makes it the category's one direct cross-retailer pair.
 
+# --- sentiment -------------------------------------------------------------------
+# The category's own verdict words (M9); see keyboards.yaml.
+sentiment:
+  positive: [crisp, vibrant, sharp, bright, punchy, buttery]
+  negative: [ghosting, smearing, dim, washed out, flicker, flickering, blurry, dead pixel, dead pixels, backlight bleed, ips glow]
+
 # --- communities -----------------------------------------------------------------
 # Where people talk about monitors (M8). Same rules and the same live-checked platform findings as
 # the keyboards file: Reddit entries wait on an approved Data API client; YouTube entries read
