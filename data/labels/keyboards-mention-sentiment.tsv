@@ -1,0 +1,82 @@
+# Shelf — mention-sentiment labels for the keyboards category (M9).
+#
+# One line per (raw mention, product phrase): what does the text say about the product named by
+# that phrase — positive, negative or neutral? Keyed by the phrase as written (normalized on
+# whole tokens the way the matcher normalizes), not by a catalog product, so that the sample is
+# not starved by how few catalog products these channels happen to discuss: sentiment is read the
+# same way whether or not the product is in the seed list. Written by hand before any sentiment
+# rule or lexicon existed, over the same real corpus as keyboards-mention-resolution.tsv.
+#
+# Policy. Positive when the author praises, recommends, or is glad about the product ("love it",
+# "sounds so good", "just get a", "can't go wrong", "trust me"); negative when they disparage,
+# regret, returned it, or it loses a comparison the author makes ("sucked", "TRASH", "returned it
+# so fast", "a step up from the X" → X negative); neutral when the text only asks, requests a
+# review, names it, or reports a fact ("is it worth it", "day 1 of asking", "on sale"). Questions
+# are neutral even when leading ("what's wrong with Keychron?").
+#
+# Frozen 2026-09-17 before the first rule ran.
+#
+# source	source_id	phrase	sentiment	note
+youtube_comment	UgyMlsdsHrMwPOjYJ3h4AaABAg	wooting 80he	positive	it sounds so good
+youtube_comment	UgzMkbrnHGDHahO3MV94AaABAg	epomaker th80	positive	really cute and creamy
+youtube_comment	UgwxSenwJawphoyKs9p4AaABAg	epomaker th80 se	positive	still amazing, everything else is perfect
+youtube_comment	UgzVGib58LcYRpyEbPF4AaABAg	epomaker th80 pro v2	positive	soooo much better than the Dell
+youtube_comment	Ugy2IM92GU_whJusD4d4AaABAg	yunzii rt75 pro	positive	my main keyboard and it's great
+youtube_comment	Ugz2ijXS0HjkMFcqCuF4AaABAg	yunzii rt75 pro	positive	sound really nice
+youtube_comment	UgwZu8mjyFoct_To9il4AaABAg	keychron q3 he	positive	its so creamy
+youtube_comment	UgxjQS9c9ESqGMoO3zJ4AaABAg	keychron q3 he	positive	sound kinda creamy
+youtube_comment	UgwN80EZS5W9KUSCvnZ4AaABAg	epomaker g84 he	positive	sounds incredibly creamy
+youtube_comment	Ugx_MMLui1DOeA4PV7d4AaABAg	keychron q15 max	positive	absolutely love it
+youtube_comment	UgzSGXWcWunIvy_X-iJ4AaABAg	athena 75	positive	nice to see another build
+youtube_comment	UgzdF-1lOzwBbfrM8Q14AaABAg	rainy 75 pro	positive	can't really go wrong
+youtube_comment	Ugwd93eaHZ6djEwAyJl4AaABAg	epomaker hack 70	positive	looks cool tho
+youtube_comment	UgxDiueWHeI_sUWfPAd4AaABAg	keychron k2 he se	positive	happy with my stock
+youtube_comment	UgzfnxQdj1w-GIXJLaN4AaABAg	epomaker he108	positive	glad with it
+youtube_comment	UgwkAD3zVczPaFmyfwR4AaABAg	melgeek	positive	luxurious, highly recommend
+youtube_video	4APvQf436YM	lofree hyzen	positive	most OP keyboard, ticks all the boxes
+youtube_video	k-2UfjwdDaE	neo75	positive	is more than great
+youtube_comment	UgyhI5JW5Cl6nSUqb1h4AaABAg	th98	positive	it's nice
+youtube_comment	UgxeNU7iVW9ZvhbJH5h4AaABAg	gmmk 2	positive	sounds good, easy to mod
+youtube_comment	Ugz7AvU3ILyyNUh9Ocd4AaABAg	magi75 pro	positive	blew me away, all time favorite
+youtube_comment	UgwiJKogEpWUPRLZJPp4AaABAg	epomaker	positive	I do really love Epomaker's keyboards
+youtube_comment	Ugxmhinwqy3EVh1PWnF4AaABAg	hhkb	positive	the sound is now so much better
+youtube_comment	UgzpXtfG5Rmg4vwawd14AaABAg	wooting 80he	positive	just get a ... at this point
+youtube_comment	UgwLsxsC3j50fvtGiop4AaABAg	akko tac 75 he	positive	trust me twin
+youtube_comment	Ugz50fUOJX66MEO3UfB4AaABAg	aula 80 he	positive	super cheap compared to
+youtube_comment	UgyVfyq9hzpC2ZHJapd4AaABAg	epomaker qk81	positive	on sale for $36, has QMK/VIA
+youtube_comment	Ugzdh82js9nrLVjj5jR4AaABAg	epomaker	positive	sound is WAY better right out of the box
+youtube_comment	UgxIbZJFvCFIida5gD94AaABAg	gmmk pro	negative	they both sucked
+youtube_comment	UgxIbZJFvCFIida5gD94AaABAg	keychron	negative	cheap looking, sucked
+youtube_comment	Ugzm4YYlDGMkGI_PmYZ4AaABAg	rk61	negative	which is TRASH
+youtube_comment	UgyI3XnYc-dLNVsVB3V4AaABAg	he75 v2	negative	returned it so fast
+youtube_video	JsjFProjLk0	turtle beach command kb7	negative	one of the WORST
+youtube_video	t7IvxWrcNFs	lenovo yoga creative keyboard	negative	tried to scam everyone; is it a scam?
+youtube_comment	UgzUenzm6TFobJjU4D14AaABAg	lenovo	negative	the markup is unhinged
+youtube_comment	UgzZjRhWAyk9r942J154AaABAg	angry miao	negative	you don't buy it cuz it's good
+youtube_comment	Ugwm9OgM5nJ8S_-5ymx4AaABAg	keychron	negative	please kill Keychron
+youtube_comment	Ugwm9OgM5nJ8S_-5ymx4AaABAg	evo75	negative	a step up from the Evo75 — the Evo75 loses
+youtube_comment	UgwkABoLQFRXWzLiS3V4AaABAg	epomaker	negative	kings of making stuff that's almost cool
+youtube_video	otH-jYRW1mQ	dyson zone	negative	the dumbest headphones ever made
+youtube_comment	UgyKimCFMrKP5Y0Bj7Z4AaABAg	wooting	negative	comparative: the new board sounds better than the wooting
+youtube_comment	Ugw9Fosms10MSbnha6h4AaABAg	ducky one x mini	neutral	asking for a review
+youtube_comment	UgwpVBqw24o5PV9dNcR4AaABAg	one x mini	neutral	asking for a review
+youtube_comment	UgxNKXH9DMr01VsZ2F94AaABAg	yunzii rt75 pro	neutral	can you review
+youtube_comment	Ugxc7JQT3XYYt8ztbDF4AaABAg	rainy 75 pro	neutral	is it worth it
+youtube_comment	UgySOr0zkP-a_BNiS_94AaABAg	wooting 60he v2	neutral	asking for one
+youtube_comment	Ugyt66kd39RSHzxpGEx4AaABAg	wooting 60he v2	neutral	likes wager
+youtube_comment	Ugzdf3mVpfBeNVgGPal4AaABAg	wooting 80he	neutral	asks about mods; 'better sounding' is the wish, not the verdict
+youtube_comment	UgwFtGMqLo3_Q3i-4zJ4AaABAg	ducky one 3 mini	neutral	what do you think
+youtube_comment	UgzLt5MZFQzlaOzEpo94AaABAg	epomaker he68 lite	neutral	any good?
+youtube_comment	Ugy-YNkShtPCJNxLucB4AaABAg	keychron k2 max	neutral	review request
+youtube_comment	Ugz3GO64CGjBAQ9sxc14AaABAg	akko 5087 v5 tmr	neutral	review request
+youtube_comment	Ugz8crgdUl6lvAilaFp4AaABAg	akko tac75 he	neutral	is it really that good — a question
+youtube_video	O-QJvTKotAM	epomaker he75 v2 tmr	neutral	the title's 'don't buy' is about hall effect boards, the TMR is what is looked at
+youtube_video	KGKtbvOczTg	epomaker hack 70	neutral	questions only
+youtube_video	DKpH1QdcOHc	athena 75	neutral	a build stream title
+youtube_comment	Ugww5kj-HAy6-g1I1Wt4AaABAg	epomaker he75 v2	neutral	review request with a spec list
+youtube_comment	UgyPlEUA5SXGGG89xJh4AaABAg	tofu 1800	neutral	waiting for it
+youtube_comment	UgxMpH8bW5CH5n1Jm6B4AaABAg	keychron v1 max	neutral	a question about a key
+youtube_comment	UgyooGxdc1nULWBAG6B4AaABAg	lofree flow lite	neutral	went on sale after ordering
+youtube_comment	Ugzeq7wU9YsTHHu1_kJ4AaABAg	epomaker th99	neutral	is this not just the
+youtube_comment	Ugwx54UC6kVQscoc30Z4AaABAg	keychron	neutral	a question, even if leading
+youtube_comment	Ugx_06CCQHfnHCTYNnR4AaABAg	epomaker software	neutral	looks the same as another
