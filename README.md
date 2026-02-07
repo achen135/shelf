@@ -9,7 +9,21 @@ products, and (v2) the communities that talk about them — so onboarding one is
 plus parsers, not new pipeline code. M7 proved it with monitors. The crawler never touches the open web: it visits the paths a category file
 names, and nothing else.
 
-> **Status: M8 complete — v2 begins with community ingestion.** A category file now carries a
+> **Status: M9 complete — mention resolution.** The community track's second stage: `shelf
+> mentions --category keyboards` decides which catalog products each ingested comment or video
+> names and what it says about them, into a `mentions` table (one row per text × product, with the
+> score, the span, the reasons, a rule-read sentiment and an explicit rank when the text gives
+> one). The matcher is the **listing scorer's core behind a text front-end**, not a second matcher:
+> five rules fixed before the labels were scored, and the M3/M7 listing numbers re-run to prove
+> they did not move. Against **87 hand-labeled pairs frozen before the first score: precision
+> 1.000 / recall 1.000**, four proposals for a human (another maker's RT75); sentiment **0.841 on
+> 63 labeled phrases** (0.667 as first written; the one widening is recorded). Products gain
+> config-declared `aliases`; a category gains its own `sentiment:` words. The finding underneath:
+> on 3,206 real rows from three keyboard channels, **seventeen name a product the retailers
+> sell** — mention resolution works, and the channels talk about a different catalog. M8's
+> ingestion below.
+>
+> **M8 — v2 begins with community ingestion.** A category file now carries a
 > **`communities:` block** — subreddits and YouTube channels, the same idiom as `retailers:` —
 > and `shelf ingest --category keyboards` reads them through the platforms' **official APIs**
 > into a `raw_mentions` staging table, idempotent on `(source, source_id)` and proven so by a
@@ -19,7 +33,7 @@ names, and nothing else.
 > client is approved; **YouTube** transcripts are owner-only through the official API and the
 > undocumented route is against its policies, so ingestion is titles + descriptions + top-level
 > comments, and stored rows are pruned after the 30 days the policies allow. Nothing downstream
-> yet — no matching, no sentiment: that is M9. v1 stands as it was (below).
+> yet at M8 — matching and sentiment arrived with M9, above. v1 stands as it was (below).
 >
 > **M7 — the second category.** `categories/monitors.yaml` onboarded
 > **monitors** — six Shopify storefronts (Focus Camera, Pixio, Dough, KOORUI, INNOCN, Cooler
@@ -216,6 +230,21 @@ approved client first, and the `notes` field in the config says how to get one. 
 whenever — a repeat is an upsert — but within 30 days, which is how long YouTube's terms let
 API data sit before it is refreshed or deleted (the run prunes what has gone stale).
 
+### Mention resolution (v2, M9)
+
+```
+shelf mentions --category keyboards                 # every raw mention → the products it names, with sentiment and rank; rerun any time
+shelf eval mention-resolution --category keyboards --labels data/labels/keyboards-mention-resolution.tsv
+shelf eval mention-sentiment  --category keyboards --labels data/labels/keyboards-mention-sentiment.tsv
+psql shelf -c "select p.canonical_name, m.match_status, m.matched_text, m.sentiment, m.match_reasons from mentions m join products p on p.id = m.product_id"
+```
+
+One row per (raw mention, product) the matcher found: the score, the span it matched, why, and
+the sentiment read from the sentence around it. A seed's `aliases:` are the other names it goes
+by in free text; a category's `sentiment:` section is its own words of praise and complaint.
+Every pass re-decides everything the machine wrote and keeps what a human decided. The two
+evals print the reports committed beside the labels (`data/labels/*-mention-*.eval.txt`).
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -240,20 +269,21 @@ categories/           per-category config (spec schema, retailers, seed products
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
 scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans; k6/ — the API load test
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api, ingest
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api, ingest, mentions
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
   crawl/cluster/      coordinator (leader election, cycles, reaping) + worker pool
-  resolve/            entity resolution: blocking, scoring, the review queue, the eval (M3)
+  resolve/            entity resolution: blocking, scoring, the review queue, the eval (M3); the mention matcher on the same core (M9)
   rollup/             the post-cycle pass: offer retirement + price rollups (M4)
   backfill/           the labeled synthetic history (M4)
   signal/             the buy/wait/neutral rule, the per-cycle signal pass, the backtest (M5)
   api/                the Javalin query API; the demo page is src/main/resources/public/index.html (M6)
   ingest/             community ingestion: Reddit + YouTube through their official APIs into raw_mentions (M8, v2)
+  mention/            mention resolution: the pass, the rule-based sentiment and rank reading, the two evals (M9, v2)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures (the reddit/ and youtube/ ones are hand-built to the documented shapes — their READMEs say so)
-data/labels/          hand-labeled resolution pairs + the committed eval reports (keyboards, monitors)
+data/labels/          hand-labeled resolution pairs + the committed eval reports (keyboards, monitors); the M9 mention and sentiment labels + reports
 data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
 data/benchmarks/m5/   the committed backtest report
 data/benchmarks/m6/   the k6 sweep, the pinned run, the pool experiment

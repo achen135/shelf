@@ -1,0 +1,27 @@
+mention resolution — keyboards
+87 labeled pairs: 13 match, 74 not; 0 skipped (text or product not in the database)
+at auto >= 0.90: precision 1.000  recall 1.000  F1 1.000  (tp 13 fp 0 fn 0 tn 74)
+4 pairs in the review band [0.40, 0.90); 0 link(s) to a product no label judges
+sweep (threshold  precision  recall  f1)
+  0.00  0.765  1.000  0.867
+  0.05  0.765  1.000  0.867
+  0.10  0.765  1.000  0.867
+  0.15  0.765  1.000  0.867
+  0.20  0.765  1.000  0.867
+  0.25  0.765  1.000  0.867
+  0.30  0.765  1.000  0.867
+  0.35  0.765  1.000  0.867
+  0.40  0.765  1.000  0.867
+  0.45  0.765  1.000  0.867
+  0.50  0.765  1.000  0.867
+  0.55  0.765  1.000  0.867
+  0.60  0.765  1.000  0.867
+  0.65  0.765  1.000  0.867
+  0.70  0.765  1.000  0.867
+  0.75  0.765  1.000  0.867
+  0.80  0.765  1.000  0.867
+  0.85  1.000  1.000  1.000
+  0.90  1.000  1.000  1.000
+  0.95  1.000  1.000  1.000
+  1.00  1.000  1.000  1.000
+no mistakes at the operating point
