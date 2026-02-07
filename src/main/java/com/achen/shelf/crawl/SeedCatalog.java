@@ -40,7 +40,8 @@ public final class SeedCatalog {
               Normalizer.normalize(seed.brand()),
               Normalizer.normalize(seed.model()),
               seed.canonicalName(),
-              Jsonb.fromMap(seed.spec())));
+              Jsonb.fromMap(seed.spec()),
+              seed.aliases()));
     }
     return new SeedCatalog(ids);
   }

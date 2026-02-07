@@ -27,8 +27,10 @@
   <Match>
     <Or>
       <Package name="com.achen.shelf.resolve"/>
+      <Package name="com.achen.shelf.mention"/>
       <Class name="com.achen.shelf.db.ProductDao$Row"/>
       <Class name="com.achen.shelf.db.ResolutionDao$PendingOffer"/>
+      <Class name="com.achen.shelf.db.MentionDao$Decision"/>
     </Or>
     <Or>
       <Bug pattern="EI_EXPOSE_REP"/>

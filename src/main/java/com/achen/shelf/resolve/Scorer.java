@@ -44,13 +44,43 @@ import java.util.Set;
  */
 public final class Scorer {
 
-  /** A score and, for the review queue and the eval report, why. */
-  public record Score(double value, List<String> reasons) {
+  /**
+   * A score and, for the review queue and the eval report, why.
+   *
+   * @param value in [0, 1]
+   * @param reasons the features that fired, as sentences
+   * @param start index of the first title token the model matched, or -1 when nothing matched
+   * @param end index of the last, inclusive; the span M9's mention matcher reads a sentence around
+   */
+  public record Score(double value, List<String> reasons, int start, int end) {
     public Score {
       reasons = List.copyOf(reasons);
     }
 
-    static final Score NONE = new Score(0, List.of("no model token in the title"));
+    /** The v1 shape: a score with no span. */
+    public Score(double value, List<String> reasons) {
+      this(value, reasons, -1, -1);
+    }
+
+    public static final Score NONE = new Score(0, List.of("no model token in the title"), -1, -1);
+
+    public boolean matched() {
+      return start >= 0;
+    }
+  }
+
+  /**
+   * Where a name was found in a token list and how much of it: the shared core of listing and
+   * mention scoring (features 1 and 2 above). {@code start}/{@code end} bound the matched span;
+   * {@code modelSet} is every token that counts as part of the name there, so a qualifier check can
+   * tell a sibling's token inside the span from the name's own.
+   */
+  record Located(double base, int start, int end, Set<String> modelSet, List<String> reasons) {
+    static final Located NONE = new Located(0, -1, -1, Set.of(), List.of());
+
+    boolean found() {
+      return start >= 0;
+    }
   }
 
   static final double MODEL_WHOLE = 1.0;
@@ -91,77 +121,18 @@ public final class Scorer {
     if (title.isEmpty() || model.isEmpty()) {
       return Score.NONE;
     }
-    List<String> reasons = new ArrayList<>();
-    Set<String> modelSet = new LinkedHashSet<>(model);
-
-    // 1 + 2: where is the model, and how much of it is there
-    double base;
-    int start;
-    int end;
-    int whole = indexOfRun(title, model);
-    int asOneToken = model.size() > 1 ? title.indexOf(String.join("", model)) : -1;
-    if (whole >= 0) {
-      base = MODEL_WHOLE;
-      start = whole;
-      end = whole + model.size() - 1;
-      reasons.add("model appears whole");
-    } else if (asOneToken >= 0) {
-      base = MODEL_WHOLE;
-      start = asOneToken;
-      end = asOneToken;
-      modelSet.add(String.join("", model));
-      reasons.add("model appears as one token");
-    } else {
-      double have = 0;
-      double total = 0;
-      boolean designatorMissing = false;
-      List<String> missing = new ArrayList<>();
-      start = Integer.MAX_VALUE;
-      end = -1;
-      for (String t : model) {
-        double w = hasDigit(t) ? 2 : 1;
-        total += w;
-        int at = title.indexOf(t);
-        if (at >= 0) {
-          have += w;
-          start = Math.min(start, at);
-          end = Math.max(end, at);
-        } else {
-          missing.add(t);
-          designatorMissing |= hasDigit(t);
-        }
-      }
-      if (end < 0) {
-        return Score.NONE;
-      }
-      double recall = have / total;
-      if (missing.isEmpty()) {
-        base = ALL_TOKENS_SCATTERED;
-        reasons.add("every model token present, not together");
-      } else {
-        base = PARTIAL_SCALE * recall;
-        reasons.add("missing model token(s) " + missing + ", recall " + fmt(recall));
-      }
-      if (designatorMissing) {
-        base *= DESIGNATOR_MISSING_SCALE;
-        reasons.add("a numbered model token is missing");
-      }
+    Located at = locate(title, model, true);
+    if (!at.found()) {
+      return Score.NONE;
     }
+    List<String> reasons = new ArrayList<>(at.reasons());
+    double base = at.base();
+    int start = at.start();
+    int end = at.end();
+    Set<String> modelSet = at.modelSet();
 
     // 3: a sibling's qualifier touching or inside the matched span
-    Set<String> touching = new LinkedHashSet<>();
-    if (start > 0) {
-      touching.add(title.get(start - 1));
-    }
-    if (end < title.size() - 1) {
-      touching.add(title.get(end + 1));
-    }
-    for (int i = start; i <= end; i++) {
-      if (!modelSet.contains(title.get(i))) {
-        touching.add(title.get(i));
-      }
-    }
-    List<String> qualifiers = touching.stream().filter(siblingTokens::contains).toList();
+    List<String> qualifiers = touching(title, start, end, modelSet, siblingTokens);
     double penalty = 0;
     if (!qualifiers.isEmpty()) {
       penalty += QUALIFIER_PENALTY * Math.min(qualifiers.size(), QUALIFIER_CAP);
@@ -192,7 +163,132 @@ public final class Scorer {
     }
 
     double value = Math.max(0, Math.min(1, base - penalty));
-    return new Score(value, reasons);
+    return new Score(value, reasons, start, end);
+  }
+
+  /**
+   * Features 1 and 2: the name whole on token boundaries (also as one token, and — new in M9 — a
+   * one-token name written apart, "hack 70" for {@code hack70}), else, when {@code allowPartial},
+   * weighted token recall with a missing numbered token scaled down. Free text never takes the
+   * partial branch: in a two-hundred-word comment, the scattered tokens of a model mean nothing.
+   */
+  static Located locate(List<String> text, List<String> model, boolean allowPartial) {
+    if (text.isEmpty() || model.isEmpty()) {
+      return Located.NONE;
+    }
+    Set<String> modelSet = new LinkedHashSet<>(model);
+    int whole = indexOfRun(text, model);
+    if (whole >= 0) {
+      return new Located(
+          MODEL_WHOLE, whole, whole + model.size() - 1, modelSet, List.of("model appears whole"));
+    }
+    if (model.size() > 1) {
+      String joined = String.join("", model);
+      int asOneToken = text.indexOf(joined);
+      if (asOneToken >= 0) {
+        modelSet.add(joined);
+        return new Located(
+            MODEL_WHOLE, asOneToken, asOneToken, modelSet, List.of("model appears as one token"));
+      }
+    } else {
+      List<String> apart = splitLettersFromDigits(model.get(0));
+      if (apart.size() > 1) {
+        int written = indexOfRun(text, apart);
+        if (written >= 0) {
+          modelSet.addAll(apart);
+          return new Located(
+              MODEL_WHOLE,
+              written,
+              written + apart.size() - 1,
+              modelSet,
+              List.of("model appears written apart (" + String.join(" ", apart) + ")"));
+        }
+      }
+    }
+    if (!allowPartial) {
+      return Located.NONE;
+    }
+    double have = 0;
+    double total = 0;
+    boolean designatorMissing = false;
+    List<String> missing = new ArrayList<>();
+    int start = Integer.MAX_VALUE;
+    int end = -1;
+    for (String t : model) {
+      double w = hasDigit(t) ? 2 : 1;
+      total += w;
+      int at = text.indexOf(t);
+      if (at >= 0) {
+        have += w;
+        start = Math.min(start, at);
+        end = Math.max(end, at);
+      } else {
+        missing.add(t);
+        designatorMissing |= hasDigit(t);
+      }
+    }
+    if (end < 0) {
+      return Located.NONE;
+    }
+    List<String> reasons = new ArrayList<>();
+    double recall = have / total;
+    double base;
+    if (missing.isEmpty()) {
+      base = ALL_TOKENS_SCATTERED;
+      reasons.add("every model token present, not together");
+    } else {
+      base = PARTIAL_SCALE * recall;
+      reasons.add("missing model token(s) " + missing + ", recall " + fmt(recall));
+    }
+    if (designatorMissing) {
+      base *= DESIGNATOR_MISSING_SCALE;
+      reasons.add("a numbered model token is missing");
+    }
+    return new Located(base, start, end, modelSet, reasons);
+  }
+
+  /**
+   * A one-token name split where letters meet digits: {@code hack70} → [hack, 70], {@code 60he} →
+   * [60, he], {@code kbd67} → [kbd, 67]. A token that is all letters or all digits stays whole.
+   */
+  static List<String> splitLettersFromDigits(String token) {
+    List<String> parts = new ArrayList<>();
+    StringBuilder run = new StringBuilder();
+    boolean lastDigit = false;
+    for (int i = 0; i < token.length(); i++) {
+      char ch = token.charAt(i);
+      boolean digit = Character.isDigit(ch);
+      if (i > 0 && digit != lastDigit) {
+        parts.add(run.toString());
+        run.setLength(0);
+      }
+      run.append(ch);
+      lastDigit = digit;
+    }
+    parts.add(run.toString());
+    return parts;
+  }
+
+  /**
+   * Feature 3's evidence: the tokens touching or inside the matched span that belong to {@code
+   * vocabulary} (a sibling's qualifiers, or — for mentions — another brand's name) and not to the
+   * matched name itself.
+   */
+  static List<String> touching(
+      List<String> text, int start, int end, Set<String> modelSet, Set<String> vocabulary) {
+    Set<String> touching = new LinkedHashSet<>();
+    if (start > 0) {
+      touching.add(text.get(start - 1));
+    }
+    if (end < text.size() - 1) {
+      touching.add(text.get(end + 1));
+    }
+    for (int i = start; i <= end; i++) {
+      if (!modelSet.contains(text.get(i))) {
+        touching.add(text.get(i));
+      }
+    }
+    return touching.stream().filter(vocabulary::contains).toList();
   }
 
   /** Identity fields present on both sides with different values. */
@@ -209,7 +305,7 @@ public final class Scorer {
   }
 
   /** Space-separated tokens of a normalized string; empty for blank input. */
-  static List<String> tokens(String norm) {
+  public static List<String> tokens(String norm) {
     if (norm == null || norm.isBlank()) {
       return List.of();
     }
@@ -217,7 +313,7 @@ public final class Scorer {
   }
 
   /** Index of the first occurrence of {@code run} as a contiguous sub-list of {@code in}. */
-  static int indexOfRun(List<String> in, List<String> run) {
+  public static int indexOfRun(List<String> in, List<String> run) {
     outer:
     for (int i = 0; i + run.size() <= in.size(); i++) {
       for (int j = 0; j < run.size(); j++) {

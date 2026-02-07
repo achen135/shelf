@@ -92,6 +92,45 @@ class CategoryConfigLoaderTest {
   }
 
   @Test
+  void loadsAliasesAndTheSentimentSection() {
+    CategoryConfig cfg = loader.load(Path.of("categories"), "keyboards");
+
+    assertThat(cfg.seedProducts())
+        .filteredOn(s -> s.model().equals("Q8"))
+        .singleElement()
+        .satisfies(s -> assertThat(s.aliases()).containsExactly("Q8 Alice"));
+    assertThat(cfg.seedProducts())
+        .filteredOn(s -> s.model().equals("Q1 Pro"))
+        .singleElement()
+        .satisfies(s -> assertThat(s.aliases()).isEmpty());
+    assertThat(cfg.sentiment().positive()).contains("creamy", "thocky");
+    assertThat(cfg.sentiment().negative()).contains("mushy", "pingy");
+    // A file without the section: nothing configured.
+    assertThat(loader.load(FIXTURES.resolve("good-minimal.yaml")).sentiment())
+        .isEqualTo(SentimentConfig.NONE);
+  }
+
+  @Test
+  void rejectsBlankOrRepeatedAliasesAndAWordThatIsBothPraiseAndComplaint() {
+    String yaml =
+        FixtureServer.Fixtures.read("categories/good-minimal.yaml")
+                .replace(
+                    "canonical_name: \"ShopOne W1\", spec: { finish: matte, port_count: 2 } }",
+                    "canonical_name: \"ShopOne W1\", aliases: [\"W-1\", \" \", \"w-1\"] }")
+            + "sentiment:\n  positive: [crisp, \"\"]\n  negative: [crisp]\n";
+    assertThatThrownBy(
+            () ->
+                loader.load(
+                    new java.io.ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)),
+                    "inline"))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("seed_products[0].aliases: contains a blank alias")
+        .hasMessageContaining("seed_products[0].aliases: 'w-1' is listed twice")
+        .hasMessageContaining("sentiment.positive: contains a blank phrase")
+        .hasMessageContaining("sentiment: [crisp] listed as both positive and negative");
+  }
+
+  @Test
   void rejectsAnUnknownCommunitySource() {
     String yaml =
         FixtureServer.Fixtures.read("categories/good-communities.yaml")

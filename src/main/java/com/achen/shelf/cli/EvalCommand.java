@@ -4,8 +4,14 @@ import com.achen.shelf.config.AppConfig;
 import com.achen.shelf.config.CategoryConfig;
 import com.achen.shelf.config.CategoryConfigLoader;
 import com.achen.shelf.db.Database;
+import com.achen.shelf.mention.MentionEval;
+import com.achen.shelf.mention.MentionLabels;
+import com.achen.shelf.mention.MentionRun;
+import com.achen.shelf.mention.SentimentEval;
+import com.achen.shelf.mention.SentimentRule;
 import com.achen.shelf.resolve.Catalog;
 import com.achen.shelf.resolve.Labels;
+import com.achen.shelf.resolve.MentionMatcher;
 import com.achen.shelf.resolve.ResolutionEval;
 import com.achen.shelf.resolve.ResolutionRun;
 import com.achen.shelf.resolve.Resolver;
@@ -16,16 +22,25 @@ import com.achen.shelf.signal.DealRule;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
-/** {@code shelf eval} — the measured claims: {@code resolution} (M3) and {@code backtest} (M5). */
+/**
+ * {@code shelf eval} — the measured claims: {@code resolution} (M3), {@code backtest} (M5), {@code
+ * mention-resolution} and {@code mention-sentiment} (M9).
+ */
 @CommandLine.Command(
     name = "eval",
     mixinStandardHelpOptions = true,
     description = "Evaluate a subsystem against labeled data or held-out history.",
-    subcommands = {EvalCommand.Resolution.class, EvalCommand.SignalBacktest.class})
+    subcommands = {
+      EvalCommand.Resolution.class,
+      EvalCommand.SignalBacktest.class,
+      EvalCommand.MentionResolution.class,
+      EvalCommand.MentionSentiment.class
+    })
 public final class EvalCommand implements Runnable {
 
   @CommandLine.Spec CommandLine.Model.CommandSpec spec;
@@ -182,6 +197,121 @@ public final class EvalCommand implements Runnable {
         Backtest backtest = new Backtest(db, settings);
         Backtest.Grid grid = backtest.grid(config);
         String text = BacktestReport.render(backtest.evaluate(grid, rule), category);
+        System.out.print(text);
+        if (out != null) {
+          Files.writeString(out, text, StandardCharsets.UTF_8);
+          System.out.printf("written to %s%n", out);
+        }
+        return CommandLine.ExitCode.OK;
+      }
+    }
+  }
+
+  /**
+   * {@code shelf eval mention-resolution --category keyboards --labels
+   * data/labels/keyboards-mention-resolution.tsv}
+   *
+   * <p>Loads the labels into {@code mention_labels} (keyed by the platform's own id and the seed's
+   * brand + model), scores each labeled pair with the mention matcher over the catalog as it stands
+   * — seeds bootstrapped first, so the config's aliases are in — and reports precision / recall at
+   * the operating point and across a sweep. Labels whose text is not in the database (an ingest
+   * that has not run, or a comment since deleted) are reported and skipped.
+   */
+  @CommandLine.Command(
+      name = "mention-resolution",
+      mixinStandardHelpOptions = true,
+      description = "Precision / recall of mention resolution against hand-labeled pairs (M9).")
+  public static final class MentionResolution implements Callable<Integer> {
+
+    @CommandLine.Option(
+        names = {"-c", "--category"},
+        required = true,
+        description = "Category the labels belong to.")
+    private String category;
+
+    @CommandLine.Option(
+        names = "--labels",
+        required = true,
+        description =
+            "Tab-separated label file (source, source_id, excerpt, brand, model, match, note).")
+    private Path labels;
+
+    @CommandLine.Option(names = "--out", description = "Also write the report here.")
+    private Path out;
+
+    @CommandLine.Option(
+        names = "--auto",
+        defaultValue = "0.9",
+        description = "Auto-link threshold to report at (default ${DEFAULT-VALUE}).")
+    private double auto;
+
+    @CommandLine.Option(
+        names = "--review",
+        defaultValue = "0.4",
+        description = "Review threshold to report at (default ${DEFAULT-VALUE}).")
+    private double review;
+
+    @Override
+    public Integer call() throws Exception {
+      AppConfig app = AppConfig.fromEnv();
+      CategoryConfig config = new CategoryConfigLoader().load(app.categoriesDir(), category);
+      List<MentionLabels.MatchLabel> labelRows = MentionLabels.readMatches(labels);
+      try (Database db = Database.open(app, 2)) {
+        MentionMatcher matcher =
+            new MentionRun(db, new Resolver.Thresholds(auto, review)).matcher(config);
+        MentionEval.Loaded loaded = MentionEval.load(db, matcher.catalog(), labelRows);
+        MentionEval.Report report = MentionEval.evaluate(matcher, loaded.pairs());
+        String text = MentionEval.render(category, report, loaded.skipped());
+        System.out.print(text);
+        if (out != null) {
+          Files.writeString(out, text, StandardCharsets.UTF_8);
+          System.out.printf("written to %s%n", out);
+        }
+        return CommandLine.ExitCode.OK;
+      }
+    }
+  }
+
+  /**
+   * {@code shelf eval mention-sentiment --category keyboards --labels
+   * data/labels/keyboards-mention-sentiment.tsv}
+   *
+   * <p>Runs the sentiment rule, with the category's own words, over the sentence around each
+   * labeled phrase and reports accuracy, the confusion and every miss with the rule's evidence.
+   */
+  @CommandLine.Command(
+      name = "mention-sentiment",
+      mixinStandardHelpOptions = true,
+      description =
+          "Accuracy of the rule-based sentiment reading against hand-labeled phrases (M9).")
+  public static final class MentionSentiment implements Callable<Integer> {
+
+    @CommandLine.Option(
+        names = {"-c", "--category"},
+        required = true,
+        description = "Category the labels belong to.")
+    private String category;
+
+    @CommandLine.Option(
+        names = "--labels",
+        required = true,
+        description = "Tab-separated label file (source, source_id, phrase, sentiment, note).")
+    private Path labels;
+
+    @CommandLine.Option(names = "--out", description = "Also write the report here.")
+    private Path out;
+
+    @Override
+    public Integer call() throws Exception {
+      AppConfig app = AppConfig.fromEnv();
+      CategoryConfig config = new CategoryConfigLoader().load(app.categoriesDir(), category);
+      List<MentionLabels.SentimentLabel> labelRows = MentionLabels.readSentiments(labels);
+      try (Database db = Database.open(app, 2)) {
+        List<String> skipped = new ArrayList<>();
+        List<SentimentEval.Case> cases = SentimentEval.load(db, labelRows, skipped);
+        SentimentEval.Report report =
+            SentimentEval.evaluate(new SentimentRule(config.sentiment()), cases);
+        String text = SentimentEval.render(category, report, skipped);
         System.out.print(text);
         if (out != null) {
           Files.writeString(out, text, StandardCharsets.UTF_8);

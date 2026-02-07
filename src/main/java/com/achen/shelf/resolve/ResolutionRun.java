@@ -65,7 +65,8 @@ public final class ResolutionRun {
     List<Candidate> candidates = new ArrayList<>();
     for (ProductDao.Row p : products.list(category.name())) {
       candidates.add(
-          new Candidate(p.id(), p.brandNorm(), p.modelNorm(), p.canonicalName(), p.spec()));
+          new Candidate(
+              p.id(), p.brandNorm(), p.modelNorm(), p.canonicalName(), p.spec(), p.aliases()));
     }
     return Catalog.of(candidates);
   }

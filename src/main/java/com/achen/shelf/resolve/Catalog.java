@@ -77,6 +77,11 @@ public final class Catalog {
     return siblingTokens.getOrDefault(candidate.productId(), Set.of());
   }
 
+  /** The normalized brand of every block — what a mention's text is searched for (M9). */
+  public Set<String> brands() {
+    return byBrand.keySet();
+  }
+
   /** Every product, in no particular order. */
   public List<Candidate> all() {
     List<Candidate> all = new ArrayList<>(size);

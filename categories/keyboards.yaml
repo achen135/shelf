@@ -175,6 +175,14 @@ retailers:
       keyboard category_id confirmed. Used-condition listings would also need a condition
       filter before the prices are comparable with the new-only retailers above.
 
+# --- sentiment -------------------------------------------------------------------
+# The category's own verdict words (M9). The sentiment rule's general lexicon — love, great,
+# terrible, returned — lives in code; these are the words this hobby uses as praise or complaint
+# that mean nothing elsewhere. Matched on whole normalized tokens in the sentence around a mention.
+sentiment:
+  positive: [creamy, thocky, thock, thocc, marbly, buttery, smooth, crisp, clacky]
+  negative: [mushy, pingy, ping, rattly, rattle, hollow, scratchy, spongy, plasticky, wobbly]
+
 # --- communities -----------------------------------------------------------------
 # Where people talk about these products (M8, the first v2 section). Same idiom as a retailer: a
 # stable name, the platform id, an `ingest` block with credentials by env var NAME, and notes.
@@ -272,6 +280,9 @@ communities:
 # --- seed products ---------------------------------------------------------------
 # Bootstraps the catalog and gives entity resolution something to match against. Every entry
 # below was taken from a live listing during the M0 retailer survey, not from memory.
+# `aliases` (M9) are the other names a product goes by in free text — read by mention resolution
+# exactly as the model is; a listing title never needs one. Given only where the everyday name
+# differs from the retailer's model string, not tuned to any label.
 seed_products:
   # Keychron
   - { brand: "Keychron", model: "Q1 Pro",   canonical_name: "Keychron Q1 Pro" }
@@ -279,7 +290,7 @@ seed_products:
   - { brand: "Keychron", model: "Q4",       canonical_name: "Keychron Q4" }
   - { brand: "Keychron", model: "Q6 HE",    canonical_name: "Keychron Q6 HE" }
   - { brand: "Keychron", model: "Q7",       canonical_name: "Keychron Q7" }
-  - { brand: "Keychron", model: "Q8",       canonical_name: "Keychron Q8 (Alice)" }
+  - { brand: "Keychron", model: "Q8",       canonical_name: "Keychron Q8 (Alice)", aliases: ["Q8 Alice"] }
   - { brand: "Keychron", model: "Q15 Max",  canonical_name: "Keychron Q15 Max" }
   - { brand: "Keychron", model: "K2 Ultra", canonical_name: "Keychron K2 Ultra" }
   - { brand: "Keychron", model: "K5 Ultra", canonical_name: "Keychron K5 Ultra" }
@@ -291,7 +302,7 @@ seed_products:
   - { brand: "Glorious", model: "GMMK 3",           canonical_name: "Glorious GMMK 3" }
   - { brand: "Glorious", model: "GMMK 3 HE",        canonical_name: "Glorious GMMK 3 HE" }
   - { brand: "Glorious", model: "GMMK Pro",         canonical_name: "Glorious GMMK Pro" }
-  - { brand: "Glorious", model: "GMMK Eternal 96",  canonical_name: "Glorious GMMK Eternal 96%" }
+  - { brand: "Glorious", model: "GMMK Eternal 96",  canonical_name: "Glorious GMMK Eternal 96%", aliases: ["Eternal 96"] }
   - { brand: "Glorious", model: "GMBK 75",          canonical_name: "Glorious GMBK 75%" }
   # Epomaker
   - { brand: "Epomaker", model: "TH26",        canonical_name: "Epomaker TH26" }
@@ -307,10 +318,10 @@ seed_products:
   - { brand: "KBDfans", model: "KBD75 V3",     canonical_name: "KBDfans KBD75 V3" }
   - { brand: "KBDfans", model: "KBD67 Lite",   canonical_name: "KBDfans KBD67 Lite" }
   - { brand: "KBDfans", model: "Blade60",      canonical_name: "KBDfans Blade60" }
-  - { brand: "KBDfans", model: "+84 Classic TKL", canonical_name: "KBDfans +84 Classic TKL" }
+  - { brand: "KBDfans", model: "+84 Classic TKL", canonical_name: "KBDfans +84 Classic TKL", aliases: ["Plus 84"] }
   # Wooting
   - { brand: "Wooting", model: "60HE V2", canonical_name: "Wooting 60HE V2" }
-  - { brand: "Wooting", model: "60HE+",   canonical_name: "Wooting 60HE+" }
+  - { brand: "Wooting", model: "60HE+",   canonical_name: "Wooting 60HE+", aliases: ["60HE plus"] }
   # Ducky
   - { brand: "Ducky", model: "One 2 Mini Pro", canonical_name: "Ducky One 2 Mini Pro" }
   - { brand: "Ducky", model: "One 2 SF",       canonical_name: "Ducky One 2 SF" }
@@ -318,7 +329,7 @@ seed_products:
   - { brand: "Ducky", model: "OK-M 65",        canonical_name: "Ducky OK-M 65" }
   - { brand: "Ducky", model: "Tinker 65",      canonical_name: "Ducky Tinker 65 ProjectD" }
   # HHKB
-  - { brand: "HHKB", model: "Hybrid Type-S",  canonical_name: "HHKB Professional Hybrid Type-S" }
+  - { brand: "HHKB", model: "Hybrid Type-S",  canonical_name: "HHKB Professional Hybrid Type-S", aliases: ["Professional Hybrid Type-S", "Pro Hybrid Type-S"] }
   - { brand: "HHKB", model: "Classic Type-S", canonical_name: "HHKB Professional Classic Type-S" }
   - { brand: "HHKB", model: "Studio",         canonical_name: "HHKB Studio" }
   # Leopold
