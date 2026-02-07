@@ -23,7 +23,16 @@ else
   sel="id=$channel"
 fi
 get "$api/channels?part=contentDetails&$sel" > "$out/channels.json"
-uploads=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"])' "$out/channels.json")
+# An error body (a bad key, a spent quota, an unknown handle) is JSON too; say what it said.
+uploads=$(python3 - "$out/channels.json" <<'PY'
+import json, sys
+body = json.load(open(sys.argv[1]))
+if "error" in body:
+    sys.exit("YouTube API error %s: %s" % (body["error"].get("code"), body["error"].get("message")))
+items = body.get("items") or sys.exit("no channel found for that handle or id")
+print(items[0]["contentDetails"]["relatedPlaylists"]["uploads"])
+PY
+)
 echo "uploads playlist: $uploads"
 
 get "$api/playlistItems?part=snippet,contentDetails&playlistId=$uploads&maxResults=50" > "$out/playlist-items-page1.json"
