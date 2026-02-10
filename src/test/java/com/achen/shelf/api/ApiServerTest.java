@@ -187,6 +187,66 @@ class ApiServerTest extends PostgresTestBase {
   }
 
   @Test
+  void theConsensusRidesBesideTheCallWithItsCountAndQuotes() throws Exception {
+    // Before any pass: nothing, not zero.
+    JsonNode before = json("/products?category=keyboards&in_stock=false", 200);
+    assertThat(before.get("products").get(0).get("consensus").isNull()).isTrue();
+
+    // Two linked mentions of the Q1 Pro: a positive comment and a neutral video, one community.
+    execute(
+        "insert into raw_mentions (category, source, source_id, community, title, text, posted_at,"
+            + " permalink) values"
+            + " ('keyboards', 'youtube_comment', 'c1', 'yt_test', null,"
+            + " 'Bought the Q1 Pro after this. No regrets. Long story about the rest.',"
+            + " '2030-05-20T00:00:00Z', 'https://www.youtube.com/watch?v=v1&lc=c1'),"
+            + " ('keyboards', 'youtube_video', 'v1', 'yt_test', 'Keychron Q1 Pro after a year',"
+            + " 'Chapters: sound, software.', '2030-05-01T00:00:00Z',"
+            + " 'https://www.youtube.com/watch?v=v1')");
+    execute(
+        "insert into mentions (raw_mention_id, product_id, match_score, match_status, matched_text,"
+            + " sentiment, extraction_method) select r.id, "
+            + shop.q1pro
+            + ", 1.0, 'auto', 'q1 pro',"
+            + " case when r.source = 'youtube_comment' then 'positive' else 'neutral' end, 'rule'"
+            + " from raw_mentions r");
+    new com.achen.shelf.consensus.ConsensusRun(DB, Clock.fixed(Storefront.AS_OF, ZoneOffset.UTC))
+        .run(shop.category);
+
+    JsonNode list = json("/products?category=keyboards&in_stock=false&sort=consensus", 200);
+    assertThat(list.get("query").get("sort").asText()).isEqualTo("consensus");
+    JsonNode first = list.get("products").get(0);
+    assertThat(first.get("id").asLong()).isEqualTo(shop.q1pro);
+    JsonNode k = first.get("consensus");
+    assertThat(k.get("mention_count").asInt()).isEqualTo(2);
+    assertThat(k.get("leaning").asText()).isEqualTo("liked");
+    assertThat(k.get("score").asDouble()).isEqualTo(0.5);
+    assertThat(k.get("source_diversity").asInt()).isEqualTo(1);
+    assertThat(k.get("window_days").asInt()).isEqualTo(90);
+    assertThat(k.get("quotes")).isEmpty(); // the list carries the numbers, the detail the words
+    JsonNode second = list.get("products").get(1).get("consensus");
+    assertThat(second.get("mention_count").asInt()).isZero();
+    assertThat(second.get("leaning").asText()).isEqualTo("unheard");
+    assertThat(second.get("score").isNull()).isTrue();
+
+    JsonNode d = json("/products/" + shop.q1pro, 200);
+    JsonNode dk = d.get("consensus");
+    assertThat(dk.get("mention_count").asInt()).isEqualTo(2);
+    assertThat(dk.get("quotes")).hasSize(2);
+    JsonNode q = dk.get("quotes").get(0);
+    assertThat(q.get("sentiment").asText()).isEqualTo("positive");
+    assertThat(q.get("excerpt").asText()).isEqualTo("Bought the Q1 Pro after this. No regrets.");
+    assertThat(q.get("platform").asText()).isEqualTo("YouTube");
+    assertThat(q.get("permalink").asText()).isEqualTo("https://www.youtube.com/watch?v=v1&lc=c1");
+    assertThat(q.get("community").asText()).isEqualTo("yt_test");
+    assertThat(dk.get("quotes").get(1).get("sentiment").asText()).isEqualTo("neutral");
+    // The call is untouched by the consensus: separate objects, never one number.
+    assertThat(d.get("signal").get("signal").asText()).isIn("buy", "wait", "neutral");
+
+    assertThat(json("/products?category=keyboards&sort=talk", 400).get("title").asText())
+        .isEqualTo("sort must be one of deal, price, name, consensus");
+  }
+
+  @Test
   void servesTheCategoriesTheHealthCheckAndThePage() throws Exception {
     JsonNode cats = json("/categories", 200);
     assertThat(cats).hasSize(1);

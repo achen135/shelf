@@ -55,7 +55,8 @@ public abstract class PostgresTestBase {
     try (Connection c = DB.connection();
         Statement s = c.createStatement()) {
       s.execute(
-          "truncate raw_mentions, deal_signals, price_rollups, price_observations, raw_fetches,"
+          "truncate consensus_scores, mentions, mention_labels, raw_mentions, deal_signals, price_rollups,"
+              + " price_observations, raw_fetches,"
               + " resolution_labels,"
               + " offers, products, crawl_tasks, crawl_runs, robots_cache, domain_rate_limits restart"
               + " identity cascade");

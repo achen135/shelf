@@ -32,9 +32,11 @@ import org.slf4j.LoggerFactory;
  *   <li>{@code GET /categories} — every category served, with its spec schema (the filter UI).
  *   <li>{@code GET /products?category=…} — price range in dollars, {@code in_stock}, any spec field
  *       as a filter (matched against the listings, see {@link QueryDao}), {@code sort=deal|price|
- *       name}, {@code limit}/{@code offset}, optional {@code signal}.
- *   <li>{@code GET /products/{id}?days=365} — the product, its price picture and call, its live
- *       listings each with their own current price, and its daily history over the window.
+ *       name|consensus}, {@code limit}/{@code offset}, optional {@code signal}. Every row carries
+ *       its consensus (score, leaning, mention count) beside its call (M10).
+ *   <li>{@code GET /products/{id}?days=365} — the product, its price picture and call, what the
+ *       communities said with up to two quoted, linked mentions, its live listings each with their
+ *       own current price, and its daily history over the window.
  *   <li>{@code GET /deals?category=…} — {@code /products} with {@code signal=buy}, {@code
  *       sort=deal}.
  *   <li>{@code GET /health} — a {@code select 1}.

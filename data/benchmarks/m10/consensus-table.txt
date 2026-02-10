@@ -1,0 +1,16 @@
+ category  |         product         | score | n | pos | neg | neu | communities 
+-----------+-------------------------+-------+---+-----+-----+-----+-------------
+ keyboards | WOBKEY Rainy 75 Pro     |  1.00 | 2 |   2 |   0 |   0 |           1
+ keyboards | Keychron Q15 Max        |  1.00 | 1 |   1 |   0 |   0 |           1
+ keyboards | Glorious GMMK Pro       |  1.00 | 1 |   1 |   0 |   0 |           1
+ keyboards | KBDfans Athena 75       |  0.50 | 2 |   1 |   0 |   1 |           1
+ keyboards | Wooting 60HE V2         |  0.00 | 2 |   0 |   0 |   2 |           1
+ keyboards | Ducky One X Mini        |  0.00 | 2 |   0 |   0 |   2 |           1
+ keyboards | Epomaker HE75 V2 TMR    |  0.00 | 1 |   0 |   0 |   1 |           1
+ keyboards | Epomaker HACK70         | -0.50 | 2 |   0 |   1 |   1 |           1
+ monitors  | Dell Alienware AW2725Q  |  0.17 | 6 |   1 |   0 |   5 |           1
+ monitors  | Dell UltraSharp U2725QE |  0.00 | 1 |   0 |   0 |   1 |           1
+ monitors  | Pixio PX32U Wave        |  0.00 | 1 |   0 |   0 |   1 |           1
+ monitors  | INNOCN GA27T1M          |  0.00 | 1 |   0 |   0 |   1 |           1
+(12 rows)
+

@@ -37,7 +37,9 @@ public final class QueryDao {
     /** Buy calls first, then by where today's price sits in the trailing year, then price. */
     DEAL("(signal = 'buy') desc, percentile_365d asc nulls last, price_cents asc, id"),
     PRICE("price_cents asc, id"),
-    NAME("canonical_name asc, id");
+    NAME("canonical_name asc, id"),
+    /** Best-liked first among products people talked about, the most talked-about breaking ties. */
+    CONSENSUS("consensus_score desc nulls last, mention_count desc nulls last, id");
 
     private final String orderBy;
 
@@ -121,6 +123,38 @@ public final class QueryDao {
     }
   }
 
+  /**
+   * A product's consensus, from {@code consensus_scores}; null when no pass has run. {@code
+   * mentionCount} 0 is a row that says nothing was said.
+   */
+  public record Consensus(
+      Double score,
+      int mentionCount,
+      int positiveCount,
+      int negativeCount,
+      int neutralCount,
+      Double positiveShare,
+      int sourceDiversity,
+      int windowDays,
+      List<Long> quoteMentionIds,
+      Instant asOf) {
+    public Consensus {
+      quoteMentionIds = List.copyOf(quoteMentionIds);
+    }
+  }
+
+  /** One quoted mention: the row, the words, and where they were said. */
+  public record Quote(
+      long mentionId,
+      String sentiment,
+      String matchedText,
+      String title,
+      String text,
+      String community,
+      String source,
+      Instant postedAt,
+      String permalink) {}
+
   /** One listing with its own current price. */
   public record Offer(
       long id,
@@ -141,8 +175,11 @@ public final class QueryDao {
     }
   }
 
-  /** One search result: the product, its price and call, and the listing that matched. */
-  public record Hit(Product product, Price price, Signal signal, Offer offer) {}
+  /**
+   * One search result: the product, its price and call, the listing that matched, its consensus.
+   */
+  public record Hit(
+      Product product, Price price, Signal signal, Offer offer, Consensus consensus) {}
 
   /** A page of hits with the total the search would return unpaged. */
   public record Page(List<Hit> hits, long total) {
@@ -152,9 +189,16 @@ public final class QueryDao {
   }
 
   /** One product with everything the detail page shows. */
-  public record Detail(Product product, Price price, Signal signal, List<Offer> offers) {
+  public record Detail(
+      Product product,
+      Price price,
+      Signal signal,
+      List<Offer> offers,
+      Consensus consensus,
+      List<Quote> quotes) {
     public Detail {
       offers = List.copyOf(offers);
+      quotes = List.copyOf(quotes);
     }
   }
 
@@ -170,6 +214,13 @@ public final class QueryDao {
 
   private static final String SIGNAL_COLUMNS =
       "s.signal, s.reason_codes, s.best_offer_id, s.as_of as signal_as_of";
+
+  private static final String CONSENSUS_COLUMNS =
+      """
+      cs.score as consensus_score, cs.mention_count, cs.positive_count, cs.negative_count,
+      cs.neutral_count, cs.positive_share, cs.source_diversity, cs.window_days,
+      cs.quote_mention_ids, cs.as_of as consensus_as_of
+      """;
 
   private static final String OFFER_COLUMNS =
       """
@@ -195,10 +246,15 @@ public final class QueryDao {
                m.offer_id, m.retailer, m.title, m.url, m.offer_spec, m.price_cents, m.in_stock,
                m.observed_at, m.offer_list_price_cents, m.offer_percentile_365d, m.offer_min_365d,
                m.offer_observations_365d, m.offer_synthetic_365d,
+      """
+          + CONSENSUS_COLUMNS
+          + """
+      ,
                count(*) over () as total
         from products p
         join price_rollups r on r.product_id = p.id
         left join deal_signals s on s.product_id = p.id
+        left join consensus_scores cs on cs.product_id = p.id
         cross join lateral (
           select o.id as offer_id, o.retailer, o.title, o.url, o.spec::text as offer_spec,
                  ro.current_price_cents as price_cents, ro.current_in_stock as in_stock,
@@ -278,8 +334,10 @@ public final class QueryDao {
                   intOrNull(rs, k++),
                   rs.getInt(k++),
                   rs.getInt(k++));
+          Consensus consensus = consensus(rs, k);
+          k += 10;
           total = rs.getLong(k);
-          hits.add(new Hit(product, price, signal, offer));
+          hits.add(new Hit(product, price, signal, offer, consensus));
         }
         return new Page(hits, total);
       }
@@ -295,16 +353,20 @@ public final class QueryDao {
             + PRICE_COLUMNS
             + ", "
             + SIGNAL_COLUMNS
+            + ", "
+            + CONSENSUS_COLUMNS
             + """
 
         from products p
         left join price_rollups r on r.product_id = p.id
         left join deal_signals s on s.product_id = p.id
+        left join consensus_scores cs on cs.product_id = p.id
         where p.id = ?
         """;
     Product product;
     Price price;
     Signal signal;
+    Consensus consensus;
     try (PreparedStatement ps = c.prepareStatement(sql)) {
       ps.setLong(1, productId);
       try (ResultSet rs = ps.executeQuery()) {
@@ -323,9 +385,54 @@ public final class QueryDao {
         price = rs.getTimestamp(k + 12) == null ? null : price(rs, k);
         k += 13;
         signal = signal(rs, k);
+        k += 4;
+        consensus = consensus(rs, k);
       }
     }
-    return Optional.of(new Detail(product, price, signal, offers(c, productId)));
+    List<Quote> quotes = consensus == null ? List.of() : quotes(c, consensus.quoteMentionIds());
+    return Optional.of(new Detail(product, price, signal, offers(c, productId), consensus, quotes));
+  }
+
+  /** The quoted mentions, in the order the consensus chose them. */
+  static List<Quote> quotes(Connection c, List<Long> mentionIds) throws SQLException {
+    if (mentionIds.isEmpty()) {
+      return List.of();
+    }
+    String sql =
+        """
+        select m.id, m.sentiment, m.matched_text, r.title, r.text, r.community, r.source,
+               r.posted_at, r.permalink
+        from mentions m join raw_mentions r on r.id = m.raw_mention_id
+        where m.id = any (?)
+        """;
+    Map<Long, Quote> byId = new java.util.HashMap<>();
+    try (PreparedStatement ps = c.prepareStatement(sql)) {
+      ps.setArray(1, c.createArrayOf("bigint", mentionIds.toArray()));
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          byId.put(
+              rs.getLong(1),
+              new Quote(
+                  rs.getLong(1),
+                  rs.getString(2),
+                  rs.getString(3),
+                  rs.getString(4),
+                  rs.getString(5),
+                  rs.getString(6),
+                  rs.getString(7),
+                  instantOrNull(rs, 8),
+                  rs.getString(9)));
+        }
+      }
+    }
+    List<Quote> out = new ArrayList<>();
+    for (Long id : mentionIds) {
+      Quote q = byId.get(id);
+      if (q != null) {
+        out.add(q);
+      }
+    }
+    return out;
   }
 
   /** A product's live linked listings, cheapest in-stock first. */
@@ -421,6 +528,25 @@ public final class QueryDao {
         rs.getInt(k + 10),
         rs.getInt(k + 11),
         rs.getTimestamp(k + 12).toInstant());
+  }
+
+  private static Consensus consensus(ResultSet rs, int k) throws SQLException {
+    Timestamp asOf = rs.getTimestamp(k + 9);
+    if (asOf == null) {
+      return null;
+    }
+    Array ids = rs.getArray(k + 8);
+    return new Consensus(
+        doubleOrNull(rs, k),
+        rs.getInt(k + 1),
+        rs.getInt(k + 2),
+        rs.getInt(k + 3),
+        rs.getInt(k + 4),
+        doubleOrNull(rs, k + 5),
+        rs.getInt(k + 6),
+        rs.getInt(k + 7),
+        ids == null ? List.of() : Arrays.asList((Long[]) ids.getArray()),
+        asOf.toInstant());
   }
 
   private static Signal signal(ResultSet rs, int k) throws SQLException {

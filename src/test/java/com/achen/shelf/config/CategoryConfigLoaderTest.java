@@ -79,6 +79,25 @@ class CategoryConfigLoaderTest {
   }
 
   @Test
+  void aCommunitysWeightDefaultsToOneAndMustBePositive() {
+    CategoryConfig cfg = loader.load(FIXTURES.resolve("good-communities.yaml"));
+    assertThat(cfg.communities()).allSatisfy(c -> assertThat(c.weight()).isEqualTo(1.0));
+    String yaml =
+        FixtureServer.Fixtures.read("categories/good-communities.yaml")
+            .replace(
+                "    notes: waiting on approval", "    weight: 2.5\n    notes: waiting on approval")
+            .replace("    id: \"@WidgetReviews\"", "    id: \"@WidgetReviews\"\n    weight: 0");
+    assertThatThrownBy(
+            () ->
+                loader.load(
+                    new java.io.ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)),
+                    "inline"))
+        .isInstanceOf(ConfigException.class)
+        .hasMessageContaining("communities.yt_widgets: `weight` must be > 0 and <= 10 (got 0.0)")
+        .satisfies(e -> assertThat(e.getMessage()).doesNotContain("r_widgets: `weight`"));
+  }
+
+  @Test
   void rejectsABadCommunitiesSectionNamingEveryProblem() {
     assertThatThrownBy(() -> loader.load(FIXTURES.resolve("bad-communities.yaml")))
         .isInstanceOf(ConfigException.class)
