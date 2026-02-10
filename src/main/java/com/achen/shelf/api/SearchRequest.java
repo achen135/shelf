@@ -46,7 +46,7 @@ final class SearchRequest {
     if (sortParam != null) {
       sort = QueryDao.Sort.parse(sortParam);
       if (sort == null) {
-        throw new BadRequestResponse("sort must be one of deal, price, name");
+        throw new BadRequestResponse("sort must be one of deal, price, name, consensus");
       }
     }
     int limit = integer(ctx, "limit", DEFAULT_LIMIT, 1, MAX_LIMIT);

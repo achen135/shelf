@@ -80,6 +80,24 @@
   .reasonlist li { padding: 2px 0; color: var(--ink-2); }
   .reasonlist code { color: var(--ink); font-size: 12px; }
   .offers td { font-size: 13px; }
+  /* what people say: the count is the headline, the leaning is a word, the score is a bar */
+  .talk { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .talk .n { font-weight: 600; color: var(--ink); }
+  .talk .lean { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--ring); }
+  .talk .lean.liked { color: var(--good-ink); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .talk .lean.disliked { color: var(--warn-ink); border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+  .say { margin-top: 6px; }
+  .say .count { font-size: 18px; font-weight: 600; }
+  .say .count small { font-size: 13px; font-weight: 400; color: var(--ink-2); }
+  .bar { position: relative; height: 8px; border-radius: 4px; background: var(--grid); margin: 8px 0 4px; max-width: 360px; }
+  .bar .mid { position: absolute; left: 50%; top: -3px; width: 1px; height: 14px; background: var(--axis); }
+  .bar .fill { position: absolute; top: 0; height: 8px; border-radius: 4px; background: var(--series); }
+  .quotes { margin: 10px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .quotes li { padding: 10px 12px; border: 1px solid var(--ring); border-radius: 8px; background: var(--page); }
+  .quotes .who { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .quotes .sent { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  .quotes .sent.positive { color: var(--good-ink); }
+  .quotes .sent.negative { color: var(--warn-ink); }
   .foot { margin-top: 28px; color: var(--muted); font-size: 12px; }
   .hidden { display: none !important; }
 </style>
@@ -89,14 +107,16 @@
   <h1>Shelf</h1>
   <p class="sub">Price &amp; deal intelligence for one enthusiast category at a time. Pick a budget and specs, get the list, and a
     <strong>buy / wait</strong> call per product with the reasons behind it — from a year of price history, most of which is
-    <em>labeled synthetic</em> until the crawler has been running for a while. Every number says how much of it is.</p>
+    <em>labeled synthetic</em> until the crawler has been running for a while. Every number says how much of it is.
+    Beside the call, what the configured communities said about the product in the last 90 days — always with how many
+    said it, because a score from three mentions and one from three hundred are not the same fact.</p>
 
   <form class="filters card" id="filters" onsubmit="return false">
     <label>Category <select id="category"></select></label>
     <label>Min $ <input id="min" type="number" min="0" step="1" placeholder="0"></label>
     <label>Max $ <input id="max" type="number" min="0" step="1" placeholder="any"></label>
     <span id="specs" style="display: contents"></span>
-    <label>Sort <select id="sort"><option value="deal">best deal first</option><option value="price">price</option><option value="name">name</option></select></label>
+    <label>Sort <select id="sort"><option value="deal">best deal first</option><option value="price">price</option><option value="name">name</option><option value="consensus">what people say</option></select></label>
     <label class="check"><input id="instock" type="checkbox" checked> in stock only</label>
   </form>
   <div class="status" id="status"></div>
@@ -108,7 +128,7 @@
   <div class="card tablewrap">
     <table id="results">
       <thead><tr>
-        <th>Product</th><th>Matching listing</th><th class="num">Price</th><th class="num">vs list</th><th>Trailing year</th><th>90 days</th><th>Call</th>
+        <th>Product</th><th>Matching listing</th><th class="num">Price</th><th class="num">vs list</th><th>Trailing year</th><th>90 days</th><th>Call</th><th>People say</th>
       </tr></thead>
       <tbody></tbody>
     </table>
@@ -118,7 +138,8 @@
 
   <p class="foot">Read-only demo over <code>GET /products</code>, <code>/products/{id}</code>, <code>/deals</code>, <code>/categories</code>.
     Prices are the cheapest in-stock listing linked to each product; the year percentile is the share of the trailing year priced below today.
-    Dashed history is synthetic backfill (<code>price_observations.source = 'synthetic'</code>), solid is observed.</p>
+    Dashed history is synthetic backfill (<code>price_observations.source = 'synthetic'</code>), solid is observed.
+    "What people say" comes from the YouTube Data API (and, once approved, Reddit); quotes link back to their source.</p>
 </div>
 
 <script>
@@ -214,6 +235,7 @@
         <td><div>${pct(pr.price.percentile_365d)} of year cheaper</div><div class="pct">low ${money(pr.price.min_365d_cents)} · ${Math.round((pr.price.synthetic_share ?? 0) * 100)}% synthetic</div></td>
         <td><svg class="spark" data-spark="${pr.id}" viewBox="0 0 120 28" preserveAspectRatio="none"></svg></td>
         <td>${badge(pr.signal)}<div class="reasons">${(pr.signal ? pr.signal.reasons : []).filter(r => r.code !== 'MOSTLY_SYNTHETIC').map(r => esc(r.description)).slice(0, 2).join(' · ')}</div></td>
+        <td>${talk(pr.consensus)}</td>
       </tr>`;
     }).join('');
     tb.querySelectorAll('tr.row').forEach(tr => tr.addEventListener('click', () => select(+tr.dataset.id)));
@@ -224,6 +246,13 @@
         if (svg) drawLine(svg, d.history, { w: 120, h: 28, pad: 2 });
       }).catch(() => {});
     }
+  }
+  // The count comes first and is never dropped; the leaning is a word; a score alone is never shown.
+  function talk(k) {
+    if (!k) return '<span class="talk">not scored</span>';
+    if (!k.mention_count) return `<span class="talk"><span class="n">0</span> mentions in ${k.window_days} d</span>`;
+    return `<span class="talk" title="score ${k.score.toFixed(2)} · ${k.positive_count} positive / ${k.negative_count} negative / ${k.neutral_count} neutral · ${k.source_diversity} communit${k.source_diversity === 1 ? 'y' : 'ies'}">
+      <span class="n">${k.mention_count}</span> mention${k.mention_count === 1 ? '' : 's'}<span class="lean ${esc(k.leaning)}">${esc(k.leaning)}</span></span>`;
   }
   function badge(sig) {
     if (!sig) return '<span class="badge">no call</span>';
@@ -287,12 +316,27 @@
       <div class="legend"><span><span class="key"></span>observed</span><span><span class="key syn"></span>synthetic backfill</span>
         <span>${p.observations_365d ?? 0} observations in the trailing year, ${p.synthetic_365d ?? 0} synthetic (${Math.round((p.synthetic_share ?? 0) * 100)}%) · as of ${esc((p.as_of || '').slice(0, 16).replace('T', ' '))} UTC</span></div>
       ${s ? `<ul class="reasonlist">${s.reasons.map(r => `<li><code>${esc(r.code)}</code> — ${esc(r.description)}</li>`).join('')}</ul>` : '<p class="status">No call has been computed for this product yet.</p>'}
+      <h2>What people say</h2>
+      ${say(d.consensus)}
       <h2>Live listings (${d.offers.length})</h2>
       <div class="tablewrap"><table class="offers"><thead><tr><th>Retailer</th><th>Listing</th><th class="num">Price</th><th>Stock</th><th class="num">Year pct</th></tr></thead>
       <tbody>${d.offers.map(o => `<tr><td>${esc(o.retailer)}</td><td><a href="${esc(o.url)}" target="_blank" rel="noopener">${esc(o.title)}</a></td>
         <td class="num">${money(o.price_cents)}</td><td>${o.in_stock == null ? '—' : o.in_stock ? 'in stock' : 'out of stock'}</td><td class="num">${pct(o.percentile_365d)}</td></tr>`).join('')}</tbody></table></div>`;
     drawChart($('svg.chart', el), $('.tip', el), d.history);
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function say(k) {
+    if (!k) return '<p class="status">No consensus has been computed for this product yet (run <code>shelf mentions</code>).</p>';
+    if (!k.mention_count) return `<div class="say"><div class="count">0 mentions <small>in the configured communities over the last ${k.window_days} days</small></div>
+      <p class="status">Nothing said — not "neutral". Two thousand comments about other keyboards are not evidence about this one.</p></div>`;
+    const left = k.score < 0 ? 50 + k.score * 50 : 50, width = Math.abs(k.score) * 50;
+    return `<div class="say">
+      <div class="count">${k.mention_count} mention${k.mention_count === 1 ? '' : 's'} <small>in ${k.source_diversity} communit${k.source_diversity === 1 ? 'y' : 'ies'} over the last ${k.window_days} days ·
+        ${k.positive_count} positive / ${k.negative_count} negative / ${k.neutral_count} neutral · leaning <strong>${esc(k.leaning)}</strong> (score ${k.score.toFixed(2)} on −1…+1)</small></div>
+      <div class="bar" title="weighted mean of +1 / 0 / −1 per mention"><span class="mid"></span><span class="fill" style="left:${left}%;width:${Math.max(width, 0.5)}%"></span></div>
+      <ul class="quotes">${k.quotes.map(q => `<li><span class="sent ${esc(q.sentiment)}">${esc(q.sentiment)}</span><div>${esc(q.excerpt)}</div>
+        <div class="who">${esc(q.community)} · <a href="${esc(q.permalink)}" target="_blank" rel="noopener">on ${esc(q.platform)}</a>${q.posted_at ? ' · ' + esc(q.posted_at.slice(0, 10)) : ''}</div></li>`).join('')}</ul>
+      <p class="status">Read by rule (<code>extraction_method = rule</code>): the sentence naming the product, a lexicon, negators. It is additive to the price call above, never blended into it.</p></div>`;
   }
   function drawChart(svg, tip, history) {
     const box = { w: 900, h: 220, pad: 14 };

@@ -2,7 +2,10 @@ package com.achen.shelf.api;
 
 import com.achen.shelf.config.CategoryConfig;
 import com.achen.shelf.config.SpecField;
+import com.achen.shelf.consensus.ConsensusRule;
 import com.achen.shelf.db.QueryDao;
+import com.achen.shelf.mention.Excerpt;
+import com.achen.shelf.resolve.Scorer;
 import com.achen.shelf.signal.ReasonCode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
@@ -100,6 +103,75 @@ final class Views {
     }
   }
 
+  /**
+   * What the communities said (M10). The count is never optional: a score without it would be the
+   * one number Spec v2 §3 says never to show. {@code leaning} is the score in words at the rule's
+   * fixed cut-offs; {@code unheard} is a row with nothing in the window.
+   */
+  record ConsensusView(
+      Double score,
+      String leaning,
+      int mentionCount,
+      int positiveCount,
+      int negativeCount,
+      int neutralCount,
+      Double positiveShare,
+      int sourceDiversity,
+      int windowDays,
+      Instant asOf,
+      List<QuoteView> quotes) {
+    static ConsensusView of(QueryDao.Consensus k, List<QueryDao.Quote> quotes) {
+      if (k == null) {
+        return null;
+      }
+      String leaning =
+          k.score() == null
+              ? ConsensusRule.Leaning.UNHEARD.dbValue()
+              : ConsensusRule.leaning(k.score()).dbValue();
+      return new ConsensusView(
+          k.score(),
+          leaning,
+          k.mentionCount(),
+          k.positiveCount(),
+          k.negativeCount(),
+          k.neutralCount(),
+          k.positiveShare(),
+          k.sourceDiversity(),
+          k.windowDays(),
+          k.asOf(),
+          quotes.stream().map(QuoteView::of).toList());
+    }
+  }
+
+  /**
+   * A quoted mention: an excerpt around the words that named the product, and where it was said.
+   */
+  record QuoteView(
+      String sentiment,
+      String excerpt,
+      String community,
+      String source,
+      String platform,
+      Instant postedAt,
+      String permalink) {
+    static final int EXCERPT_CHARS = 280;
+
+    static QuoteView of(QueryDao.Quote q) {
+      String full =
+          q.title() == null || q.title().isBlank() ? q.text() : q.title() + "\n" + q.text();
+      return new QuoteView(
+          q.sentiment(),
+          Excerpt.of(full, Scorer.tokens(q.matchedText()), EXCERPT_CHARS),
+          q.community(),
+          q.source(),
+          q.source().startsWith("youtube")
+              ? "YouTube"
+              : q.source().startsWith("reddit") ? "Reddit" : q.source(),
+          q.postedAt(),
+          q.permalink());
+    }
+  }
+
   record OfferView(
       long id,
       String retailer,
@@ -144,7 +216,8 @@ final class Views {
       Map<String, Object> spec,
       PriceView price,
       SignalView signal,
-      OfferView offer) {
+      OfferView offer,
+      ConsensusView consensus) {
     static ProductView of(QueryDao.Hit h) {
       QueryDao.Product p = h.product();
       return new ProductView(
@@ -156,7 +229,8 @@ final class Views {
           p.spec(),
           PriceView.of(h.price()),
           SignalView.of(h.signal(), h.price()),
-          OfferView.of(h.offer()));
+          OfferView.of(h.offer()),
+          ConsensusView.of(h.consensus(), List.of()));
     }
   }
 
@@ -201,6 +275,7 @@ final class Views {
       Map<String, Object> spec,
       PriceView price,
       SignalView signal,
+      ConsensusView consensus,
       List<OfferView> offers,
       int historyDays,
       List<DayView> history) {
@@ -215,6 +290,7 @@ final class Views {
           p.spec(),
           PriceView.of(d.price()),
           SignalView.of(d.signal(), d.price()),
+          ConsensusView.of(d.consensus(), d.quotes()),
           d.offers().stream().map(OfferView::of).toList(),
           days,
           history.stream().map(DayView::of).toList());
