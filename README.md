@@ -9,7 +9,16 @@ products, and (v2) the communities that talk about them — so onboarding one is
 plus parsers, not new pipeline code. M7 proved it with monitors. The crawler never touches the open web: it visits the paths a category file
 names, and nothing else.
 
-> **Status: M9 complete — mention resolution.** The community track's second stage: `shelf
+> **Status: M10 complete — the community consensus, surfaced.** Linked mentions aggregate into
+> one `consensus_scores` row per product — a weighted mean of +1 / 0 / −1 over the trailing 90
+> days, with the mention count, the positive share and how many communities said it — by a rule
+> fixed before it ran; a product nobody mentioned gets a row that says so. The API carries it on
+> every product row and in the detail with **two quoted, linked mentions**, beside the price call
+> and never blended into it; `sort=consensus` orders by it; the page shows the count before
+> anything else, because on this corpus the largest count is six. `shelf ingest` now chains
+> ingest → mentions → consensus. M9's resolution and M8's ingestion below.
+>
+> **M9 — mention resolution.** The community track's second stage: `shelf
 > mentions --category keyboards` decides which catalog products each ingested comment or video
 > names and what it says about them, into a `mentions` table (one row per text × product, with the
 > score, the span, the reasons, a rule-read sentiment and an explicit rank when the text gives
@@ -245,6 +254,20 @@ by in free text; a category's `sentiment:` section is its own words of praise an
 Every pass re-decides everything the machine wrote and keeps what a human decided. The two
 evals print the reports committed beside the labels (`data/labels/*-mention-*.eval.txt`).
 
+### The consensus (v2, M10)
+
+```
+shelf consensus --category keyboards                # every product's row from its linked mentions in the last 90 days (shelf mentions ends with this)
+curl 'localhost:8080/products?category=keyboards&sort=consensus&in_stock=false'   # best-liked first, unheard last; every row carries mention_count
+curl 'localhost:8080/products/26' | jq .consensus   # the count, the leaning, the score, and two quotes with links back
+```
+
+A score is a weighted mean of +1 / 0 / −1 per linked mention (a community's `weight` is
+config, 1.0 everywhere so far); the count and the number of communities behind it travel with
+it everywhere, and a row with nothing said says so. It sits beside `deal_signals` — the price
+call is a function of the price row, the consensus of the mention rows, and the API never
+folds the two into one number. `data/benchmarks/m10/` has the corpus numbers.
+
 ## Configuration
 
 Environment variables, with the defaults matching `docker-compose.yml`:
@@ -269,7 +292,7 @@ categories/           per-category config (spec schema, retailers, seed products
 docs/                 Spec, Design Decisions, Sessions, Architecture, Concepts, benchmarks/
 scripts/              throughput.sh — the 1-vs-N worker benchmark; explain.sh + bench/ — the M4 query plans; k6/ — the API load test
 src/main/java/com/achen/shelf/
-  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api, ingest, mentions
+  cli/                the `shelf` CLI (picocli): crawl, migrate, coordinator, worker, resolve, review, rollup, backfill, signal, eval, api, ingest, mentions, consensus
   config/             config loading + validation
   db/                 HikariCP pool + thin JDBC query layer (no ORM) + the work queue
   crawl/              fetcher, robots, rate limiting, per-retailer parsers, the per-page pipeline
@@ -281,6 +304,7 @@ src/main/java/com/achen/shelf/
   api/                the Javalin query API; the demo page is src/main/resources/public/index.html (M6)
   ingest/             community ingestion: Reddit + YouTube through their official APIs into raw_mentions (M8, v2)
   mention/            mention resolution: the pass, the rule-based sentiment and rank reading, the two evals (M9, v2)
+  consensus/          the per-product consensus rule and pass over linked mentions (M10, v2)
 src/main/resources/db/migration/   Flyway SQL migrations
 src/test/                          JUnit 5, a fixture HTTP server, golden-file fixtures (the reddit/ and youtube/ ones are hand-built to the documented shapes — their READMEs say so)
 data/labels/          hand-labeled resolution pairs + the committed eval reports (keyboards, monitors); the M9 mention and sentiment labels + reports
@@ -288,6 +312,7 @@ data/benchmarks/m4/   EXPLAIN ANALYZE plans and sizes, before and after rollups
 data/benchmarks/m5/   the committed backtest report
 data/benchmarks/m6/   the k6 sweep, the pinned run, the pool experiment
 data/benchmarks/m7/   the monitors onboarding: the diff stat, the numbers, the backtest
+data/benchmarks/m10/  the consensus table on the corpus and the numbers around it
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable) + api (:8080)
