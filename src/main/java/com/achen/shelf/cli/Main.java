@@ -29,7 +29,8 @@ import picocli.CommandLine;
       EvalCommand.class,
       ApiCommand.class,
       IngestCommand.class,
-      MentionsCommand.class
+      MentionsCommand.class,
+      ConsensusCommand.class
     })
 public final class Main implements Runnable {
 

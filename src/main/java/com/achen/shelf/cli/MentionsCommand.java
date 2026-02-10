@@ -3,9 +3,11 @@ package com.achen.shelf.cli;
 import com.achen.shelf.config.AppConfig;
 import com.achen.shelf.config.CategoryConfig;
 import com.achen.shelf.config.CategoryConfigLoader;
+import com.achen.shelf.consensus.ConsensusRun;
 import com.achen.shelf.db.Database;
 import com.achen.shelf.mention.MentionRun;
 import com.achen.shelf.resolve.Resolver;
+import java.time.Clock;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
 
@@ -16,7 +18,8 @@ import picocli.CommandLine;
  *
  * <p>Run it after {@code shelf ingest}, and again after any edit to the category's seeds, aliases
  * or sentiment words: a pass is a full re-decision, cheap, and a repeat changes nothing. A human's
- * rows are never touched.
+ * rows are never touched. Ends with the consensus pass (M10), the way a rollup pass is followed by
+ * the signal pass.
  */
 @CommandLine.Command(
     name = "mentions",
@@ -50,6 +53,7 @@ public final class MentionsCommand implements Callable<Integer> {
     CategoryConfig config = new CategoryConfigLoader().load(app.categoriesDir(), category);
     try (Database db = Database.open(app, 2)) {
       print(new MentionRun(db, new Resolver.Thresholds(auto, review)).run(config));
+      ConsensusCommand.print(new ConsensusRun(db, Clock.systemUTC()).run(config));
       return CommandLine.ExitCode.OK;
     }
   }

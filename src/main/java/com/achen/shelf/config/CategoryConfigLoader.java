@@ -302,6 +302,9 @@ public final class CategoryConfigLoader {
       } else if (c.source() == CommunitySource.REDDIT && c.id().startsWith("r/")) {
         errors.add(path + ": `id` is the bare subreddit name, without `r/` (got '" + c.id() + "')");
       }
+      if (!(c.weight() > 0) || c.weight() > 10) {
+        errors.add(path + ": `weight` must be > 0 and <= 10 (got " + c.weight() + ")");
+      }
       validateIngest(c, path, errors);
     }
   }
