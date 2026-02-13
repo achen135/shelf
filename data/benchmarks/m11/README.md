@@ -21,7 +21,10 @@ changed. Same evidence shape as M7's monitors onboarding: the diff stat is the p
 **Two minutes of wall clock from the first command to the last; 5 lines of config in 1 file
 (1 seed line, 4 of comment); 0 lines of Java; 0 files under `crawl/`, `resolve/`, `rollup/`,
 `signal/`, `ingest/`, `mention/`, `consensus/`, `api/`, `db/`, `config/`, `cli/`, the migrations
-or the page** (`diff-stat.txt`). The branch's other file is the label file, 17 lines.
+or the page** (`diff-stat.txt`). The branch's other files: the label file (17 lines) and, in
+`src/test/`, the two numbers `MentionLabelsTest` pins the label file at (87 → 99 pairs, 13 → 24
+match) — a test constant, not pipeline code, and outside every package the restricted diff
+measures; the record says so rather than leaving it out.
 
 ## What the one line produced
 

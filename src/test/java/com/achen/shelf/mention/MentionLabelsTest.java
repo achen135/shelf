@@ -13,8 +13,9 @@ class MentionLabelsTest {
   void theCommittedResolutionLabelsParse() {
     List<MentionLabels.MatchLabel> labels =
         MentionLabels.readMatches(Path.of("data/labels/keyboards-mention-resolution.tsv"));
-    assertThat(labels).hasSize(87);
-    assertThat(labels.stream().filter(MentionLabels.MatchLabel::match).count()).isEqualTo(13);
+    // 87 pairs (13 match) from M9, plus M11's 12 for the Wooting 80HE (11 match).
+    assertThat(labels).hasSize(99);
+    assertThat(labels.stream().filter(MentionLabels.MatchLabel::match).count()).isEqualTo(24);
     assertThat(labels).allSatisfy(l -> assertThat(l.source()).startsWith("youtube_"));
     assertThat(labels).anySatisfy(l -> assertThat(l.note()).contains("Yunzii"));
   }
