@@ -1,0 +1,21 @@
+# git diff --stat HEAD~1 HEAD (the config commit only: labels are the commit before, the record the commit after)
+ categories/keyboards.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+# restricted to the pipeline packages, migrations and the page:
+(empty = nothing under any of them changed)
+
+# the whole branch against main, everything included:
+ categories/keyboards.yaml                    |  5 +++++
+ data/labels/keyboards-mention-resolution.tsv | 17 +++++++++++++++++
+ 2 files changed, 22 insertions(+)
+
+# after the record commit, the whole branch against main once more (the test constant included):
+ categories/keyboards.yaml                          |  5 ++
+ data/benchmarks/m11/README.md                      | 61 ++++++++++++++++++++++
+ data/benchmarks/m11/chain.txt                      | 49 +++++++++++++++++
+ data/benchmarks/m11/diff-stat.txt                  | 13 +++++
+ data/labels/keyboards-mention-resolution.eval.txt  | 49 ++++++++---------
+ data/labels/keyboards-mention-resolution.tsv       | 17 ++++++
+ .../com/achen/shelf/mention/MentionLabelsTest.java |  5 +-
+ 7 files changed, 173 insertions(+), 26 deletions(-)

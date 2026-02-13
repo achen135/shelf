@@ -109,3 +109,20 @@ youtube_comment	UgzfnxQdj1w-GIXJLaN4AaABAg	Just bought epomaker he108.  Glad wit
 youtube_comment	UgwN80EZS5W9KUSCvnZ4AaABAg	try the epomaker g84 HE, a magnetic switch keyboard	KBDfans	+84 Classic TKL	false	'84' shared with another maker's model
 youtube_comment	UgyjBuqzpFWQywy6jth4AaABAg	I want one in a sword	Varmilo	Sword68	false	the word
 youtube_video	k-2UfjwdDaE	Neo75 Prebuilt Is More Than Great at $169.00	KBDfans	Odin 75	false	a different maker's 75; kbdfans only in the affiliate links
+#
+# --- M11: the Wooting 80HE, labeled before it was added to the catalog (2026-09-18) ---
+# The generalization proof adds one product via config; these pairs were written from the same
+# corpus before the seed line existed, so that the product's first pass is measured, not admired.
+# Policy as above: the "80he+" a comment hopes will "come out" is a sibling that does not exist yet.
+youtube_comment	UgwcsmN60DdNe9vavZ14AaABAg	If this comment gets 175 likes he has to buy me a wooting 80he	Wooting	80HE	true	named in full
+youtube_comment	UgwMW1W6iqP6xte8l994AaABAg	are you going to review the wooting 80he+ once it comes out?	Wooting	80HE	false	a hoped-for sibling; '+' is folded away by normalization
+youtube_comment	UgxGaBvEYsywd1_dckR4AaABAg	Wooting 80he just sitting in the bg	Wooting	80HE	true	named in full
+youtube_comment	Ugxk2HN-UvniEPlBf0J4AaABAg	If this comment gets 175 likes he has to buy me a wooting 80he	Wooting	80HE	true	named in full
+youtube_comment	UgxZxPtvY3RFDCoZ84B4AaABAg	If this comment gets 175 likes he has to buy me a wooting 80he	Wooting	80HE	true	named in full
+youtube_comment	UgyEdz1huO1NHNUXtkl4AaABAg	When are going to apologize to the wooting 80he picky?	Wooting	80HE	true	named in full
+youtube_comment	UgyMlsdsHrMwPOjYJ3h4AaABAg	i just got the wooting 80he. it sounds so good	Wooting	80HE	true	named in full
+youtube_comment	Ugz50fUOJX66MEO3UfB4AaABAg	It's like a wooting 80 HE but its like 60 $	Wooting	80HE	true	written apart; the Aula is not in the catalog
+youtube_comment	Ugz8y3IwkWq9poAfgbd4AaABAg	1000 likes and he buys me a wooting 80he	Wooting	80HE	true	named in full
+youtube_comment	Ugzdf3mVpfBeNVgGPal4AaABAg	any mods youd do to a wooting 80he to make it better sounding?	Wooting	80HE	true	named in full
+youtube_comment	UgzGEv-uqi6JnKw_4EV4AaABAg	If this comment gets 175 likes he has to buy me a wooting 80he	Wooting	80HE	true	named in full
+youtube_comment	UgzpXtfG5Rmg4vwawd14AaABAg	just get a wooting 80HE at this point	Wooting	80HE	true	named in full
