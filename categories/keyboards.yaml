@@ -322,6 +322,11 @@ seed_products:
   # Wooting
   - { brand: "Wooting", model: "60HE V2", canonical_name: "Wooting 60HE V2" }
   - { brand: "Wooting", model: "60HE+",   canonical_name: "Wooting 60HE+", aliases: ["60HE plus"] }
+  # M11's generalization proof: one line, added 2026-09-18 with the product's mention labels frozen
+  # first. The most-mentioned board in the ingested corpus (a dozen comments) and five live listings
+  # at mechanicalkeyboards — the whole chain (resolve → rollup → signal → mentions → consensus) runs
+  # on it with no code change; data/benchmarks/m11/ has the diff stat and the numbers.
+  - { brand: "Wooting", model: "80HE",    canonical_name: "Wooting 80HE", aliases: ["80 HE"] }
   # Ducky
   - { brand: "Ducky", model: "One 2 Mini Pro", canonical_name: "Ducky One 2 Mini Pro" }
   - { brand: "Ducky", model: "One 2 SF",       canonical_name: "Ducky One 2 SF" }
