@@ -9,7 +9,17 @@ products, and (v2) the communities that talk about them — so onboarding one is
 plus parsers, not new pipeline code. M7 proved it with monitors. The crawler never touches the open web: it visits the paths a category file
 names, and nothing else.
 
-> **Status: M10 complete — the community consensus, surfaced.** Linked mentions aggregate into
+> **Status: M11 complete — the generalization proof for the community track.** One seed line
+> for the Wooting 80HE — the most-mentioned board in the corpus, sold by a configured retailer —
+> and the whole chain ran on it with **no code change**: five listings linked at 1.00, a rollup,
+> a call, twelve comments resolved (recall 1.000 / precision 0.960 on labels written *before*
+> the line existed), a consensus of 0.17 from twelve mentions, all served by the API. **Two
+> minutes, five config lines, zero Java**; `git diff --stat` over every pipeline package is
+> empty (`data/benchmarks/m11/`). One trap recorded: `shelf resolve` does not bootstrap seeds —
+> run `shelf mentions` (or a crawl) first after a config edit. Pass 6 is done. M10's consensus
+> below.
+>
+> **M10 — the community consensus, surfaced.** Linked mentions aggregate into
 > one `consensus_scores` row per product — a weighted mean of +1 / 0 / −1 over the trailing 90
 > days, with the mention count, the positive share and how many communities said it — by a rule
 > fixed before it ran; a product nobody mentioned gets a row that says so. The API carries it on
@@ -313,6 +323,7 @@ data/benchmarks/m5/   the committed backtest report
 data/benchmarks/m6/   the k6 sweep, the pinned run, the pool experiment
 data/benchmarks/m7/   the monitors onboarding: the diff stat, the numbers, the backtest
 data/benchmarks/m10/  the consensus table on the corpus and the numbers around it
+data/benchmarks/m11/  the generalization proof: the diff stat, the chain's output, the numbers, the trap
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable) + api (:8080)
