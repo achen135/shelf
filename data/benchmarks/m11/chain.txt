@@ -1,0 +1,49 @@
+# M11 — the chain on one new seed line, as run 2026-09-18 (each command's own summary line)
+
+$ shelf resolve -c keyboards
+resolution (keyboards, 50 catalog products): 6687 pending considered — 0 auto-linked, 419 for review, 6268 unmatched; specs derived for 0 product(s); review queue: 419
+
+$ shelf rollup -c keyboards
+rollups (keyboards, as of 2026-09-18T17:56:14.159936Z): 0 offer(s) retired; 7556 offer and 50 product rollup(s) recomputed in 9163 ms
+
+$ shelf signal -c keyboards
+signals (keyboards, as of 2026-09-18T17:56:14.159936Z): 50 product(s) — 0 buy, 44 wait, 6 neutral; 0 without a rollup row skipped; 44 ms
+
+$ shelf mentions -c keyboards
+mentions (keyboards): 3206 raw mentions against 51 products — 29 name a product; 25 linked, 4 proposed for review, 0 left as a human decided; sentiment 8 positive / 1 negative / 20 neutral; 0 with an explicit rank; 271 ms
+consensus (keyboards, as of 2026-09-18T17:56:24.409Z, 90-day window): 51 products, 8 with a mention (24 mentions) — 4 liked / 3 mixed / 1 disliked; 17 ms
+
+# Second pass — shelf resolve reads the catalog from the database and does not bootstrap seeds (a crawl and the
+# mention pass do); after the mention pass above the product exists, so the price side is run again:
+
+$ shelf resolve -c keyboards
+resolution (keyboards, 51 catalog products): 6687 pending considered — 5 auto-linked, 419 for review, 6263 unmatched; specs derived for 1 product(s); review queue: 419
+
+$ shelf rollup -c keyboards
+rollups (keyboards, as of 2026-09-18T17:56:47.873478Z): 0 offer(s) retired; 7556 offer and 51 product rollup(s) recomputed in 7195 ms
+
+$ shelf signal -c keyboards
+signals (keyboards, as of 2026-09-18T17:56:47.873478Z): 51 product(s) — 0 buy, 44 wait, 7 neutral; 0 without a rollup row skipped; 47 ms
+
+# The API, no code touched:
+$ curl 'localhost:8099/products?category=keyboards&sort=consensus&in_stock=false&limit=3'
+   WOBKEY Rainy 75 Pro | 2 mentions, liked 1.0 | listing mechanicalkeyboards 12900
+   Keychron Q15 Max | 1 mentions, liked 1.0 | listing mechanicalkeyboards 17900
+   Glorious GMMK Pro | 1 mentions, liked 1.0 | listing glorious 11999
+$ curl localhost:8099/products/1088 | jq '{name, price: .price.current_cents, list: .price.list_cents, signal: .signal.signal, consensus: {count: .consensus.mention_count, score: .consensus.score, quotes: [.consensus.quotes[].excerpt]}, offers: (.offers|length)}'
+{
+  "name": "Wooting 80HE",
+  "price": 20999,
+  "list": 18299,
+  "signal": "neutral",
+  "consensus": {
+    "count": 12,
+    "score": 0.16666666666666666,
+    "quotes": [
+      "just get a wooting 80HE at this point",
+      "When are going to apologize to the wooting 80he picky?"
+    ]
+  },
+  "offers": 5,
+  "history_days_with_a_price": 357
+}

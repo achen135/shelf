@@ -1,0 +1,11 @@
+# git diff --stat HEAD~1 HEAD (the config commit only: labels are the commit before, the record the commit after)
+ categories/keyboards.yaml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+# restricted to the pipeline packages, migrations and the page:
+(empty = nothing under any of them changed)
+
+# the whole branch against main, everything included:
+ categories/keyboards.yaml                    |  5 +++++
+ data/labels/keyboards-mention-resolution.tsv | 17 +++++++++++++++++
+ 2 files changed, 22 insertions(+)
