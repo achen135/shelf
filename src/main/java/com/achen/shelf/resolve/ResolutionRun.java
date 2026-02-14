@@ -4,6 +4,7 @@ import com.achen.shelf.config.CategoryConfig;
 import com.achen.shelf.config.Retailer;
 import com.achen.shelf.config.SeedProduct;
 import com.achen.shelf.crawl.Normalizer;
+import com.achen.shelf.crawl.SeedCatalog;
 import com.achen.shelf.db.Database;
 import com.achen.shelf.db.ProductDao;
 import com.achen.shelf.db.ResolutionDao;
@@ -60,8 +61,19 @@ public final class ResolutionRun {
     this.thresholds = thresholds;
   }
 
-  /** The catalog for a category as it stands in the database, indexed for blocking. */
+  /**
+   * The catalog for a category, indexed for blocking — after the category's seeds have been
+   * upserted, so a product (or an alias) added to the category file is in the catalog on the first
+   * pass that reads it.
+   *
+   * <p>Until M11 only a crawl bootstrapped the seeds, and {@code shelf resolve} after a config edit
+   * saw the catalog as it was: the generalization proof found the five listings of a newly seeded
+   * product still pending until the mention pass (which does bootstrap) had run
+   * (data/benchmarks/m11/README.md). The bootstrap is fifty upserts and idempotent, so every reader
+   * of the catalog — the pass, the eval, the mention matcher — takes it here.
+   */
   public Catalog loadCatalog(CategoryConfig category) throws SQLException {
+    SeedCatalog.bootstrap(category, products);
     List<Candidate> candidates = new ArrayList<>();
     for (ProductDao.Row p : products.list(category.name())) {
       candidates.add(

@@ -308,6 +308,36 @@ class ResolutionRunTest extends PostgresTestBase {
   }
 
   @Test
+  void aProductAddedToTheConfigLinksOnTheFirstPass() throws SQLException {
+    // M11's trap: the seed is in the file, not yet in the database, and a listing for it waits.
+    long listing = offer("json_store", "Keychron", "Keychron Q1 Pro QMK Wireless Custom Keyboard");
+    CategoryConfig withSeed =
+        new CategoryConfig(
+            category.name(),
+            category.specSchema(),
+            category.retailers(),
+            java.util.stream.Stream.concat(
+                    category.seedProducts().stream(),
+                    java.util.stream.Stream.of(
+                        new com.achen.shelf.config.SeedProduct(
+                            "Keychron", "Q1 Pro", "Keychron Q1 Pro", Map.of())))
+                .toList(),
+            category.resolution(),
+            category.communities(),
+            category.sentiment());
+    assertThat(new ProductDao(DB).findId("keyboards", "keychron", "q1 pro")).isEmpty();
+
+    ResolutionRun.Summary s = run.run(withSeed);
+
+    assertThat(s.catalogSize()).isEqualTo(category.seedProducts().size() + 1);
+    assertThat(s.autoLinked()).isEqualTo(1);
+    try (Connection c = DB.connection()) {
+      assertThat(dao.linkedProduct(c, listing))
+          .isEqualTo(new ProductDao(DB).findId("keyboards", "keychron", "q1 pro"));
+    }
+  }
+
+  @Test
   void linkedProductIsReadable() throws SQLException {
     long linked = offer("json_store", "Keychron", "Keychron Q6 HE QMK Wireless Custom Keyboard");
     long unlinked = offer("json_store", "Keychron", "Keychron K3 Pro Low Profile");

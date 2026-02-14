@@ -1,10 +1,8 @@
 package com.achen.shelf.mention;
 
 import com.achen.shelf.config.CategoryConfig;
-import com.achen.shelf.crawl.SeedCatalog;
 import com.achen.shelf.db.Database;
 import com.achen.shelf.db.MentionDao;
-import com.achen.shelf.db.ProductDao;
 import com.achen.shelf.resolve.Catalog;
 import com.achen.shelf.resolve.MentionMatcher;
 import com.achen.shelf.resolve.ResolutionRun;
@@ -54,20 +52,17 @@ public final class MentionRun {
       Duration took) {}
 
   private final Database db;
-  private final ProductDao products;
   private final MentionDao dao;
   private final Resolver.Thresholds thresholds;
 
   public MentionRun(Database db, Resolver.Thresholds thresholds) {
     this.db = db;
-    this.products = new ProductDao(db);
     this.dao = new MentionDao(db);
     this.thresholds = thresholds;
   }
 
-  /** A matcher over the category's catalog as it stands after the seeds are bootstrapped. */
+  /** A matcher over the category's catalog; {@code loadCatalog} bootstraps the seeds first. */
   public MentionMatcher matcher(CategoryConfig category) throws SQLException {
-    SeedCatalog.bootstrap(category, products);
     Catalog catalog = new ResolutionRun(db, thresholds).loadCatalog(category);
     return new MentionMatcher(catalog, thresholds);
   }
