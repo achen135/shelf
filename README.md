@@ -9,7 +9,19 @@ products, and (v2) the communities that talk about them — so onboarding one is
 plus parsers, not new pipeline code. M7 proved it with monitors. The crawler never touches the open web: it visits the paths a category file
 names, and nothing else.
 
-> **Status: M11 complete — the generalization proof for the community track.** One seed line
+> **Status: M12 complete — the ML deal classifier, measured, and the rule held.** The gate
+> first: the M5 backtest's as-of grid *is* a labeled feature table, and a trained decision
+> function *is* one more `Backtest.Strategy` — fifteen lines added to `Backtest`, a logistic
+> regression in plain Java (no library, no model file, no second runtime), and the unmodified
+> tally judged it. Then the measurement, everything fixed before the first run: a chronological
+> split with a gap so no training label reads a held-out price, the same horizon, tolerance and
+> baselines as M5/M7. **Held out, a model trained on the rule's own features did not beat the
+> rule** — keyboards a tie (0.811 vs 0.809 at the same coverage), monitors a loss (0.558 vs
+> 0.603; 0.620 vs 0.663 on the days the model spoke). Its in-sample edge on monitors vanished
+> across the split as the synthetic year's base rate moved. `DealRule` stays the signal;
+> nothing is served (`data/benchmarks/m12/`). Pass 7 is done. M11's proof below.
+>
+> **M11 — the generalization proof for the community track.** One seed line
 > for the Wooting 80HE — the most-mentioned board in the corpus, sold by a configured retailer —
 > and the whole chain ran on it with **no code change**: five listings linked at 1.00, a rollup,
 > a call, twelve comments resolved (recall 1.000 / precision 0.960 on labels written *before*
@@ -206,6 +218,18 @@ call by whether a lower price came within the horizon, beside "always buy" and "
 median". `data/benchmarks/m5/keyboards-backtest.txt` is the committed report; its first lines
 say how much of the history behind it is synthetic (today: all of it).
 
+```
+shelf eval classifier --category keyboards --out data/benchmarks/m12/keyboards-classifier.txt
+shelf eval classifier --category keyboards --split 0.6                 # train on the first 60% of the span instead
+```
+
+The classifier (`signal/DealClassifier`, M12) asks whether a model finds more in the same
+information: a logistic regression over the fields the rule reads, trained on the backtest's
+own grid — the first 70% of the span, each day labeled by whether a drop followed, no label
+reaching past the split — and judged on the remaining days through the same tally, beside the
+rule and both baselines. Everything was fixed before the first run. It did not beat the rule on
+either category; `data/benchmarks/m12/README.md` has the numbers and the reasons.
+
 ```sql
 select s.signal, s.reason_codes, p.canonical_name, r.current_price_cents, r.list_price_cents, round(r.percentile_365d::numeric, 2)
   from deal_signals s join products p on p.id = s.product_id join price_rollups r on r.product_id = p.id order by s.signal, p.id;
@@ -310,7 +334,7 @@ src/main/java/com/achen/shelf/
   resolve/            entity resolution: blocking, scoring, the review queue, the eval (M3); the mention matcher on the same core (M9)
   rollup/             the post-cycle pass: offer retirement + price rollups (M4)
   backfill/           the labeled synthetic history (M4)
-  signal/             the buy/wait/neutral rule, the per-cycle signal pass, the backtest (M5)
+  signal/             the buy/wait/neutral rule, the per-cycle signal pass, the backtest (M5); the classifier it judged (M12)
   api/                the Javalin query API; the demo page is src/main/resources/public/index.html (M6)
   ingest/             community ingestion: Reddit + YouTube through their official APIs into raw_mentions (M8, v2)
   mention/            mention resolution: the pass, the rule-based sentiment and rank reading, the two evals (M9, v2)
@@ -324,6 +348,7 @@ data/benchmarks/m6/   the k6 sweep, the pinned run, the pool experiment
 data/benchmarks/m7/   the monitors onboarding: the diff stat, the numbers, the backtest
 data/benchmarks/m10/  the consensus table on the corpus and the numbers around it
 data/benchmarks/m11/  the generalization proof: the diff stat, the chain's output, the numbers, the trap
+data/benchmarks/m12/  the classifier vs the rule: both categories' reports, the diff stat, the record
 data/raw/             fetched response bodies (gitignored)
 Dockerfile            one image, one `shelf` subcommand per compose service
 docker-compose.yml    postgres:16 + migrate + coordinator (×2) + worker (scalable) + api (:8080)
