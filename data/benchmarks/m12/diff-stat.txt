@@ -1,0 +1,39 @@
+# git diff --stat main HEAD (the code commit; the reports are the commit after)
+ config/spotbugs/exclude.xml                        |  13 +
+ src/main/java/com/achen/shelf/cli/EvalCommand.java |  92 +++++-
+ src/main/java/com/achen/shelf/signal/Backtest.java |  15 +
+ .../com/achen/shelf/signal/ClassifierEval.java     | 352 +++++++++++++++++++++
+ .../com/achen/shelf/signal/DealClassifier.java     | 289 +++++++++++++++++
+ .../com/achen/shelf/signal/DealClassifierTest.java | 187 +++++++++++
+ 6 files changed, 947 insertions(+), 1 deletion(-)
+
+# restricted to build.gradle.kts, the migrations, db/, and every package but signal/ and cli/ (the spike's stop conditions: a dependency, a schema, a second runtime, a pipeline change):
+(empty = nothing under any of them changed)
+
+# Backtest.java itself — the two accessors, nothing else:
+diff --git a/src/main/java/com/achen/shelf/signal/Backtest.java b/src/main/java/com/achen/shelf/signal/Backtest.java
+index 85c9ac0..daf0dc3 100644
+--- a/src/main/java/com/achen/shelf/signal/Backtest.java
++++ b/src/main/java/com/achen/shelf/signal/Backtest.java
+@@ -494,6 +494,21 @@ public final class Backtest {
+     return day >= warmup && ahead(s, day, horizon, tolerance) != Ahead.UNJUDGEABLE;
+   }
+ 
++  /**
++   * The grid as a labeled table (M12): whether a product-day is one the tally would score, and what
++   * came after it. The same two tests the tally applies, exposed so a classifier can train on
++   * exactly the rows the harness judges and nothing else.
++   */
++  public static boolean scored(
++      Grid grid, long product, int day, int horizon, double tolerance, int warmup) {
++    return scored(grid.series(product), day, horizon, tolerance, warmup);
++  }
++
++  /** What came within {@code horizon} days of a product-day — a training label, when scored. */
++  public static Ahead ahead(Grid grid, long product, int day, int horizon, double tolerance) {
++    return ahead(grid.series(product), day, horizon, tolerance);
++  }
++
+   /** Every product and scored day. */
+   private static boolean allDays(Long product, Integer day) {
+     return true;

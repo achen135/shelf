@@ -1,0 +1,52 @@
+deal classifier vs rule — keyboards: 51 products, 2025-09-11 → 2026-09-13 (368 days)
+history: synthetic 2025-09-11 → 2026-09-10, observed 2026-09-11 → 2026-09-13
+judged over the next 30 days; a drop is 2% or more below today; the first 90 days are warm-up and not scored
+split: chronological at day 257 of 368 (2026-05-26, the first 70% of the span); a day trains only if its 30-day horizon closes before the split, so no training label reads a held-out price
+training rows: 6,696 product-days (4,176 with a drop ahead, 62.4%), days 0 → 226
+held out: 3,928 product-days, days 257 → 367. The features behind them rest on 1,167,905 observations, 1,167,905 (100.0%) synthetic; 147 held-out days (3.7%) are judged against at least one observed day
+
+model: logistic regression, 7 features, gradient descent (rate 0.50, 3,000 iterations, L2 1e-03), ≥ 30 points to call; training log-loss 0.5417 — all fixed before this run
+weights (per standard deviation of the feature; + means a drop is likelier):
+  price / list                 +0.318   (mean 0.961, sd 0.111)
+  price / year low             -0.177   (mean 1.255, sd 0.144)
+  price / year median          +0.633   (mean 0.990, sd 0.108)
+  percentile 365d              +0.568   (mean 0.360, sd 0.250)
+  sale days 365d / 365         -0.224   (mean 0.127, sd 0.089)
+  sale windows 365d            +0.611   (mean 4.645, sd 2.729)
+  days since last sale / 365   -0.086   (mean 0.126, sd 0.254)
+  bias                         +0.677
+calls: decisive = buy at or below 0.5, wait above; abstaining = buy ≤ 0.40, wait ≥ 0.60, else no call — both fixed before this run
+
+held out (30 days; days 257 → 367):
+  strategy               days   calls  coverage  hit rate   buys  buy ok  waits  wait ok
+  rule                   3928    3251     0.828     0.809    762   0.749   2489    0.828
+  always buy             3928    3928     1.000     0.327   3928   0.327      0        —
+  buy below median       3928    3928     1.000     0.746   1594   0.589   2334    0.853
+  model                  3928    3928     1.000     0.761    730   0.737   3198    0.767
+  model, abstaining      3928    3215     0.818     0.811    457   0.856   2758    0.803
+  on the 3,251 days the rule spoke:
+  always buy             3251    3251     1.000     0.308   3251   0.308      0        —
+  buy below median       3251    3251     1.000     0.788   1051   0.648   2200    0.855
+  model                  3251    3251     1.000     0.775    643   0.709   2608    0.791
+  on the 3,215 days the abstaining model spoke:
+  rule                   3215    2650     0.824     0.829    483   0.795   2167    0.837
+  always buy             3215    3215     1.000     0.291   3215   0.291      0        —
+  buy below median       3215    3215     1.000     0.750   1129   0.557   2086    0.854
+  base rate: a drop of the tolerance or more followed 67.3% of these days
+
+training era (in-sample) (30 days; days 0 → 226):
+  strategy               days   calls  coverage  hit rate   buys  buy ok  waits  wait ok
+  rule                   6696    5774     0.862     0.719   1104   0.743   4670    0.713
+  always buy             6696    6696     1.000     0.376   6696   0.376      0        —
+  buy below median       6696    6696     1.000     0.700   1954   0.631   4742    0.729
+  model                  6696    6696     1.000     0.726   1884   0.683   4812    0.744
+  model, abstaining      6696    4953     0.740     0.785   1114   0.781   3839    0.786
+  on the 5,774 days the rule spoke:
+  always buy             5774    5774     1.000     0.374   5774   0.374      0        —
+  buy below median       5774    5774     1.000     0.714   1401   0.682   4373    0.724
+  model                  5774    5774     1.000     0.733   1603   0.692   4171    0.748
+  on the 4,953 days the abstaining model spoke:
+  rule                   4953    4349     0.878     0.783    939   0.776   3410    0.785
+  always buy             4953    4953     1.000     0.342   4953   0.342      0        —
+  buy below median       4953    4953     1.000     0.764   1355   0.693   3598    0.791
+  base rate: a drop of the tolerance or more followed 62.4% of these days
