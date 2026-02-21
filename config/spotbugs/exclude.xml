@@ -61,4 +61,17 @@
     </Or>
   </Match>
 
+  <!--
+    ClassifierEval.Report carries the trained DealClassifier (M12). The model is immutable —
+    its arrays are private, set once in a private constructor and cloned by weights() — but
+    SpotBugs sees a class with array fields and calls it mutable.
+  -->
+  <Match>
+    <Class name="com.achen.shelf.signal.ClassifierEval$Report"/>
+    <Or>
+      <Bug pattern="EI_EXPOSE_REP"/>
+      <Bug pattern="EI_EXPOSE_REP2"/>
+    </Or>
+  </Match>
+
 </FindBugsFilter>

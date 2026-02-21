@@ -18,6 +18,8 @@ import com.achen.shelf.resolve.Resolver;
 import com.achen.shelf.resolve.Scorer;
 import com.achen.shelf.signal.Backtest;
 import com.achen.shelf.signal.BacktestReport;
+import com.achen.shelf.signal.ClassifierEval;
+import com.achen.shelf.signal.DealClassifier;
 import com.achen.shelf.signal.DealRule;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -29,7 +31,7 @@ import picocli.CommandLine;
 
 /**
  * {@code shelf eval} — the measured claims: {@code resolution} (M3), {@code backtest} (M5), {@code
- * mention-resolution} and {@code mention-sentiment} (M9).
+ * mention-resolution} and {@code mention-sentiment} (M9), {@code classifier} (M12).
  */
 @CommandLine.Command(
     name = "eval",
@@ -38,6 +40,7 @@ import picocli.CommandLine;
     subcommands = {
       EvalCommand.Resolution.class,
       EvalCommand.SignalBacktest.class,
+      EvalCommand.Classifier.class,
       EvalCommand.MentionResolution.class,
       EvalCommand.MentionSentiment.class
     })
@@ -197,6 +200,93 @@ public final class EvalCommand implements Runnable {
         Backtest backtest = new Backtest(db, settings);
         Backtest.Grid grid = backtest.grid(config);
         String text = BacktestReport.render(backtest.evaluate(grid, rule), category);
+        System.out.print(text);
+        if (out != null) {
+          Files.writeString(out, text, StandardCharsets.UTF_8);
+          System.out.printf("written to %s%n", out);
+        }
+        return CommandLine.ExitCode.OK;
+      }
+    }
+  }
+
+  /**
+   * {@code shelf eval classifier --category keyboards [--split 0.7] [--out …]}
+   *
+   * <p>Builds the same as-of grid the backtest does, trains a logistic regression on the rows of
+   * its first {@code --split} of days — each labeled by whether a drop followed, no label reading
+   * past the split — and judges the model on the remaining days beside the rule and both baselines,
+   * through the same tally. Whichever wins is what the report says.
+   */
+  @CommandLine.Command(
+      name = "classifier",
+      mixinStandardHelpOptions = true,
+      description =
+          "A logistic regression on the backtest grid vs the rule, on held-out later days (M12).")
+  public static final class Classifier implements Callable<Integer> {
+
+    @CommandLine.Option(
+        names = {"-c", "--category"},
+        required = true,
+        description = "Category to evaluate.")
+    private String category;
+
+    @CommandLine.Option(
+        names = "--split",
+        defaultValue = "0.7",
+        description =
+            "Share of the span's days, from the start, that train the model (default"
+                + " ${DEFAULT-VALUE}).")
+    private double split;
+
+    @CommandLine.Option(
+        names = "--horizon",
+        defaultValue = "30",
+        description = "Days ahead a call is judged over (default ${DEFAULT-VALUE}).")
+    private int horizon;
+
+    @CommandLine.Option(
+        names = "--warmup",
+        defaultValue = "90",
+        description = "Days of history before the first scored day (default ${DEFAULT-VALUE}).")
+    private int warmup;
+
+    @CommandLine.Option(
+        names = "--tolerance",
+        defaultValue = "0.02",
+        description =
+            "A drop is this share below today's price or more (default ${DEFAULT-VALUE}).")
+    private double tolerance;
+
+    @CommandLine.Option(
+        names = "--parallelism",
+        defaultValue = "4",
+        description = "As-of recomputes in flight at once (default ${DEFAULT-VALUE}).")
+    private int parallelism;
+
+    @CommandLine.Option(names = "--out", description = "Also write the report here.")
+    private Path out;
+
+    @Override
+    public Integer call() throws Exception {
+      AppConfig app = AppConfig.fromEnv();
+      CategoryConfig config = new CategoryConfigLoader().load(app.categoriesDir(), category);
+      Backtest.Settings settings = new Backtest.Settings(horizon, warmup, tolerance, parallelism);
+      ClassifierEval.Settings evalSettings =
+          new ClassifierEval.Settings(
+              split,
+              ClassifierEval.Settings.defaults().abstainBelow(),
+              ClassifierEval.Settings.defaults().abstainAbove());
+      try (Database db = Database.open(app, parallelism + 1)) {
+        Backtest.Grid grid = new Backtest(db, settings).grid(config);
+        ClassifierEval.Report report =
+            ClassifierEval.evaluate(
+                grid,
+                DealRule.defaults(),
+                settings,
+                evalSettings,
+                DealClassifier.Settings.defaults());
+        String text = ClassifierEval.render(report, category);
         System.out.print(text);
         if (out != null) {
           Files.writeString(out, text, StandardCharsets.UTF_8);

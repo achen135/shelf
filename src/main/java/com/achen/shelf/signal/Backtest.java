@@ -494,6 +494,21 @@ public final class Backtest {
     return day >= warmup && ahead(s, day, horizon, tolerance) != Ahead.UNJUDGEABLE;
   }
 
+  /**
+   * The grid as a labeled table (M12): whether a product-day is one the tally would score, and what
+   * came after it. The same two tests the tally applies, exposed so a classifier can train on
+   * exactly the rows the harness judges and nothing else.
+   */
+  public static boolean scored(
+      Grid grid, long product, int day, int horizon, double tolerance, int warmup) {
+    return scored(grid.series(product), day, horizon, tolerance, warmup);
+  }
+
+  /** What came within {@code horizon} days of a product-day — a training label, when scored. */
+  public static Ahead ahead(Grid grid, long product, int day, int horizon, double tolerance) {
+    return ahead(grid.series(product), day, horizon, tolerance);
+  }
+
   /** Every product and scored day. */
   private static boolean allDays(Long product, Integer day) {
     return true;
